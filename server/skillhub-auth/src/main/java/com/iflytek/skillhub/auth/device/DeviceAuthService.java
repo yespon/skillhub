@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.auth.device;
 
+import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
@@ -44,12 +45,12 @@ public class DeviceAuthService {
     public void authorizeDeviceCode(String userCode, String userId) {
         String deviceCode = (String) redisTemplate.opsForValue().get(USER_CODE_PREFIX + userCode);
         if (deviceCode == null) {
-            throw new IllegalArgumentException("Invalid or expired user code");
+            throw new DomainBadRequestException("error.deviceAuth.userCode.invalid");
         }
 
         DeviceCodeData data = (DeviceCodeData) redisTemplate.opsForValue().get(DEVICE_CODE_PREFIX + deviceCode);
         if (data == null) {
-            throw new IllegalArgumentException("Device code expired");
+            throw new DomainBadRequestException("error.deviceAuth.deviceCode.expired");
         }
 
         data.setStatus(DeviceCodeStatus.AUTHORIZED);
@@ -62,7 +63,7 @@ public class DeviceAuthService {
         DeviceCodeData data = (DeviceCodeData) redisTemplate.opsForValue().get(DEVICE_CODE_PREFIX + deviceCode);
 
         if (data == null) {
-            throw new IllegalArgumentException("Device code expired or invalid");
+            throw new DomainBadRequestException("error.deviceAuth.deviceCode.invalid");
         }
 
         return switch (data.getStatus()) {
@@ -73,7 +74,7 @@ public class DeviceAuthService {
                     DEVICE_CODE_PREFIX + deviceCode, data, 1, TimeUnit.MINUTES);
                 yield DeviceTokenResponse.success(null);
             }
-            case USED -> throw new IllegalStateException("Device code already used");
+            case USED -> throw new DomainBadRequestException("error.deviceAuth.deviceCode.used");
         };
     }
 
