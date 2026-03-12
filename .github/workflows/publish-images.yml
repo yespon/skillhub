@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - feature/project-init
     tags:
       - "v*.*.*"
   workflow_dispatch:
