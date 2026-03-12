@@ -48,6 +48,13 @@ Then open:
 - Web UI: `http://localhost:3000`
 - Backend API: `http://localhost:8080`
 
+Local profile seeds two mock-auth users automatically:
+
+- `local-user` for normal publishing and namespace operations
+- `local-admin` with `SUPER_ADMIN` for review and admin flows
+
+Use them with the `X-Mock-User-Id` header in local development.
+
 Stop everything with:
 
 ```bash
@@ -61,6 +68,30 @@ make dev-all-reset
 ```
 
 Run `make help` to see all available commands.
+
+### Container Runtime
+
+Published runtime images are built by GitHub Actions and pushed to GHCR.
+To start a single-node local stack from published images:
+
+```bash
+cp .env.release.example .env.release
+docker compose --env-file .env.release -f compose.release.yml up -d
+```
+
+Then open:
+
+- Web UI: `http://localhost`
+- Backend API: `http://localhost:8080`
+
+This runtime uses the existing `local,docker` profile combination so it
+is immediately usable with the same mock-auth flow as local development:
+
+- `local-user`
+- `local-admin`
+
+Pass `X-Mock-User-Id` to the backend when you need an authenticated
+session without configuring GitHub OAuth.
 
 ## Architecture
 
@@ -82,7 +113,7 @@ Run `make help` to see all available commands.
               ┌────────────┼────────────┐
               │            │            │
        ┌──────▼───┐  ┌─────▼────┐  ┌───▼────┐
-       │PostgreSQL│  │  Redis   │  │ MinIO  │
+       │PostgreSQL│  │  Redis   │  │ Storage │
        └──────────┘  └──────────┘  └────────┘
 ```
 
