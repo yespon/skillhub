@@ -33,8 +33,7 @@ firewall, with the same polish you'd expect from a public registry.
 
 ## Quick Start
 
-Start the full local stack with:
-`curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/compose.release.yml -o compose.release.yml && curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/.env.release.example -o .env.release && docker compose --env-file .env.release -f compose.release.yml up -d`
+Start the full local stack with: `curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/scripts/runtime.sh | sh -s -- up`
 
 ### Prerequisites
 
@@ -204,6 +203,12 @@ Run it against a local backend:
 
 Contributions are welcome. Please open an issue first to discuss
 what you'd like to change.
+
+- Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Code of conduct: [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
+
+- Contribution guide: [`CONTRIBUTING.md`](./CONTRIBUTING.md)
+- Code of conduct: [`CODE_OF_CONDUCT.md`](./CODE_OF_CONDUCT.md)
 
 ## License
 
