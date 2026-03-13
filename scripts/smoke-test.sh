@@ -205,7 +205,6 @@ else
   echo "FAIL: Delete label definition (got $DELETE_LABEL_STATUS)"
   FAIL=$((FAIL + 1))
 fi
-
 echo
 echo "Results: $PASS passed, $FAIL failed"
 if [[ "$FAIL" -ne 0 ]]; then
