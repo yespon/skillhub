@@ -11,6 +11,7 @@ import {
 interface User {
   displayName: string
   avatarUrl?: string
+  platformRoles?: string[]
 }
 
 interface UserMenuProps {
@@ -20,6 +21,12 @@ interface UserMenuProps {
 export function UserMenu({ user }: UserMenuProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  const hasRole = (role: string) => user.platformRoles?.includes(role) ?? false
+  const isReviewer = hasRole('SKILL_ADMIN') || hasRole('NAMESPACE_ADMIN') || hasRole('SUPER_ADMIN')
+  const isSkillAdmin = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
+  const isUserAdmin = hasRole('USER_ADMIN') || hasRole('SUPER_ADMIN')
+  const isAuditor = hasRole('AUDITOR') || hasRole('SUPER_ADMIN')
 
   const handleLogout = async () => {
     try {
@@ -69,11 +76,35 @@ export function UserMenu({ user }: UserMenuProps) {
             {t('user.menu.stars')}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/dashboard/reviews" className="cursor-pointer">
-            {t('user.menu.reviews')}
-          </Link>
-        </DropdownMenuItem>
+        {isReviewer && (
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/reviews" className="cursor-pointer">
+              {t('user.menu.reviews')}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {isSkillAdmin && (
+          <DropdownMenuItem asChild>
+            <Link to="/dashboard/promotions" className="cursor-pointer">
+              {t('user.menu.promotions')}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {(isUserAdmin || isAuditor) && <DropdownMenuSeparator />}
+        {isUserAdmin && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin/users" className="cursor-pointer">
+              {t('user.menu.users')}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {isAuditor && (
+          <DropdownMenuItem asChild>
+            <Link to="/admin/audit-log" className="cursor-pointer">
+              {t('user.menu.auditLog')}
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/settings/security" className="cursor-pointer">

@@ -46,6 +46,9 @@
       "myNamespaces": "我的命名空间",
       "stars": "我的星标",
       "reviews": "审核管理",
+      "promotions": "推广管理",
+      "users": "用户管理",
+      "auditLog": "审计日志",
       "security": "安全设置",
       "accounts": "账号合并",
       "logout": "退出登录"

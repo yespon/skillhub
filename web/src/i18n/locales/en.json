@@ -46,6 +46,9 @@
       "myNamespaces": "My Namespaces",
       "stars": "Starred",
       "reviews": "Review Management",
+      "promotions": "Promotion Management",
+      "users": "User Management",
+      "auditLog": "Audit Log",
       "security": "Security Settings",
       "accounts": "Account Merge",
       "logout": "Logout"
