@@ -25,6 +25,7 @@ export function Layout() {
   const { user, isLoading } = useAuth()
   const [isHeaderElevated, setIsHeaderElevated] = useState(false)
   const contentLayoutPathname = resolveAppMainContentPathname(pathname, resolvedPathname)
+  const isLanding = contentLayoutPathname === '/'
   const mainContentLayout = getAppMainContentLayout(contentLayoutPathname)
 
   useEffect(() => {
@@ -57,6 +58,14 @@ export function Layout() {
     if (exact) return pathname === to
     // Keep matching strict so parent dashboard paths do not highlight unrelated child links.
     return pathname === to
+  }
+
+  if (isLanding) {
+    return (
+      <Suspense fallback={null}>
+        <Outlet />
+      </Suspense>
+    )
   }
 
   return (
