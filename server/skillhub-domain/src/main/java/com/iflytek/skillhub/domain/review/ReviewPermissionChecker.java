@@ -26,9 +26,10 @@ public class ReviewPermissionChecker {
                              NamespaceType namespaceType,
                              Map<Long, NamespaceRole> userNamespaceRoles,
                              Set<String> platformRoles) {
-        // Cannot review own submission
+        // Admins can review their own submissions
         if (task.getSubmittedBy().equals(userId)) {
-            return false;
+            return platformRoles.contains("SKILL_ADMIN")
+                    || platformRoles.contains("SUPER_ADMIN");
         }
 
         return canReviewNamespace(task.getNamespaceId(), namespaceType, userNamespaceRoles, platformRoles);
