@@ -7,7 +7,7 @@ import { useNamespaceDetail, useSearchSkills } from '@/shared/hooks/use-skill-qu
 
 export function NamespacePage() {
   const navigate = useNavigate()
-  const { namespace } = useParams({ from: '/@$namespace' })
+  const { namespace } = useParams({ from: '/$namespace' })
 
   const { data: namespaceData, isLoading: isLoadingNamespace } = useNamespaceDetail(namespace)
   const { data: skillsData, isLoading: isLoadingSkills } = useSearchSkills({
