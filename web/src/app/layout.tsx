@@ -123,7 +123,7 @@ export function Layout() {
                 <li>
                   <Link
                     to="/search"
-                    search={{ q: '', sort: 'relevance', page: 1 }}
+                    search={{ q: '', sort: 'relevance', page: 0 }}
                     className="text-sm text-muted-foreground hover:text-primary transition-colors"
                   >
                     搜索技能
