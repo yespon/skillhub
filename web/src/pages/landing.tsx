@@ -161,7 +161,7 @@ export function LandingPage() {
           </div>
 
           <div className="space-y-6 max-w-5xl">
-            <h1 className="text-7xl md:text-8xl lg:text-9xl font-black tracking-tight animate-fade-up">
+            <h1 className="text-7xl md:text-8xl lg:text-9xl font-black tracking-normal animate-fade-up">
               <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-blue-400 to-violet-400">
                 SkillHub
               </span>
@@ -249,32 +249,6 @@ export function LandingPage() {
             ))}
           </div>
         </div>
-
-        <div className="py-20">
-          <div className="relative max-w-4xl mx-auto p-12 rounded-3xl bg-gradient-to-br from-cyan-500/10 to-violet-500/10 backdrop-blur-sm border border-cyan-500/30 text-center space-y-8 animate-fade-up">
-            <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-violet-500/5 rounded-3xl blur-xl" />
-            <div className="relative space-y-6">
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-100">
-                准备好开始了吗？
-              </h2>
-              <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-                一条命令即可启动本地开发环境，体验完整的技能管理流程
-              </p>
-              <div className="inline-block p-4 rounded-xl bg-slate-900/80 backdrop-blur-sm border border-slate-700/50">
-                <code className="text-cyan-400 text-lg font-mono">make dev-all</code>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
-                <Button
-                  size="lg"
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-semibold px-8 py-6 text-lg rounded-xl shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all duration-300 hover:scale-105"
-                  onClick={() => navigate({ to: '/search', search: { q: '', sort: 'relevance', page: 0 } })}
-                >
-                  立即体验
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="relative z-10 border-t border-slate-800/50 backdrop-blur-sm">
@@ -282,9 +256,7 @@ export function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-slate-400 text-sm">
             <div>© 2026 SkillHub. MIT License.</div>
             <div className="flex items-center gap-6">
-              <a href="#" className="hover:text-cyan-400 transition-colors">文档</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">GitHub</a>
-              <a href="#" className="hover:text-cyan-400 transition-colors">社区</a>
+              <a href="https://github.com/iflytek/skillhub" target="_blank" rel="noopener noreferrer" className="hover:text-cyan-400 transition-colors">GitHub</a>
             </div>
           </div>
         </div>
