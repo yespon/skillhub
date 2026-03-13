@@ -1,0 +1,63 @@
+{
+  "nav": {
+    "home": "Home",
+    "search": "Search Skills",
+    "dashboard": "Dashboard",
+    "login": "Login"
+  },
+  "landing": {
+    "hero": {
+      "title": "Discover & Share AI Skills",
+      "subtitle": "Build powerful AI agents with community-driven skills",
+      "searchPlaceholder": "Search skills...",
+      "exploreSkills": "Explore Skills"
+    },
+    "features": {
+      "secure": {
+        "title": "Secure & Private",
+        "description": "Enterprise-grade security for your AI workflows"
+      },
+      "community": {
+        "title": "Community Driven",
+        "description": "Share and discover skills from developers worldwide"
+      },
+      "integration": {
+        "title": "Easy Integration",
+        "description": "Seamlessly integrate with your existing tools"
+      }
+    }
+  },
+  "search": {
+    "title": "Search Skills",
+    "placeholder": "Search skills...",
+    "sort": {
+      "relevance": "Relevance",
+      "downloads": "Downloads",
+      "stars": "Stars",
+      "newest": "Newest"
+    },
+    "noResults": "No skills found",
+    "results": "{{count}} skills found"
+  },
+  "user": {
+    "menu": {
+      "dashboard": "Dashboard",
+      "mySkills": "My Skills",
+      "myNamespaces": "My Namespaces",
+      "stars": "Starred",
+      "reviews": "Reviews",
+      "security": "Security Settings",
+      "accounts": "Account Merge",
+      "logout": "Logout"
+    }
+  },
+  "footer": {
+    "resources": "Resources",
+    "docs": "Documentation",
+    "api": "API",
+    "community": "Community",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "copyright": "© 2024 SkillHub. All rights reserved."
+  }
+}
