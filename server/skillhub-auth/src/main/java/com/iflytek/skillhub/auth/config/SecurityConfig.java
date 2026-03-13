@@ -104,7 +104,46 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .csrfTokenRequestHandler(csrfHandler)
+<<<<<<< HEAD
                 .ignoringRequestMatchers(csrfIgnoreMatcher)
+=======
+                .ignoringRequestMatchers("/api/v1/cli/**", "/api/compat/**")
+            )
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/v1/health",
+                    "/api/v1/auth/providers",
+                    "/api/v1/auth/me",
+                    "/api/v1/auth/local/**",
+                    "/api/v1/cli/auth/device/**",
+                    "/api/v1/cli/check",
+                    "/actuator/health",
+                    "/actuator/prometheus",
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/.well-known/**",
+                    "/api/compat/v1/search",
+                    "/api/compat/v1/resolve/**"
+                ).permitAll()
+                .requestMatchers(HttpMethod.GET,
+                    "/api/v1/skills",
+                    "/api/v1/skills/*/*",
+                    "/api/v1/skills/*/*/versions",
+                    "/api/v1/skills/*/*/versions/*",
+                    "/api/v1/skills/*/*/versions/*/files",
+                    "/api/v1/skills/*/*/versions/*/file",
+                    "/api/v1/skills/*/*/resolve",
+                    "/api/v1/skills/*/*/download",
+                    "/api/v1/skills/*/*/versions/*/download",
+                    "/api/v1/skills/*/*/tags",
+                    "/api/v1/skills/*/*/tags/*/files",
+                    "/api/v1/skills/*/*/tags/*/file",
+                    "/api/v1/skills/*/*/tags/*/download"
+                ).permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/namespaces", "/api/v1/namespaces/*").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "SKILL_ADMIN", "USER_ADMIN", "AUDITOR")
+                .anyRequest().authenticated()
+>>>>>>> c5f5e2c (fix(ops): align smoke test with csrf and metrics access)
             )
             .authorizeHttpRequests(auth -> {
                 configureRoutePolicies(auth);
