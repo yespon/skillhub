@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useParams, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
@@ -19,6 +20,7 @@ import {
 } from '@/shared/hooks/use-skill-queries'
 
 export function SkillDetailPage() {
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const location = useRouterState({ select: (s) => s.location })
   const queryClient = useQueryClient()
@@ -84,8 +86,8 @@ export function SkillDetailPage() {
   if (!skill) {
     return (
       <div className="text-center py-20 animate-fade-up">
-        <h2 className="text-2xl font-bold font-heading mb-2">技能不存在</h2>
-        <p className="text-muted-foreground">该技能可能已被删除或从未存在</p>
+        <h2 className="text-2xl font-bold font-heading mb-2">{t('skillDetail.notFound')}</h2>
+        <p className="text-muted-foreground">{t('skillDetail.notFoundDesc')}</p>
       </div>
     )
   }
@@ -106,9 +108,9 @@ export function SkillDetailPage() {
 
         <Tabs defaultValue="readme">
           <TabsList>
-            <TabsTrigger value="readme">README</TabsTrigger>
-            <TabsTrigger value="files">文件</TabsTrigger>
-            <TabsTrigger value="versions">版本</TabsTrigger>
+            <TabsTrigger value="readme">{t('skillDetail.tabReadme')}</TabsTrigger>
+            <TabsTrigger value="files">{t('skillDetail.tabFiles')}</TabsTrigger>
+            <TabsTrigger value="versions">{t('skillDetail.tabVersions')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="readme" className="mt-6">
@@ -118,7 +120,7 @@ export function SkillDetailPage() {
               </Card>
             ) : (
               <Card className="p-8 text-muted-foreground text-center">
-                暂无 README
+                {t('skillDetail.noReadme')}
               </Card>
             )}
           </TabsContent>
@@ -128,7 +130,7 @@ export function SkillDetailPage() {
               <FileTree files={files} />
             ) : (
               <Card className="p-8 text-muted-foreground text-center">
-                暂无文件
+                {t('skillDetail.noFiles')}
               </Card>
             )}
           </TabsContent>
@@ -146,14 +148,14 @@ export function SkillDetailPage() {
                           </span>
                         </span>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(version.publishedAt).toLocaleDateString('zh-CN')}
+                          {new Date(version.publishedAt).toLocaleDateString(i18n.language)}
                         </span>
                       </div>
                       {version.changelog && (
                         <p className="text-sm text-muted-foreground leading-relaxed">{version.changelog}</p>
                       )}
                       <div className="text-xs text-muted-foreground mt-2 flex items-center gap-3">
-                        <span>{version.fileCount} 个文件</span>
+                        <span>{t('skillDetail.fileCount', { count: version.fileCount })}</span>
                         <span className="w-1 h-1 rounded-full bg-muted-foreground/40" />
                         <span>{(version.totalSize / 1024).toFixed(1)} KB</span>
                       </div>
@@ -161,7 +163,7 @@ export function SkillDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div className="text-muted-foreground text-center py-8">暂无版本</div>
+                <div className="text-muted-foreground text-center py-8">{t('skillDetail.noVersions')}</div>
               )}
             </Card>
           </TabsContent>
@@ -172,7 +174,7 @@ export function SkillDetailPage() {
       <div className="space-y-5">
         <Card className="p-5 space-y-5">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">版本</div>
+            <div className="text-sm text-muted-foreground">{t('skillDetail.version')}</div>
             <div className="font-semibold font-mono text-foreground">
               {skill.latestVersion ? `v${skill.latestVersion}` : '—'}
             </div>
@@ -181,23 +183,23 @@ export function SkillDetailPage() {
           <div className="h-px bg-border/40" />
 
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">下载量</div>
+            <div className="text-sm text-muted-foreground">{t('skillDetail.downloads')}</div>
             <div className="font-semibold text-foreground">{skill.downloadCount.toLocaleString()}</div>
           </div>
 
           <div className="h-px bg-border/40" />
 
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">评分</div>
+            <div className="text-sm text-muted-foreground">{t('skillDetail.rating')}</div>
             <div className="font-semibold text-foreground">
-              {skill.ratingCount > 0 && skill.ratingAvg !== undefined ? `${skill.ratingAvg.toFixed(1)} / 5` : '暂无'}
+              {skill.ratingCount > 0 && skill.ratingAvg !== undefined ? `${skill.ratingAvg.toFixed(1)} / 5` : t('skillDetail.ratingNone')}
             </div>
           </div>
 
           <div className="h-px bg-border/40" />
 
           <div className="flex items-center justify-between">
-            <div className="text-sm text-muted-foreground">命名空间</div>
+            <div className="text-sm text-muted-foreground">{t('skillDetail.namespaceLabel')}</div>
             <NamespaceBadge type="GLOBAL" name={namespace} />
           </div>
 
@@ -207,14 +209,14 @@ export function SkillDetailPage() {
             <StarButton skillId={skill.id} starCount={skill.starCount} onRequireLogin={requireLogin} />
             <RatingInput skillId={skill.id} onRequireLogin={requireLogin} />
             {!user && (
-              <p className="text-xs text-muted-foreground">登录后可以收藏和评分</p>
+              <p className="text-xs text-muted-foreground">{t('skillDetail.loginToRate')}</p>
             )}
           </div>
         </Card>
 
         {skill.latestVersion && (
           <Card className="p-5 space-y-4">
-            <div className="text-sm font-semibold font-heading text-foreground">安装</div>
+            <div className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.install')}</div>
             <InstallCommand
               namespace={namespace}
               slug={slug}
@@ -233,25 +235,25 @@ export function SkillDetailPage() {
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
           </svg>
-          下载
+          {t('skillDetail.download')}
         </Button>
 
         {governanceVisible && (
           <Card className="p-5 space-y-3">
-            <div className="text-sm font-semibold font-heading text-foreground">治理操作</div>
+            <div className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.governance')}</div>
             <div className="flex flex-col gap-3">
               {!skill.hidden ? (
                 <Button variant="outline" onClick={() => hideMutation.mutate()} disabled={hideMutation.isPending}>
-                  {hideMutation.isPending ? '处理中...' : '隐藏技能'}
+                  {hideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.hideSkill')}
                 </Button>
               ) : (
                 <Button variant="outline" onClick={() => unhideMutation.mutate()} disabled={unhideMutation.isPending}>
-                  {unhideMutation.isPending ? '处理中...' : '恢复技能'}
+                  {unhideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.unhideSkill')}
                 </Button>
               )}
               {latestVersion && (
                 <Button variant="destructive" onClick={() => yankMutation.mutate()} disabled={yankMutation.isPending}>
-                  {yankMutation.isPending ? '处理中...' : '撤回当前版本'}
+                  {yankMutation.isPending ? t('skillDetail.processing') : t('skillDetail.yankVersion')}
                 </Button>
               )}
             </div>

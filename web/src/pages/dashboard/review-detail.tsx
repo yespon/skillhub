@@ -12,7 +12,7 @@ import { useReviewDetail, useApproveReview, useRejectReview } from '@/features/r
 export function ReviewDetailPage() {
   const { id } = useParams({ from: '/dashboard/reviews/$id' })
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const taskId = Number(id)
 
   const { data: review, isLoading } = useReviewDetail(taskId)
@@ -25,7 +25,7 @@ export function ReviewDetailPage() {
   const [rejectDialog, setRejectDialog] = useState(false)
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('zh-CN')
+    return new Date(dateString).toLocaleString(i18n.language)
   }
 
   const handleApprove = async () => {

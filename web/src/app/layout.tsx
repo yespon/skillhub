@@ -78,7 +78,7 @@ export function Layout() {
                 <span className="text-xl font-bold font-heading text-foreground">SkillHub</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-sm">
-                现代化的技能注册中心，为开发者提供高效的技能管理和分发平台。
+                {t('layout.footerDescription')}
               </p>
             </div>
 
