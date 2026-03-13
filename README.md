@@ -100,6 +100,12 @@ curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- u
 
 If deployment runs into problems, clear the existing runtime home and retry.
 
+Alternative one-line Docker Compose quick start:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/compose.release.yml -o compose.release.yml && curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/.env.release.example -o .env.release && docker compose --env-file .env.release -f compose.release.yml up -d
+```
+
 ### Prerequisites
 
 - Docker & Docker Compose
