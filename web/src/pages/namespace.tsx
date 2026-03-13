@@ -34,19 +34,19 @@ export function NamespacePage() {
     const nextLabels = selectedLabels.includes(label)
       ? selectedLabels.filter((item) => item !== label)
       : normalizeSearchLabels([...selectedLabels, label])
-    navigate({ to: '/space/$namespace', params: { namespace }, search: { labels: nextLabels, labelMode } })
+    navigate({ to: `/space/${encodeURIComponent(namespace)}`, search: { labels: nextLabels, labelMode } })
   }
 
   const handleLabelModeChange = (mode: 'any' | 'all') => {
-    navigate({ to: '/space/$namespace', params: { namespace }, search: { labels: selectedLabels, labelMode: mode } })
+    navigate({ to: `/space/${encodeURIComponent(namespace)}`, search: { labels: selectedLabels, labelMode: mode } })
   }
 
   const handleClearLabels = () => {
-    navigate({ to: '/space/$namespace', params: { namespace }, search: { labels: [], labelMode: 'any' } })
+    navigate({ to: `/space/${encodeURIComponent(namespace)}`, search: { labels: [], labelMode: 'any' } })
   }
 
   const handleSkillClick = (slug: string) => {
-    navigate({ to: `/space/${namespace}/${slug}` })
+    navigate({ to: `/space/${namespace}/${encodeURIComponent(slug)}` })
   }
 
   if (isLoadingNamespace) {
