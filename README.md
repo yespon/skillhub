@@ -33,7 +33,8 @@ firewall, with the same polish you'd expect from a public registry.
 
 ## Quick Start
 
-Start all local services with the one-command script: `make dev-all`.
+Start the full local stack with:
+`curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/compose.release.yml -o compose.release.yml && curl -fsSL https://raw.githubusercontent.com/iflytek/skillhub/main/.env.release.example -o .env.release && docker compose --env-file .env.release -f compose.release.yml up -d`
 
 ### Prerequisites
 
