@@ -426,7 +426,7 @@
     "creating": "Creating...",
     "create": "Create",
     "successTitle": "Token Created",
-    "successDescription": "Copy and save this token now. It will only be shown once.",
+    "successDescription": "Copy and save this token now. It is only shown and copyable at creation time. If you need it again later, create a new token.",
     "tokenLabel": "Token",
     "nameDisplay": "Name",
     "expirationLabel": "Expiration",
@@ -565,7 +565,7 @@
   "token": {
     "title": "API Tokens",
     "createNew": "Create Token",
-    "copyHint": "For security reasons, token plaintext is shown only once at creation time. If you lose it, create a new token.",
+    "copyHint": "For security reasons, token plaintext can only be copied once when it is created. It cannot be viewed or copied again later. If you still need it, create a new token.",
     "empty": "No tokens created yet",
     "emptyHint": "Click the button above to create your first token",
     "name": "Name",

@@ -23,12 +23,11 @@ import { resolveTokenExpiresAt, toLocalDateTimeInputValue, type TokenExpirationM
 interface CreateTokenDialogProps {
   children: React.ReactNode
   existingNames?: string[]
-  onCreated?: (token: CreateTokenResponse) => void
 }
 
 const MAX_TOKEN_NAME_LENGTH = 64
 
-export function CreateTokenDialog({ children, existingNames = [], onCreated }: CreateTokenDialogProps) {
+export function CreateTokenDialog({ children, existingNames = [] }: CreateTokenDialogProps) {
   const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
@@ -54,7 +53,6 @@ export function CreateTokenDialog({ children, existingNames = [], onCreated }: C
       setCustomExpiresAt('')
       setExpiresAtError(null)
       queryClient.invalidateQueries({ queryKey: ['tokens'] })
-      onCreated?.(data)
     },
   })
 

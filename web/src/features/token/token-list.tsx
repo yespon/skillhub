@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Copy, Pencil } from 'lucide-react'
+import { Pencil } from 'lucide-react'
 import { tokenApi } from '@/api/client'
 import { Button } from '@/shared/ui/button'
 import {
@@ -31,7 +31,6 @@ export function TokenList() {
   const { t, i18n } = useTranslation()
   const queryClient = useQueryClient()
   const [page, setPage] = useState(0)
-  const [createdTokens, setCreatedTokens] = useState<Record<number, string>>({})
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; tokenId?: number; name?: string }>({
     open: false,
   })
@@ -113,21 +112,6 @@ export function TokenList() {
     setDeleteDialog({ open: true, tokenId, name })
   }
 
-  const handleCopyToken = async (tokenId: number) => {
-    const rawToken = createdTokens[tokenId]
-    if (!rawToken) {
-      toast.info(t('token.copyUnavailableTitle'), t('token.copyUnavailableDescription'), centeredToastOptions())
-      return
-    }
-
-    try {
-      await navigator.clipboard.writeText(rawToken)
-      toast.success(t('token.copySuccess'), undefined, centeredToastOptions())
-    } catch {
-      toast.error(t('token.copyFailed'), undefined, centeredToastOptions())
-    }
-  }
-
   const handleEditExpiration = (token: ApiToken) => {
     setExpirationDialog({
       open: true,
@@ -193,12 +177,7 @@ export function TokenList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">{t('token.title')}</h2>
-        <CreateTokenDialog
-          existingNames={tokens.map((token) => token.name)}
-          onCreated={(token) => {
-            setCreatedTokens((current) => ({ ...current, [token.id]: token.token }))
-          }}
-        >
+        <CreateTokenDialog existingNames={tokens.map((token) => token.name)}>
           <Button>{t('token.createNew')}</Button>
         </CreateTokenDialog>
       </div>
@@ -236,15 +215,6 @@ export function TokenList() {
                   <TableCell>{formatDate(token.expiresAt, t('token.neverExpires'))}</TableCell>
                   <TableCell className="text-center">
                     <div className="flex justify-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleCopyToken(token.id)}
-                        aria-label={createdTokens[token.id] ? t('token.copy') : t('token.copyUnavailableTitle')}
-                      >
-                        <Copy className="mr-1 h-4 w-4" />
-                        {t('token.copy')}
-                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
