@@ -112,14 +112,14 @@ export function DashboardPage() {
           <Card>
             <CardContent className="p-4">
               {isLoadingSkills ? (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {Array.from({ length: DASHBOARD_PREVIEW_LIMIT + 1 }).map((_, index) => (
                     <div key={index} className="h-20 animate-shimmer rounded-lg" />
                   ))}
                 </div>
               ) : skillPreview.items.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {skillPreview.items.map((skill) => (
                       <Link
                         key={skill.id}
