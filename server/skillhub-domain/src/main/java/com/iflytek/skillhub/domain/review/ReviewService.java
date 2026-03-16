@@ -154,6 +154,9 @@ public class ReviewService {
 
         SkillVersion skillVersion = skillVersionRepository.findById(task.getSkillVersionId())
                 .orElseThrow(() -> new DomainNotFoundException("skill_version.not_found", task.getSkillVersionId()));
+        if (skillVersion.getStatus() != SkillVersionStatus.PENDING_REVIEW) {
+            throw new DomainBadRequestException("review.not_pending", reviewTaskId);
+        }
 
         Skill skill = skillRepository.findById(skillVersion.getSkillId())
                 .orElseThrow(() -> new DomainNotFoundException("skill.not_found", skillVersion.getSkillId()));

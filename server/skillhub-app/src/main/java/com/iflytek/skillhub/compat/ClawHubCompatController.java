@@ -23,6 +23,7 @@ import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillPublishService;
 import com.iflytek.skillhub.domain.skill.service.SkillQueryService;
+import com.iflytek.skillhub.domain.skill.service.SkillSlugResolutionService;
 import com.iflytek.skillhub.domain.social.SkillStarService;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
 import com.iflytek.skillhub.service.SkillSearchAppService;
@@ -55,6 +56,7 @@ public class ClawHubCompatController {
     private final NamespaceRepository namespaceRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final SkillStarService skillStarService;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public ClawHubCompatController(CanonicalSlugMapper mapper,
                                    SkillSearchAppService skillSearchAppService,
@@ -66,7 +68,8 @@ public class ClawHubCompatController {
                                    SkillRepository skillRepository,
                                    NamespaceRepository namespaceRepository,
                                    SkillVersionRepository skillVersionRepository,
-                                   SkillStarService skillStarService) {
+                                   SkillStarService skillStarService,
+                                   SkillSlugResolutionService skillSlugResolutionService) {
         this.mapper = mapper;
         this.skillSearchAppService = skillSearchAppService;
         this.skillQueryService = skillQueryService;
@@ -78,6 +81,7 @@ public class ClawHubCompatController {
         this.namespaceRepository = namespaceRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.skillStarService = skillStarService;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     @GetMapping("/search")
@@ -420,24 +424,14 @@ public class ClawHubCompatController {
     }
 
     private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        java.util.List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
+        try {
+            return skillSlugResolutionService.resolve(
+                    namespaceId,
+                    slug,
+                    currentUserId,
+                    SkillSlugResolutionService.Preference.PUBLISHED);
+        } catch (com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException ex) {
             throw new DomainNotFoundException("error.skill.notFound", slug);
         }
-        java.util.Optional<Skill> published = skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst();
-        if (published.isPresent()) {
-            return published.get();
-        }
-        if (currentUserId != null) {
-            java.util.Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-        return skills.get(0);
     }
 }

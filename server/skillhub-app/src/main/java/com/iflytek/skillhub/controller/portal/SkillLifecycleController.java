@@ -8,11 +8,11 @@ import com.iflytek.skillhub.domain.namespace.NamespaceRole;
 import com.iflytek.skillhub.domain.review.ReviewService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.skill.Skill;
-import com.iflytek.skillhub.domain.skill.SkillRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.service.SkillGovernanceService;
 import com.iflytek.skillhub.domain.skill.service.SkillPublishService;
+import com.iflytek.skillhub.domain.skill.service.SkillSlugResolutionService;
 import com.iflytek.skillhub.dto.AdminSkillActionRequest;
 import com.iflytek.skillhub.dto.ApiResponse;
 import com.iflytek.skillhub.dto.ApiResponseFactory;
@@ -34,29 +34,29 @@ import org.springframework.web.bind.annotation.RestController;
 public class SkillLifecycleController extends BaseApiController {
 
     private final NamespaceRepository namespaceRepository;
-    private final SkillRepository skillRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final SkillGovernanceService skillGovernanceService;
     private final ReviewService reviewService;
     private final SkillPublishService skillPublishService;
     private final AuditLogService auditLogService;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public SkillLifecycleController(NamespaceRepository namespaceRepository,
-                                    SkillRepository skillRepository,
                                     SkillVersionRepository skillVersionRepository,
                                     SkillGovernanceService skillGovernanceService,
                                     ReviewService reviewService,
                                     SkillPublishService skillPublishService,
                                     AuditLogService auditLogService,
+                                    SkillSlugResolutionService skillSlugResolutionService,
                                     ApiResponseFactory responseFactory) {
         super(responseFactory);
         this.namespaceRepository = namespaceRepository;
-        this.skillRepository = skillRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.skillGovernanceService = skillGovernanceService;
         this.reviewService = reviewService;
         this.skillPublishService = skillPublishService;
         this.auditLogService = auditLogService;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     @PostMapping("/{namespace}/{slug}/archive")
@@ -189,24 +189,10 @@ public class SkillLifecycleController extends BaseApiController {
     }
 
     private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        java.util.List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
-            throw new DomainBadRequestException("error.skill.notFound", slug);
-        }
-        java.util.Optional<Skill> published = skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst();
-        if (published.isPresent()) {
-            return published.get();
-        }
-        if (currentUserId != null) {
-            java.util.Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-        return skills.get(0);
+        return skillSlugResolutionService.resolve(
+                namespaceId,
+                slug,
+                currentUserId,
+                SkillSlugResolutionService.Preference.CURRENT_USER);
     }
 }
