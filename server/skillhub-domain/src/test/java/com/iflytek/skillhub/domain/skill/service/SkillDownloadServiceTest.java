@@ -46,9 +46,11 @@ class SkillDownloadServiceTest {
     private ApplicationEventPublisher eventPublisher;
 
     private SkillDownloadService service;
+    private SkillSlugResolutionService skillSlugResolutionService;
 
     @BeforeEach
     void setUp() {
+        skillSlugResolutionService = new SkillSlugResolutionService(skillRepository);
         service = new SkillDownloadService(
                 namespaceRepository,
                 skillRepository,
@@ -56,7 +58,8 @@ class SkillDownloadServiceTest {
                 skillTagRepository,
                 objectStorageService,
                 visibilityChecker,
-                eventPublisher
+                eventPublisher,
+                skillSlugResolutionService
         );
     }
 

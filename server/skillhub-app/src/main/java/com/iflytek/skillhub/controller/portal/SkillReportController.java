@@ -6,7 +6,7 @@ import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.report.SkillReportService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.skill.Skill;
-import com.iflytek.skillhub.domain.skill.SkillRepository;
+import com.iflytek.skillhub.domain.skill.service.SkillSlugResolutionService;
 import com.iflytek.skillhub.dto.ApiResponse;
 import com.iflytek.skillhub.dto.ApiResponseFactory;
 import com.iflytek.skillhub.dto.SkillReportMutationResponse;
@@ -24,17 +24,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class SkillReportController extends BaseApiController {
 
     private final NamespaceRepository namespaceRepository;
-    private final SkillRepository skillRepository;
     private final SkillReportService skillReportService;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public SkillReportController(NamespaceRepository namespaceRepository,
-                                 SkillRepository skillRepository,
                                  SkillReportService skillReportService,
+                                 SkillSlugResolutionService skillSlugResolutionService,
                                  ApiResponseFactory responseFactory) {
         super(responseFactory);
         this.namespaceRepository = namespaceRepository;
-        this.skillRepository = skillRepository;
         this.skillReportService = skillReportService;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     @PostMapping("/{namespace}/{slug}/reports")
@@ -59,28 +59,10 @@ public class SkillReportController extends BaseApiController {
         String cleanNamespace = namespaceSlug.startsWith("@") ? namespaceSlug.substring(1) : namespaceSlug;
         Namespace namespace = namespaceRepository.findBySlug(cleanNamespace)
                 .orElseThrow(() -> new DomainBadRequestException("error.namespace.slug.notFound", cleanNamespace));
-        return resolveVisibleSkill(namespace.getId(), skillSlug, currentUserId);
-    }
-
-    private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        java.util.List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
-            throw new DomainBadRequestException("error.skill.notFound", slug);
-        }
-        java.util.Optional<Skill> published = skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst();
-        if (published.isPresent()) {
-            return published.get();
-        }
-        if (currentUserId != null) {
-            java.util.Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-        return skills.get(0);
+        return skillSlugResolutionService.resolve(
+                namespace.getId(),
+                skillSlug,
+                currentUserId,
+                SkillSlugResolutionService.Preference.PUBLISHED);
     }
 }

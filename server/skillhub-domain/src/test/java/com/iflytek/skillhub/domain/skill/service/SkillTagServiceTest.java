@@ -39,16 +39,19 @@ class SkillTagServiceTest {
     private VisibilityChecker visibilityChecker;
 
     private SkillTagService service;
+    private SkillSlugResolutionService skillSlugResolutionService;
 
     @BeforeEach
     void setUp() {
+        skillSlugResolutionService = new SkillSlugResolutionService(skillRepository);
         service = new SkillTagService(
                 namespaceRepository,
                 namespaceMemberRepository,
                 skillRepository,
                 skillVersionRepository,
                 skillTagRepository,
-                visibilityChecker
+                visibilityChecker,
+                skillSlugResolutionService
         );
     }
 

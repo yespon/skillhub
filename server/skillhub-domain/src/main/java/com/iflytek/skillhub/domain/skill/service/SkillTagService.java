@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SkillTagService {
@@ -24,6 +23,7 @@ public class SkillTagService {
     private final SkillVersionRepository skillVersionRepository;
     private final SkillTagRepository skillTagRepository;
     private final VisibilityChecker visibilityChecker;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public SkillTagService(
             NamespaceRepository namespaceRepository,
@@ -31,13 +31,15 @@ public class SkillTagService {
             SkillRepository skillRepository,
             SkillVersionRepository skillVersionRepository,
             SkillTagRepository skillTagRepository,
-            VisibilityChecker visibilityChecker) {
+            VisibilityChecker visibilityChecker,
+            SkillSlugResolutionService skillSlugResolutionService) {
         this.namespaceRepository = namespaceRepository;
         this.namespaceMemberRepository = namespaceMemberRepository;
         this.skillRepository = skillRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.skillTagRepository = skillTagRepository;
         this.visibilityChecker = visibilityChecker;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     public List<SkillTag> listTags(String namespaceSlug,
@@ -124,25 +126,11 @@ public class SkillTagService {
     }
 
     private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
-            throw new DomainBadRequestException("error.skill.notFound", slug);
-        }
-        Optional<Skill> published = skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst();
-        if (published.isPresent()) {
-            return published.get();
-        }
-        if (currentUserId != null) {
-            Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-        return skills.get(0);
+        return skillSlugResolutionService.resolve(
+                namespaceId,
+                slug,
+                currentUserId,
+                SkillSlugResolutionService.Preference.CURRENT_USER);
     }
 
     private void assertAdminOrOwner(Long namespaceId, String operatorId) {

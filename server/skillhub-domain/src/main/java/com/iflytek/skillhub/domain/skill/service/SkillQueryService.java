@@ -40,6 +40,7 @@ public class SkillQueryService {
     private final ObjectStorageService objectStorageService;
     private final VisibilityChecker visibilityChecker;
     private final PromotionRequestRepository promotionRequestRepository;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public SkillQueryService(
             NamespaceRepository namespaceRepository,
@@ -49,7 +50,8 @@ public class SkillQueryService {
             SkillTagRepository skillTagRepository,
             ObjectStorageService objectStorageService,
             VisibilityChecker visibilityChecker,
-            PromotionRequestRepository promotionRequestRepository) {
+            PromotionRequestRepository promotionRequestRepository,
+            SkillSlugResolutionService skillSlugResolutionService) {
         this.namespaceRepository = namespaceRepository;
         this.skillRepository = skillRepository;
         this.skillVersionRepository = skillVersionRepository;
@@ -58,6 +60,7 @@ public class SkillQueryService {
         this.objectStorageService = objectStorageService;
         this.visibilityChecker = visibilityChecker;
         this.promotionRequestRepository = promotionRequestRepository;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     public record SkillDetailDTO(
@@ -345,24 +348,11 @@ public class SkillQueryService {
     }
 
     private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
-            throw new DomainBadRequestException("error.skill.notFound", slug);
-        }
-
-        if (currentUserId != null) {
-            Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-
-        return skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst()
-                .orElseThrow(() -> new DomainBadRequestException("error.skill.notFound", slug));
+        return skillSlugResolutionService.resolve(
+                namespaceId,
+                slug,
+                currentUserId,
+                SkillSlugResolutionService.Preference.CURRENT_USER);
     }
 
     private SkillVersion findVersion(Skill skill, String version) {

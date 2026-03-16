@@ -320,6 +320,24 @@ class ReviewServiceTest {
         }
 
         @Test
+        void shouldRejectApproveWhenSkillVersionWasWithdrawnBackToDraft() {
+            ReviewTask task = createPendingReviewTask();
+            Namespace ns = createTeamNamespace();
+            SkillVersion sv = createPendingReviewSkillVersion();
+            sv.setStatus(SkillVersionStatus.DRAFT);
+
+            when(reviewTaskRepository.findById(REVIEW_TASK_ID)).thenReturn(Optional.of(task));
+            when(namespaceRepository.findById(NAMESPACE_ID)).thenReturn(Optional.of(ns));
+            when(permissionChecker.canReview(any(), any(), any(), anyMap(), anySet())).thenReturn(true);
+            when(reviewTaskRepository.updateStatusWithVersion(any(), any(), any(), any(), any())).thenReturn(1);
+            when(skillVersionRepository.findById(SKILL_VERSION_ID)).thenReturn(Optional.of(sv));
+
+            assertThrows(DomainBadRequestException.class,
+                    () -> reviewService.approveReview(REVIEW_TASK_ID, REVIEWER_ID, "ok",
+                            Map.of(NAMESPACE_ID, NamespaceRole.ADMIN), Set.of()));
+        }
+
+        @Test
         void shouldThrowWhenNoPermission() {
             ReviewTask task = createPendingReviewTask();
             Namespace ns = createTeamNamespace();

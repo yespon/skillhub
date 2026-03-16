@@ -14,9 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class SkillDownloadService {
@@ -28,6 +26,7 @@ public class SkillDownloadService {
     private final ObjectStorageService objectStorageService;
     private final VisibilityChecker visibilityChecker;
     private final ApplicationEventPublisher eventPublisher;
+    private final SkillSlugResolutionService skillSlugResolutionService;
 
     public SkillDownloadService(
             NamespaceRepository namespaceRepository,
@@ -36,7 +35,8 @@ public class SkillDownloadService {
             SkillTagRepository skillTagRepository,
             ObjectStorageService objectStorageService,
             VisibilityChecker visibilityChecker,
-            ApplicationEventPublisher eventPublisher) {
+            ApplicationEventPublisher eventPublisher,
+            SkillSlugResolutionService skillSlugResolutionService) {
         this.namespaceRepository = namespaceRepository;
         this.skillRepository = skillRepository;
         this.skillVersionRepository = skillVersionRepository;
@@ -44,6 +44,7 @@ public class SkillDownloadService {
         this.objectStorageService = objectStorageService;
         this.visibilityChecker = visibilityChecker;
         this.eventPublisher = eventPublisher;
+        this.skillSlugResolutionService = skillSlugResolutionService;
     }
 
     public record DownloadResult(
@@ -155,25 +156,11 @@ public class SkillDownloadService {
     }
 
     private Skill resolveVisibleSkill(Long namespaceId, String slug, String currentUserId) {
-        List<Skill> skills = skillRepository.findByNamespaceIdAndSlug(namespaceId, slug);
-        if (skills.isEmpty()) {
-            throw new DomainBadRequestException("error.skill.notFound", slug);
-        }
-        Optional<Skill> published = skills.stream()
-                .filter(s -> s.getLatestVersionId() != null)
-                .findFirst();
-        if (published.isPresent()) {
-            return published.get();
-        }
-        if (currentUserId != null) {
-            Optional<Skill> ownSkill = skills.stream()
-                    .filter(s -> currentUserId.equals(s.getOwnerId()))
-                    .findFirst();
-            if (ownSkill.isPresent()) {
-                return ownSkill.get();
-            }
-        }
-        return skills.get(0);
+        return skillSlugResolutionService.resolve(
+                namespaceId,
+                slug,
+                currentUserId,
+                SkillSlugResolutionService.Preference.CURRENT_USER);
     }
 
     private void assertPublishedAccessible(Skill skill) {
