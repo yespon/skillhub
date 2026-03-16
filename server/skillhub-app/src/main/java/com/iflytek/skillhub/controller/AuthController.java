@@ -5,6 +5,9 @@ import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.auth.rbac.PlatformRoleDefaults;
 import com.iflytek.skillhub.auth.repository.UserRoleBindingRepository;
 import com.iflytek.skillhub.auth.session.PlatformSessionService;
+import com.iflytek.skillhub.domain.user.UserAccount;
+import com.iflytek.skillhub.domain.user.UserAccountRepository;
+import com.iflytek.skillhub.domain.user.UserStatus;
 import com.iflytek.skillhub.dto.ApiResponse;
 import com.iflytek.skillhub.dto.ApiResponseFactory;
 import com.iflytek.skillhub.dto.AuthMeResponse;
@@ -45,6 +48,7 @@ public class AuthController extends BaseApiController {
     private final AuthFailureThrottleService authFailureThrottleService;
     private final UserRoleBindingRepository userRoleBindingRepository;
     private final PlatformSessionService platformSessionService;
+    private final UserAccountRepository userAccountRepository;
 
     public AuthController(ApiResponseFactory responseFactory,
                           AuthMethodCatalog authMethodCatalog,
@@ -52,7 +56,8 @@ public class AuthController extends BaseApiController {
                           DirectAuthService directAuthService,
                           AuthFailureThrottleService authFailureThrottleService,
                           UserRoleBindingRepository userRoleBindingRepository,
-                          PlatformSessionService platformSessionService) {
+                          PlatformSessionService platformSessionService,
+                          UserAccountRepository userAccountRepository) {
         super(responseFactory);
         this.authMethodCatalog = authMethodCatalog;
         this.sessionBootstrapService = sessionBootstrapService;
@@ -60,6 +65,7 @@ public class AuthController extends BaseApiController {
         this.authFailureThrottleService = authFailureThrottleService;
         this.userRoleBindingRepository = userRoleBindingRepository;
         this.platformSessionService = platformSessionService;
+        this.userAccountRepository = userAccountRepository;
     }
 
     @GetMapping("/me")
@@ -67,6 +73,11 @@ public class AuthController extends BaseApiController {
                                           Authentication authentication,
                                           HttpServletRequest request) {
         if (principal == null || authentication == null || !authentication.isAuthenticated()) {
+            throw new UnauthorizedException("error.auth.required");
+        }
+        UserAccount user = userAccountRepository.findById(principal.userId()).orElse(null);
+        if (user == null || user.getStatus() == UserStatus.DISABLED) {
+            request.getSession().invalidate();
             throw new UnauthorizedException("error.auth.required");
         }
         Set<String> freshRoles = PlatformRoleDefaults.withDefaultUserRole(
