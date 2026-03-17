@@ -203,6 +203,35 @@ class PostgresFullTextQueryServiceTest {
     }
 
     @Test
+    void downloadsSortShouldNotBindRelevanceOnlyParameters() {
+        EntityManager entityManager = mock(EntityManager.class);
+        Query nativeQuery = mock(Query.class);
+        Query countQuery = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString()))
+                .thenReturn(nativeQuery)
+                .thenReturn(countQuery);
+        when(nativeQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(nativeQuery);
+        when(countQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(countQuery);
+        when(nativeQuery.getResultList()).thenReturn(List.of());
+        when(countQuery.getSingleResult()).thenReturn(0L);
+
+        PostgresFullTextQueryService service = new PostgresFullTextQueryService(entityManager);
+
+        service.search(new SearchQuery(
+                "51222222333",
+                null,
+                new SearchVisibilityScope(null, Set.of(), Set.of()),
+                "downloads",
+                0,
+                12
+        ));
+
+        verify(nativeQuery, never()).setParameter(org.mockito.ArgumentMatchers.eq("titleExact"), anyString());
+        verify(nativeQuery, never()).setParameter(org.mockito.ArgumentMatchers.eq("titlePrefix"), anyString());
+        verify(nativeQuery).setParameter("titleLike", "%51222222333%");
+    }
+
+    @Test
     void semanticRerankShouldPromoteSemanticallyRelevantCandidate() {
         EntityManager entityManager = mock(EntityManager.class);
         Query nativeQuery = mock(Query.class);
