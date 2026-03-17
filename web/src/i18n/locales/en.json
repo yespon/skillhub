@@ -969,6 +969,10 @@
     "networkError": "Network connection failed, please check your network",
     "unknown": "Operation failed"
   },
+  "routeGuard": {
+    "forbiddenTitle": "You do not have permission to view this page",
+    "forbiddenDescription": "Your account permissions changed. Returning to the previous page."
+  },
   "error": {
     "auth": {
       "local": {

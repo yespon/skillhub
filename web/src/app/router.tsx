@@ -2,6 +2,7 @@ import { lazy, Suspense, type ComponentType } from 'react'
 import { createRouter, createRoute, createRootRoute, redirect } from '@tanstack/react-router'
 import { Layout } from './layout'
 import { getCurrentUser } from '@/api/client'
+import { RoleGuard } from '@/shared/components/role-guard'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
 
 // Capture original URL before TanStack Router rewrites it
@@ -34,6 +35,22 @@ function createLazyRouteComponent<TModule extends Record<string, unknown>>(
   }
 }
 
+function createRoleProtectedRouteComponent<TModule extends Record<string, unknown>>(
+  importer: () => Promise<TModule>,
+  exportName: keyof TModule,
+  allowedRoles: readonly string[],
+) {
+  const RouteComponent = createLazyRouteComponent(importer, exportName)
+
+  return function RoleProtectedRouteComponent(props: Record<string, unknown>) {
+    return (
+      <RoleGuard allowedRoles={allowedRoles}>
+        <RouteComponent {...props} />
+      </RoleGuard>
+    )
+  }
+}
+
 const HomePage = createLazyRouteComponent(() => import('@/pages/home'), 'HomePage')
 const LoginPage = createLazyRouteComponent(() => import('@/pages/login'), 'LoginPage')
 const RegisterPage = createLazyRouteComponent(() => import('@/pages/register'), 'RegisterPage')
@@ -58,15 +75,25 @@ const NamespaceReviewsPage = createLazyRouteComponent(
   'NamespaceReviewsPage',
 )
 const GovernancePage = createLazyRouteComponent(() => import('@/pages/dashboard/governance'), 'GovernancePage')
-const ReviewsPage = createLazyRouteComponent(() => import('@/pages/dashboard/reviews'), 'ReviewsPage')
-const ReportsPage = createLazyRouteComponent(() => import('@/pages/dashboard/reports'), 'ReportsPage')
-const ReviewDetailPage = createLazyRouteComponent(
+const ReviewsPage = createRoleProtectedRouteComponent(
+  () => import('@/pages/dashboard/reviews'),
+  'ReviewsPage',
+  ['SKILL_ADMIN', 'NAMESPACE_ADMIN', 'SUPER_ADMIN'],
+)
+const ReportsPage = createRoleProtectedRouteComponent(
+  () => import('@/pages/dashboard/reports'),
+  'ReportsPage',
+  ['SKILL_ADMIN', 'SUPER_ADMIN'],
+)
+const ReviewDetailPage = createRoleProtectedRouteComponent(
   () => import('@/pages/dashboard/review-detail'),
   'ReviewDetailPage',
+  ['SKILL_ADMIN', 'NAMESPACE_ADMIN', 'SUPER_ADMIN'],
 )
-const PromotionsPage = createLazyRouteComponent(
+const PromotionsPage = createRoleProtectedRouteComponent(
   () => import('@/pages/dashboard/promotions'),
   'PromotionsPage',
+  ['SKILL_ADMIN', 'SUPER_ADMIN'],
 )
 const MyStarsPage = createLazyRouteComponent(() => import('@/pages/dashboard/stars'), 'MyStarsPage')
 const TokensPage = createLazyRouteComponent(() => import('@/pages/dashboard/tokens'), 'TokensPage')
@@ -75,8 +102,16 @@ const SecuritySettingsPage = createLazyRouteComponent(
   () => import('@/pages/settings/security'),
   'SecuritySettingsPage',
 )
-const AdminUsersPage = createLazyRouteComponent(() => import('@/pages/admin/users'), 'AdminUsersPage')
-const AuditLogPage = createLazyRouteComponent(() => import('@/pages/admin/audit-log'), 'AuditLogPage')
+const AdminUsersPage = createRoleProtectedRouteComponent(
+  () => import('@/pages/admin/users'),
+  'AdminUsersPage',
+  ['USER_ADMIN', 'SUPER_ADMIN'],
+)
+const AuditLogPage = createRoleProtectedRouteComponent(
+  () => import('@/pages/admin/audit-log'),
+  'AuditLogPage',
+  ['AUDITOR', 'SUPER_ADMIN'],
+)
 
 function DefaultNotFound() {
   return (
@@ -227,13 +262,7 @@ const dashboardReviewsRoute = createRoute({
 const dashboardReportsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'dashboard/reports',
-  beforeLoad: async (ctx) => {
-    const { user } = await requireAuth(ctx)
-    if (!user.platformRoles?.includes('SKILL_ADMIN') && !user.platformRoles?.includes('SUPER_ADMIN')) {
-      throw redirect({ to: '/dashboard' })
-    }
-    return { user }
-  },
+  beforeLoad: requireAuth,
   component: ReportsPage,
 })
 
@@ -247,13 +276,7 @@ const dashboardReviewDetailRoute = createRoute({
 const dashboardPromotionsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'dashboard/promotions',
-  beforeLoad: async (ctx) => {
-    const { user } = await requireAuth(ctx)
-    if (!user.platformRoles?.includes('SKILL_ADMIN') && !user.platformRoles?.includes('SUPER_ADMIN')) {
-      throw redirect({ to: '/dashboard' })
-    }
-    return { user }
-  },
+  beforeLoad: requireAuth,
   component: PromotionsPage,
 })
 
@@ -305,26 +328,14 @@ const settingsAccountsRoute = createRoute({
 const adminUsersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin/users',
-  beforeLoad: async (ctx) => {
-    const { user } = await requireAuth(ctx)
-    if (!user.platformRoles?.includes('USER_ADMIN') && !user.platformRoles?.includes('SUPER_ADMIN')) {
-      throw redirect({ to: '/dashboard' })
-    }
-    return { user }
-  },
+  beforeLoad: requireAuth,
   component: AdminUsersPage,
 })
 
 const adminAuditLogRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'admin/audit-log',
-  beforeLoad: async (ctx) => {
-    const { user } = await requireAuth(ctx)
-    if (!user.platformRoles?.includes('AUDITOR') && !user.platformRoles?.includes('SUPER_ADMIN')) {
-      throw redirect({ to: '/dashboard' })
-    }
-    return { user }
-  },
+  beforeLoad: requireAuth,
   component: AuditLogPage,
 })
 
