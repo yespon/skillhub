@@ -9,11 +9,12 @@ import { limitPreviewItems } from './dashboard-preview'
 const DASHBOARD_PREVIEW_LIMIT = 5
 
 export function DashboardPage() {
+  const skillPreviewPageSize = DASHBOARD_PREVIEW_LIMIT
   const { t } = useTranslation()
   const { user, hasRole } = useAuth()
   const governanceVisible = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
-  const { data: skills, isLoading: isLoadingSkills } = useMySkills()
-  const skillPreview = limitPreviewItems(skills ?? [], DASHBOARD_PREVIEW_LIMIT)
+  const { data: skillPage, isLoading: isLoadingSkills } = useMySkills({ page: 0, size: skillPreviewPageSize })
+  const skillPreview = limitPreviewItems(skillPage?.items ?? [], DASHBOARD_PREVIEW_LIMIT)
 
   return (
     <div className="space-y-8 animate-fade-up">

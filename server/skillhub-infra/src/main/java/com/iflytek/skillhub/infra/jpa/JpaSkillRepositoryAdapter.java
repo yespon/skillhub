@@ -4,6 +4,8 @@ import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
 import com.iflytek.skillhub.domain.skill.SkillStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 
@@ -65,6 +67,11 @@ public class JpaSkillRepositoryAdapter implements SkillRepository {
     @Override
     public List<Skill> findByOwnerId(String ownerId) {
         return delegate.findByOwnerId(ownerId);
+    }
+
+    @Override
+    public Page<Skill> findByOwnerId(String ownerId, Pageable pageable) {
+        return delegate.findByOwnerId(ownerId, pageable);
     }
 
     @Override

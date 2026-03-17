@@ -1,5 +1,8 @@
 package com.iflytek.skillhub.domain.skill;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -13,6 +16,7 @@ public interface SkillRepository {
     Skill save(Skill skill);
     void delete(Skill skill);
     List<Skill> findByOwnerId(String ownerId);
+    Page<Skill> findByOwnerId(String ownerId, Pageable pageable);
     void incrementDownloadCount(Long skillId);
     List<Skill> findBySlug(String slug);
     Optional<Skill> findByNamespaceSlugAndSlug(String namespaceSlug, String slug);

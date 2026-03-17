@@ -11,12 +11,12 @@ import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersionStatus;
 import com.iflytek.skillhub.domain.social.SkillStarRepository;
+import com.iflytek.skillhub.dto.PageResponse;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
 import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,8 +25,6 @@ import java.util.stream.Collectors;
 
 @Service
 public class MySkillAppService {
-    private static final int STAR_PAGE_SIZE = 200;
-
     private final SkillRepository skillRepository;
     private final NamespaceRepository namespaceRepository;
     private final SkillVersionRepository skillVersionRepository;
@@ -46,10 +44,9 @@ public class MySkillAppService {
         this.promotionRequestRepository = promotionRequestRepository;
     }
 
-    public List<SkillSummaryResponse> listMySkills(String userId) {
-        List<Skill> skills = skillRepository.findByOwnerId(userId).stream()
-                .sorted(Comparator.comparing(Skill::getUpdatedAt).reversed())
-                .toList();
+    public PageResponse<SkillSummaryResponse> listMySkills(String userId, int page, int size) {
+        Page<Skill> skillPage = skillRepository.findByOwnerId(userId, PageRequest.of(page, size));
+        List<Skill> skills = skillPage.getContent();
 
         Map<Long, SkillVersion> versionsBySkillId = loadLatestRelevantVersions(skills);
 
@@ -62,13 +59,19 @@ public class MySkillAppService {
                 : namespaceRepository.findByIdIn(namespaceIds).stream()
                         .collect(Collectors.toMap(com.iflytek.skillhub.domain.namespace.Namespace::getId, Function.identity()));
 
-        return skills.stream()
+        List<SkillSummaryResponse> items = skills.stream()
                 .map(skill -> toSummaryResponse(skill, versionsBySkillId, namespacesById))
                 .toList();
+
+        return new PageResponse<>(items, skillPage.getTotalElements(), skillPage.getNumber(), skillPage.getSize());
     }
 
-    public List<SkillSummaryResponse> listMyStars(String userId) {
-        List<com.iflytek.skillhub.domain.social.SkillStar> stars = loadAllStars(userId);
+    public PageResponse<SkillSummaryResponse> listMyStars(String userId, int page, int size) {
+        Page<com.iflytek.skillhub.domain.social.SkillStar> starPage = skillStarRepository.findByUserId(
+                userId,
+                PageRequest.of(page, size)
+        );
+        List<com.iflytek.skillhub.domain.social.SkillStar> stars = starPage.getContent();
 
         List<Long> skillIds = stars.stream()
                 .map(com.iflytek.skillhub.domain.social.SkillStar::getSkillId)
@@ -90,30 +93,13 @@ public class MySkillAppService {
                 : namespaceRepository.findByIdIn(namespaceIds).stream()
                         .collect(Collectors.toMap(com.iflytek.skillhub.domain.namespace.Namespace::getId, Function.identity()));
 
-        return stars.stream()
-                .sorted(Comparator.comparing(com.iflytek.skillhub.domain.social.SkillStar::getCreatedAt).reversed())
+        List<SkillSummaryResponse> items = stars.stream()
                 .map(star -> skillsById.get(star.getSkillId()))
                 .filter(java.util.Objects::nonNull)
                 .map(skill -> toSummaryResponse(skill, versionsBySkillId, namespacesById))
                 .toList();
-    }
 
-    private List<com.iflytek.skillhub.domain.social.SkillStar> loadAllStars(String userId) {
-        List<com.iflytek.skillhub.domain.social.SkillStar> stars = new java.util.ArrayList<>();
-        int pageNumber = 0;
-
-        while (true) {
-            Page<com.iflytek.skillhub.domain.social.SkillStar> page = skillStarRepository.findByUserId(
-                    userId,
-                    PageRequest.of(pageNumber, STAR_PAGE_SIZE)
-            );
-            stars.addAll(page.getContent());
-
-            if (!page.hasNext()) {
-                return stars;
-            }
-            pageNumber++;
-        }
+        return new PageResponse<>(items, starPage.getTotalElements(), starPage.getNumber(), starPage.getSize());
     }
 
     private SkillSummaryResponse toSummaryResponse(

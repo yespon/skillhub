@@ -46,12 +46,16 @@ async function getSkillDocumentation(namespace: string, slug: string, version: s
   return fetchText(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/versions/${version}/file?path=${encodeURIComponent(path)}`)
 }
 
-async function getMySkills(): Promise<SkillSummary[]> {
-  return fetchJson<SkillSummary[]>(`${WEB_API_PREFIX}/me/skills`)
+async function getMySkills(params: { page?: number; size?: number } = {}): Promise<PagedResponse<SkillSummary>> {
+  return meApi.getSkills(params)
 }
 
 async function getMyStars(): Promise<SkillSummary[]> {
   return meApi.getStars()
+}
+
+async function getMyStarsPage(params: { page?: number; size?: number } = {}): Promise<PagedResponse<SkillSummary>> {
+  return meApi.getStarsPage(params)
 }
 
 async function getMyNamespaces(): Promise<ManagedNamespace[]> {
@@ -158,10 +162,10 @@ export function useSkillVersionDetail(namespace: string, slug: string, version?:
   })
 }
 
-export function useMySkills() {
+export function useMySkills(params: { page?: number; size?: number } = {}) {
   return useQuery({
-    queryKey: ['skills', 'my'],
-    queryFn: getMySkills,
+    queryKey: ['skills', 'my', params],
+    queryFn: () => getMySkills(params),
   })
 }
 
@@ -169,6 +173,14 @@ export function useMyStars(enabled = true) {
   return useQuery({
     queryKey: ['skills', 'stars'],
     queryFn: getMyStars,
+    enabled,
+  })
+}
+
+export function useMyStarsPage(params: { page?: number; size?: number } = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['skills', 'stars', 'page', params],
+    queryFn: () => getMyStarsPage(params),
     enabled,
   })
 }

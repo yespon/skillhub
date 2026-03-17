@@ -1,14 +1,21 @@
+import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { SkillCard } from '@/features/skill/skill-card'
-import { useMyStars } from '@/shared/hooks/use-skill-queries'
+import { Pagination } from '@/shared/components/pagination'
+import { useMyStarsPage } from '@/shared/hooks/use-skill-queries'
 import { Card } from '@/shared/ui/card'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
+
+const PAGE_SIZE = 12
 
 export function MyStarsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { data: skills, isLoading } = useMyStars()
+  const [page, setPage] = useState(0)
+  const { data, isLoading } = useMyStarsPage({ page, size: PAGE_SIZE })
+  const skills = data?.items ?? []
+  const totalPages = data ? Math.max(Math.ceil(data.total / data.size), 1) : 1
 
   if (isLoading) {
     return (
@@ -27,15 +34,20 @@ export function MyStarsPage() {
       {!skills || skills.length === 0 ? (
         <Card className="p-12 text-center text-muted-foreground">{t('stars.empty')}</Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {skills.map((skill) => (
-            <SkillCard
-              key={skill.id}
-              skill={skill}
-              onClick={() => navigate({ to: `/space/${skill.namespace}/${skill.slug}` })}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {skills.map((skill) => (
+              <SkillCard
+                key={skill.id}
+                skill={skill}
+                onClick={() => navigate({ to: `/space/${skill.namespace}/${skill.slug}` })}
+              />
+            ))}
+          </div>
+          {data && data.total > PAGE_SIZE ? (
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          ) : null}
+        </>
       )}
     </div>
   )
