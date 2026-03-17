@@ -10,7 +10,7 @@ import { resolveSkillActionErrorTitle } from '@/features/skill/skill-action-erro
 import { RatingInput } from '@/features/social/rating-input'
 import { StarButton } from '@/features/social/star-button'
 import { useAuth } from '@/features/auth/use-auth'
-import { adminApi, ApiError, skillDownloadApi } from '@/api/client'
+import { adminApi, ApiError, buildApiUrl, WEB_API_PREFIX } from '@/api/client'
 import { useSubmitSkillReport } from '@/features/report/use-skill-reports'
 import { formatLocalDateTime } from '@/shared/lib/date-time'
 import { incrementSkillDownloadCount } from '@/shared/lib/skill-download-cache'
@@ -141,15 +141,12 @@ export function SkillDetailPage() {
   const submitPromotionMutation = useSubmitPromotion()
   const reportMutation = useSubmitSkillReport(namespace, slug)
 
-  const triggerBrowserDownload = (blob: Blob, fileName: string) => {
-    const objectUrl = window.URL.createObjectURL(blob)
+  const triggerBrowserDownload = (url: string) => {
     const link = document.createElement('a')
-    link.href = objectUrl
-    link.download = fileName
+    link.href = url
     document.body.appendChild(link)
     link.click()
     link.remove()
-    window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 0)
   }
 
   const handleDownload = async () => {
@@ -162,10 +159,9 @@ export function SkillDetailPage() {
     }
 
     try {
-      const downloadedFile = await skillDownloadApi.downloadVersion(namespace, slug, selectedVersionEntry.version)
+      const cleanNamespace = namespace.startsWith('@') ? namespace.slice(1) : namespace
       triggerBrowserDownload(
-        downloadedFile.blob,
-        downloadedFile.fileName ?? `${slug}-${selectedVersionEntry.version}.zip`,
+        buildApiUrl(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/versions/${selectedVersionEntry.version}/download`),
       )
       incrementSkillDownloadCount(queryClient, { namespace, slug })
       queryClient.invalidateQueries({ queryKey: ['skills', namespace, slug] })

@@ -62,6 +62,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         String tsQuery = buildPrefixTsQuery(normalizedKeyword);
         boolean hasKeyword = normalizedKeyword != null;
         boolean hasTsQuery = tsQuery != null;
+        boolean useRelevanceOrdering = "relevance".equals(query.sortBy()) && hasKeyword;
         boolean useShortPrefixTitleSearch = hasTsQuery && normalizedKeyword.length() <= SHORT_PREFIX_LENGTH;
         boolean useSemanticRerank = semanticEnabled
                 && hasKeyword
@@ -126,7 +127,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             sql.append("ORDER BY (SELECT rating_avg FROM skill WHERE id = skill_id) DESC ");
         } else if ("newest".equals(query.sortBy())) {
             sql.append("ORDER BY (SELECT updated_at FROM skill WHERE id = skill_id) DESC ");
-        } else if ("relevance".equals(query.sortBy()) && hasKeyword) {
+        } else if (useRelevanceOrdering) {
             sql.append("ORDER BY CASE ");
             sql.append("WHEN ").append(TITLE_SQL).append(" = :titleExact THEN 4 ");
             sql.append("WHEN ").append(TITLE_SQL).append(" LIKE :titlePrefix THEN 3 ");
@@ -163,8 +164,10 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             if (hasTsQuery) {
                 nativeQuery.setParameter("tsQuery", tsQuery);
             }
-            nativeQuery.setParameter("titleExact", normalizedKeyword.toLowerCase());
-            nativeQuery.setParameter("titlePrefix", normalizedKeyword.toLowerCase() + "%");
+            if (useRelevanceOrdering) {
+                nativeQuery.setParameter("titleExact", normalizedKeyword.toLowerCase());
+                nativeQuery.setParameter("titlePrefix", normalizedKeyword.toLowerCase() + "%");
+            }
             nativeQuery.setParameter("titleLike", "%" + normalizedKeyword.toLowerCase() + "%");
         }
 
