@@ -29,7 +29,7 @@ public class AdminSkillController extends BaseApiController {
     }
 
     @PostMapping("/{skillId}/hide")
-    @PreAuthorize("hasAnyRole('SKILL_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ApiResponse<AdminSkillMutationResponse> hideSkill(@PathVariable Long skillId,
                                                              @RequestBody(required = false) AdminSkillActionRequest request,
                                                              @AuthenticationPrincipal PlatformPrincipal principal,
@@ -45,7 +45,7 @@ public class AdminSkillController extends BaseApiController {
     }
 
     @PostMapping("/{skillId}/unhide")
-    @PreAuthorize("hasAnyRole('SKILL_ADMIN', 'SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ApiResponse<AdminSkillMutationResponse> unhideSkill(@PathVariable Long skillId,
                                                                @AuthenticationPrincipal PlatformPrincipal principal,
                                                                HttpServletRequest httpRequest) {

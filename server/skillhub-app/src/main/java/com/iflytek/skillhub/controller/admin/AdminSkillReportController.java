@@ -4,6 +4,7 @@ import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.controller.BaseApiController;
 import com.iflytek.skillhub.domain.report.SkillReportDisposition;
 import com.iflytek.skillhub.domain.report.SkillReportService;
+import com.iflytek.skillhub.domain.shared.exception.DomainForbiddenException;
 import com.iflytek.skillhub.dto.AdminSkillReportActionRequest;
 import com.iflytek.skillhub.dto.AdminSkillReportSummaryResponse;
 import com.iflytek.skillhub.dto.ApiResponse;
@@ -52,12 +53,16 @@ public class AdminSkillReportController extends BaseApiController {
                                                                   @RequestBody(required = false) AdminSkillReportActionRequest request,
                                                                   @AuthenticationPrincipal PlatformPrincipal principal,
                                                                   HttpServletRequest httpRequest) {
+        SkillReportDisposition disposition = request != null && request.disposition() != null
+                ? SkillReportDisposition.valueOf(request.disposition().trim().toUpperCase())
+                : SkillReportDisposition.RESOLVE_ONLY;
+        if (disposition == SkillReportDisposition.RESOLVE_AND_HIDE && !principal.platformRoles().contains("SUPER_ADMIN")) {
+            throw new DomainForbiddenException("error.skill.lifecycle.noPermission");
+        }
         var report = skillReportService.resolveReport(
                 reportId,
                 principal.userId(),
-                request != null && request.disposition() != null
-                        ? SkillReportDisposition.valueOf(request.disposition().trim().toUpperCase())
-                        : SkillReportDisposition.RESOLVE_ONLY,
+                disposition,
                 request != null ? request.comment() : null,
                 httpRequest.getRemoteAddr(),
                 httpRequest.getHeader("User-Agent")

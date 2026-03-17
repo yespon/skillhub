@@ -51,8 +51,8 @@ class AdminSkillControllerTest {
         given(skillGovernanceService.hideSkill(org.mockito.ArgumentMatchers.eq(10L), org.mockito.ArgumentMatchers.eq("admin"), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq("policy")))
             .willReturn(skill);
 
-        PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("SKILL_ADMIN"));
-        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_SKILL_ADMIN")));
+        PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("SUPER_ADMIN"));
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN")));
 
         mockMvc.perform(post("/api/v1/admin/skills/10/hide")
                 .with(authentication(auth))
@@ -91,6 +91,20 @@ class AdminSkillControllerTest {
     void hideSkill_withUserAdminRole_returns403() throws Exception {
         PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("USER_ADMIN"));
         var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_USER_ADMIN")));
+
+        mockMvc.perform(post("/api/v1/admin/skills/10/hide")
+                .with(authentication(auth))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\":\"policy\"}"))
+            .andExpect(status().isForbidden())
+            .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    void hideSkill_withSkillAdminRole_returns403() throws Exception {
+        PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("SKILL_ADMIN"));
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_SKILL_ADMIN")));
 
         mockMvc.perform(post("/api/v1/admin/skills/10/hide")
                 .with(authentication(auth))

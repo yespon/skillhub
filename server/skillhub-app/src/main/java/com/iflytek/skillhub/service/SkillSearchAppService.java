@@ -7,6 +7,7 @@ import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.namespace.NamespaceService;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
+import com.iflytek.skillhub.domain.skill.VisibilityChecker;
 import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
@@ -31,18 +32,21 @@ public class SkillSearchAppService {
     private final NamespaceRepository namespaceRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final NamespaceService namespaceService;
+    private final VisibilityChecker visibilityChecker;
 
     public SkillSearchAppService(
             SearchQueryService searchQueryService,
             SkillRepository skillRepository,
             NamespaceRepository namespaceRepository,
             SkillVersionRepository skillVersionRepository,
-            NamespaceService namespaceService) {
+            NamespaceService namespaceService,
+            VisibilityChecker visibilityChecker) {
         this.searchQueryService = searchQueryService;
         this.skillRepository = skillRepository;
         this.namespaceRepository = namespaceRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.namespaceService = namespaceService;
+        this.visibilityChecker = visibilityChecker;
     }
 
     public record SearchResponse(
@@ -171,6 +175,7 @@ public class SkillSearchAppService {
         return skillIds.stream()
                 .map(skillsById::get)
                 .filter(java.util.Objects::nonNull)
+                .filter(skill -> visibilityChecker.canAccess(skill, userId, userNsRoles != null ? userNsRoles : Map.of()))
                 .filter(skill -> namespaceVisible(skill.getNamespaceId(), namespacesById, userId, userNsRoles))
                 .map(skill -> toSummaryResponse(skill, versionsById, namespaceSlugsById))
                 .toList();

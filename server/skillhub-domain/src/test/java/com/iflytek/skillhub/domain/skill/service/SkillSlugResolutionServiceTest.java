@@ -58,6 +58,16 @@ class SkillSlugResolutionServiceTest {
                 service.resolve(1L, "demo", null, SkillSlugResolutionService.Preference.CURRENT_USER));
     }
 
+    @Test
+    void throwsWhenOnlyPublishedSkillIsHiddenFromCurrentUser() throws Exception {
+        Skill hiddenPublishedSkill = createSkill(4L, "demo", "user-2", 44L);
+        hiddenPublishedSkill.setHidden(true);
+        when(skillRepository.findByNamespaceIdAndSlug(1L, "demo")).thenReturn(List.of(hiddenPublishedSkill));
+
+        assertThrows(DomainBadRequestException.class, () ->
+                service.resolve(1L, "demo", "user-9", SkillSlugResolutionService.Preference.CURRENT_USER));
+    }
+
     private Skill createSkill(Long id, String slug, String ownerId, Long latestVersionId) throws Exception {
         Skill skill = new Skill(1L, slug, ownerId, SkillVisibility.PUBLIC);
         Field idField = Skill.class.getDeclaredField("id");

@@ -32,7 +32,7 @@ public class SkillSlugResolutionService {
                 ? Optional.empty()
                 : skills.stream().filter(skill -> currentUserId.equals(skill.getOwnerId())).findFirst();
         Optional<Skill> publishedSkill = skills.stream()
-                .filter(skill -> skill.getLatestVersionId() != null)
+                .filter(skill -> skill.getLatestVersionId() != null && !skill.isHidden())
                 .findFirst();
 
         if (preference == Preference.CURRENT_USER) {

@@ -95,7 +95,7 @@ class AdminSkillReportControllerTest {
         report.setStatus(com.iflytek.skillhub.domain.report.SkillReportStatus.RESOLVED);
         when(skillReportService.resolveReport(
                 org.mockito.ArgumentMatchers.eq(99L),
-                org.mockito.ArgumentMatchers.eq("admin"),
+                org.mockito.ArgumentMatchers.eq("super-admin"),
                 org.mockito.ArgumentMatchers.eq(SkillReportDisposition.RESOLVE_AND_HIDE),
                 org.mockito.ArgumentMatchers.eq("handled"),
                 org.mockito.ArgumentMatchers.any(),
@@ -103,13 +103,24 @@ class AdminSkillReportControllerTest {
                 .thenReturn(report);
 
         mockMvc.perform(post("/api/v1/admin/skill-reports/99/resolve")
-                        .with(authentication(adminAuth()))
+                        .with(authentication(superAdminAuth()))
                         .with(csrf())
                         .contentType(APPLICATION_JSON)
                         .content("{\"comment\":\"handled\",\"disposition\":\"RESOLVE_AND_HIDE\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.reportId").value(99))
                 .andExpect(jsonPath("$.data.status").value("RESOLVED"));
+    }
+
+    @Test
+    void resolveReport_withHideDispositionAndSkillAdmin_returns403() throws Exception {
+        mockMvc.perform(post("/api/v1/admin/skill-reports/99/resolve")
+                        .with(authentication(adminAuth()))
+                        .with(csrf())
+                        .contentType(APPLICATION_JSON)
+                        .content("{\"comment\":\"handled\",\"disposition\":\"RESOLVE_AND_HIDE\"}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
     }
 
     @Test
@@ -134,6 +145,15 @@ class AdminSkillReportControllerTest {
         );
         return new UsernamePasswordAuthenticationToken(
                 principal, null, List.of(new SimpleGrantedAuthority("ROLE_SKILL_ADMIN"))
+        );
+    }
+
+    private UsernamePasswordAuthenticationToken superAdminAuth() {
+        PlatformPrincipal principal = new PlatformPrincipal(
+                "super-admin", "super-admin", "admin@example.com", "", "github", Set.of("SUPER_ADMIN")
+        );
+        return new UsernamePasswordAuthenticationToken(
+                principal, null, List.of(new SimpleGrantedAuthority("ROLE_SUPER_ADMIN"))
         );
     }
 }

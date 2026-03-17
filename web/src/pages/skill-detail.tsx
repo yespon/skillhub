@@ -107,6 +107,7 @@ export function SkillDetailPage() {
   const { data: diffSourceReadme } = useSkillReadme(namespace, slug, diffSourceVersion ?? undefined, diffSourceDocumentationPath)
   const { data: diffCompareReadme } = useSkillReadme(namespace, slug, diffCompareVersion ?? undefined, diffCompareDocumentationPath)
   const governanceVisible = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
+  const canHideSkill = hasRole('SUPER_ADMIN')
   const isPendingPreview = skill?.viewingVersionStatus === 'PENDING_REVIEW'
   const canInteract = skill?.canInteract ?? true
   const canReport = skill?.canReport ?? true
@@ -736,15 +737,17 @@ export function SkillDetailPage() {
           <Card className="p-5 space-y-3">
             <div className="text-sm font-semibold font-heading text-foreground">{t('skillDetail.governance')}</div>
             <div className="flex flex-col gap-3">
-              {!skill.hidden ? (
-                <Button variant="outline" onClick={() => hideMutation.mutate()} disabled={hideMutation.isPending}>
-                  {hideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.hideSkill')}
-                </Button>
-              ) : (
-                <Button variant="outline" onClick={() => unhideMutation.mutate()} disabled={unhideMutation.isPending}>
-                  {unhideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.unhideSkill')}
-                </Button>
-              )}
+              {canHideSkill ? (
+                !skill.hidden ? (
+                  <Button variant="outline" onClick={() => hideMutation.mutate()} disabled={hideMutation.isPending}>
+                    {hideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.hideSkill')}
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => unhideMutation.mutate()} disabled={unhideMutation.isPending}>
+                    {unhideMutation.isPending ? t('skillDetail.processing') : t('skillDetail.unhideSkill')}
+                  </Button>
+                )
+              ) : null}
               {selectedVersionEntry && (
                 <Button variant="destructive" onClick={() => yankMutation.mutate()} disabled={yankMutation.isPending}>
                   {yankMutation.isPending ? t('skillDetail.processing') : t('skillDetail.yankVersion')}
