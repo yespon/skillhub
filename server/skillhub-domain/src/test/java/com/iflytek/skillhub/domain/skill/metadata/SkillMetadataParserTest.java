@@ -124,7 +124,7 @@ class SkillMetadataParserTest {
     }
 
     @Test
-    void testThrowsWhenInvalidYaml() {
+    void testFallsBackToLooseFrontmatterParsingWhenYamlSyntaxIsNotStrict() {
         String content = """
             ---
             name: test-skill
@@ -134,11 +134,29 @@ class SkillMetadataParserTest {
             Body
             """;
 
-        DomainBadRequestException exception = assertThrows(
-            DomainBadRequestException.class,
-            () -> parser.parse(content)
-        );
-        assertEquals("error.skill.metadata.yaml.invalid", exception.messageCode());
+        SkillMetadata metadata = parser.parse(content);
+
+        assertEquals("test-skill", metadata.name());
+        assertEquals("[unclosed bracket", metadata.description());
+        assertEquals("1.0.0", metadata.version());
+    }
+
+    @Test
+    void testAllowsColonInDescriptionWithoutStrictYamlQuoting() {
+        String content = """
+            ---
+            name: clawdbot
+            description: Send messages from Clawdbot via the discord tool: send messages, react, post or edit
+            version: 1.0.0
+            ---
+            Body
+            """;
+
+        SkillMetadata metadata = parser.parse(content);
+
+        assertEquals("clawdbot", metadata.name());
+        assertEquals("Send messages from Clawdbot via the discord tool: send messages, react, post or edit", metadata.description());
+        assertEquals("1.0.0", metadata.version());
     }
 
     @Test

@@ -143,7 +143,7 @@ class SkillPackageValidatorTest {
     }
 
     @Test
-    void testInvalidYamlFrontmatterUsesFriendlyMessage() {
+    void testInvalidYamlFrontmatterWithColonInValueShouldStillPass() {
         String skillMdContent = """
             ---
             name: clawdbot
@@ -159,12 +159,8 @@ class SkillPackageValidatorTest {
 
         ValidationResult result = validator.validate(entries);
 
-        assertFalse(result.passed());
-        assertTrue(result.errors().stream().anyMatch(e ->
-                e.contains("Invalid SKILL.md frontmatter")
-                        && e.contains("line")
-                        && e.contains("column")));
-        assertFalse(result.errors().stream().anyMatch(e -> e.contains("mapping values are not allowed here")));
+        assertTrue(result.passed());
+        assertTrue(result.errors().isEmpty());
     }
 
     @Test

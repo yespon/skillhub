@@ -3,6 +3,7 @@ package com.iflytek.skillhub.domain.skill.metadata;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import org.yaml.snakeyaml.Yaml;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class SkillMetadataParser {
@@ -35,14 +36,7 @@ public class SkillMetadataParser {
 
         Map<String, Object> frontmatter;
         try {
-            Yaml yaml = new Yaml();
-            Object parsed = yaml.load(yamlContent);
-            if (!(parsed instanceof Map)) {
-                throw new DomainBadRequestException("error.skill.metadata.yaml.notMap");
-            }
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = (Map<String, Object>) parsed;
-            frontmatter = map;
+            frontmatter = parseFrontmatter(yamlContent);
         } catch (DomainBadRequestException e) {
             throw e;
         } catch (Exception e) {
@@ -54,6 +48,62 @@ public class SkillMetadataParser {
         String version = extractOptionalField(frontmatter, "version");
 
         return new SkillMetadata(name, description, version, body, frontmatter);
+    }
+
+    private Map<String, Object> parseFrontmatter(String yamlContent) {
+        try {
+            Yaml yaml = new Yaml();
+            Object parsed = yaml.load(yamlContent);
+            if (!(parsed instanceof Map)) {
+                throw new DomainBadRequestException("error.skill.metadata.yaml.notMap");
+            }
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) parsed;
+            return map;
+        } catch (DomainBadRequestException exception) {
+            throw exception;
+        } catch (Exception exception) {
+            Map<String, Object> fallback = parseLooseFrontmatter(yamlContent);
+            if (!fallback.isEmpty()) {
+                return fallback;
+            }
+            throw exception;
+        }
+    }
+
+    private Map<String, Object> parseLooseFrontmatter(String yamlContent) {
+        Map<String, Object> values = new LinkedHashMap<>();
+        for (String rawLine : yamlContent.split("\\R")) {
+            String line = rawLine.trim();
+            if (line.isEmpty() || line.startsWith("#")) {
+                continue;
+            }
+
+            int separatorIndex = line.indexOf(':');
+            if (separatorIndex <= 0) {
+                continue;
+            }
+
+            String key = line.substring(0, separatorIndex).trim();
+            String value = line.substring(separatorIndex + 1).trim();
+            if (key.isEmpty()) {
+                continue;
+            }
+
+            values.put(key, stripWrappingQuotes(value));
+        }
+        return values;
+    }
+
+    private String stripWrappingQuotes(String value) {
+        if (value.length() >= 2) {
+            boolean wrappedInDoubleQuotes = value.startsWith("\"") && value.endsWith("\"");
+            boolean wrappedInSingleQuotes = value.startsWith("'") && value.endsWith("'");
+            if (wrappedInDoubleQuotes || wrappedInSingleQuotes) {
+                return value.substring(1, value.length() - 1);
+            }
+        }
+        return value;
     }
 
     private String extractRequiredField(Map<String, Object> frontmatter, String fieldName) {
