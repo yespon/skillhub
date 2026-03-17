@@ -165,6 +165,7 @@ export interface SkillDetail {
   canSubmitPromotion: boolean
   viewingVersionStatus?: string
   canInteract: boolean
+  canReport: boolean
 }
 
 export interface SubmitPromotionRequest {

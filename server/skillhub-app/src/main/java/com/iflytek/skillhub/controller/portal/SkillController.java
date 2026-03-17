@@ -75,7 +75,8 @@ public class SkillController extends BaseApiController {
                 detail.canManageLifecycle(),
                 detail.canSubmitPromotion(),
                 detail.viewingVersionStatus(),
-                detail.canInteract()
+                detail.canInteract(),
+                detail.canReport()
         );
 
         return ok("response.success.read", response);

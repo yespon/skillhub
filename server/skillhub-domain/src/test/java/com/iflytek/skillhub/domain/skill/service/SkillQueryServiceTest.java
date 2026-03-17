@@ -102,6 +102,7 @@ class SkillQueryServiceTest {
         assertEquals(skillSlug, result.slug());
         assertEquals("Test Skill", result.displayName());
         assertEquals("1.0.0", result.latestVersion());
+        assertFalse(result.canReport());
     }
 
     @Test
@@ -137,6 +138,7 @@ class SkillQueryServiceTest {
         assertEquals(2L, result.id());
         assertEquals("Own Skill", result.displayName());
         assertEquals("2.0.0", result.latestVersion());
+        assertFalse(result.canReport());
     }
 
     @Test

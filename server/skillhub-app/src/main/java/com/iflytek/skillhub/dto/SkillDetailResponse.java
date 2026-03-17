@@ -20,5 +20,6 @@ public record SkillDetailResponse(
         boolean canManageLifecycle,
         boolean canSubmitPromotion,
         String viewingVersionStatus,
-        boolean canInteract
+        boolean canInteract,
+        boolean canReport
 ) {}

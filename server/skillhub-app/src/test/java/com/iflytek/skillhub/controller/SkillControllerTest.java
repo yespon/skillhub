@@ -132,6 +132,7 @@ class SkillControllerTest {
                         true,
                         false,
                         "PENDING_REVIEW",
+                        false,
                         false
                 ));
 
@@ -142,7 +143,8 @@ class SkillControllerTest {
                 .andExpect(jsonPath("$.data.latestVersionId").value(11L))
                 .andExpect(jsonPath("$.data.canSubmitPromotion").value(false))
                 .andExpect(jsonPath("$.data.viewingVersionStatus").value("PENDING_REVIEW"))
-                .andExpect(jsonPath("$.data.canInteract").value(false));
+                .andExpect(jsonPath("$.data.canInteract").value(false))
+                .andExpect(jsonPath("$.data.canReport").value(false));
     }
 
     @Test

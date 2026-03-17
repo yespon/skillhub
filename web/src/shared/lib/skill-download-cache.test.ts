@@ -44,6 +44,7 @@ function createSkillDetail(overrides: Partial<SkillDetail> = {}): SkillDetail {
     canSubmitPromotion: false,
     viewingVersionStatus: 'PUBLISHED',
     canInteract: true,
+    canReport: true,
     ...overrides,
   }
 }

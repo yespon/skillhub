@@ -84,7 +84,8 @@ public class SkillQueryService {
             boolean canManageLifecycle,
             boolean canSubmitPromotion,
             String viewingVersionStatus,
-            boolean canInteract
+            boolean canInteract,
+            boolean canReport
     ) {}
 
     public record SkillVersionDetailDTO(
@@ -151,7 +152,8 @@ public class SkillQueryService {
                 canManageRestrictedSkill(skill, currentUserId, userNsRoles),
                 canSubmitPromotion(namespace, skill, latestVersionEntity, currentUserId, userNsRoles),
                 latestVersionEntity != null ? latestVersionEntity.getStatus().name() : null,
-                latestVersionEntity == null || latestVersionEntity.getStatus() == SkillVersionStatus.PUBLISHED
+                latestVersionEntity == null || latestVersionEntity.getStatus() == SkillVersionStatus.PUBLISHED,
+                currentUserId == null || !Objects.equals(skill.getOwnerId(), currentUserId)
         );
     }
 

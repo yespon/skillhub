@@ -109,6 +109,7 @@ export function SkillDetailPage() {
   const governanceVisible = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
   const isPendingPreview = skill?.viewingVersionStatus === 'PENDING_REVIEW'
   const canInteract = skill?.canInteract ?? true
+  const canReport = skill?.canReport ?? true
   const isVersionDownloadable = selectedVersionEntry?.status === 'PUBLISHED' && (selectedVersionEntry?.downloadAvailable ?? false)
 
   const refreshSkill = () => {
@@ -657,9 +658,11 @@ export function SkillDetailPage() {
               <>
                 <StarButton skillId={skill.id} starCount={skill.starCount} onRequireLogin={requireLogin} />
                 <RatingInput skillId={skill.id} onRequireLogin={requireLogin} />
-                <Button variant="outline" className="w-full" onClick={handleOpenReport} disabled={reportMutation.isPending}>
-                  {reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
-                </Button>
+                {canReport ? (
+                  <Button variant="outline" className="w-full" onClick={handleOpenReport} disabled={reportMutation.isPending}>
+                    {reportMutation.isPending ? t('skillDetail.processing') : t('skillDetail.reportSkill')}
+                  </Button>
+                ) : null}
               </>
             ) : (
               <p className="text-sm text-muted-foreground">{t('skillDetail.pendingPreviewInteractionHint')}</p>
