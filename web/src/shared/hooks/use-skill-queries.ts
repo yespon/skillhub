@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, SkillFile, SearchParams, PagedResponse, PublishResult, Namespace, NamespaceMember, ManagedNamespace, CreateNamespaceRequest, NamespaceCandidateUser, NamespaceRole } from '@/api/types'
 import { fetchJson, fetchText, getCsrfHeaders, meApi, namespaceApi, promotionApi, skillLifecycleApi, WEB_API_PREFIX } from '@/api/client'
+import { appendNamespaceMember, replaceNamespaceMemberRole } from '@/shared/lib/namespace-member-cache'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
 
 const PUBLISH_REQUEST_TIMEOUT_MS = 60_000
@@ -268,7 +269,11 @@ export function useAddNamespaceMember() {
 
   return useMutation({
     mutationFn: addNamespaceMember,
-    onSuccess: (_data, variables) => {
+    onSuccess: (member, variables) => {
+      queryClient.setQueryData<NamespaceMember[]>(
+        ['namespaces', variables.slug, 'members'],
+        (currentMembers) => appendNamespaceMember(currentMembers, member),
+      )
       invalidateNamespaceQueries(queryClient, variables.slug)
     },
   })
@@ -279,7 +284,11 @@ export function useUpdateNamespaceMemberRole() {
 
   return useMutation({
     mutationFn: updateNamespaceMemberRole,
-    onSuccess: (_data, variables) => {
+    onSuccess: (member, variables) => {
+      queryClient.setQueryData<NamespaceMember[]>(
+        ['namespaces', variables.slug, 'members'],
+        (currentMembers) => replaceNamespaceMemberRole(currentMembers, variables.userId, member.role),
+      )
       invalidateNamespaceQueries(queryClient, variables.slug)
     },
   })

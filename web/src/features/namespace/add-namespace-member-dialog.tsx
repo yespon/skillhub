@@ -224,10 +224,10 @@ export function AddNamespaceMemberDialog({ slug, children }: AddNamespaceMemberD
         ) : null}
 
         <DialogFooter className="sm:justify-center sm:space-x-3">
-          <Button variant="outline" onClick={() => handleOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
             {t('dialog.cancel')}
           </Button>
-          <Button onClick={handleAddMember} disabled={addMemberMutation.isPending}>
+          <Button type="button" onClick={handleAddMember} disabled={addMemberMutation.isPending}>
             {addMemberMutation.isPending ? t('members.addingMember') : t('members.addMember')}
           </Button>
         </DialogFooter>

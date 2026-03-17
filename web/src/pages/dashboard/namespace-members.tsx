@@ -197,6 +197,7 @@ export function NamespaceMembersPage() {
                                 <option value="ADMIN">{t('members.roleAdmin')}</option>
                               </Select>
                               <Button
+                                type="button"
                                 variant="outline"
                                 size="sm"
                                 disabled={roleValue === member.role || isSavingRole}
@@ -220,6 +221,7 @@ export function NamespaceMembersPage() {
                         </td>
                         <td className="p-4 text-right">
                           <Button
+                            type="button"
                             variant="destructive"
                             size="sm"
                             disabled={!canManageMembers || isOwner || isRemoving}
