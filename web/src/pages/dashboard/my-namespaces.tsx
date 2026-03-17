@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '@/features/auth/use-auth'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { NamespaceBadge } from '@/shared/components/namespace-badge'
@@ -20,6 +21,8 @@ type PendingNamespaceAction =
 export function MyNamespacesPage() {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { hasRole } = useAuth()
+  const canCreateNamespace = hasRole('SKILL_ADMIN') || hasRole('SUPER_ADMIN')
   const [pendingAction, setPendingAction] = useState<PendingNamespaceAction | null>(null)
   const { data: namespaces, isLoading } = useMyNamespaces()
   const freezeMutation = useFreezeNamespace()
@@ -160,11 +163,11 @@ export function MyNamespacesPage() {
       <DashboardPageHeader
         title={t('myNamespaces.title')}
         subtitle={t('myNamespaces.subtitle')}
-        actions={(
+        actions={canCreateNamespace ? (
           <CreateNamespaceDialog>
             <Button>{t('myNamespaces.create')}</Button>
           </CreateNamespaceDialog>
-        )}
+        ) : undefined}
       />
 
       {namespaces && namespaces.length > 0 ? (

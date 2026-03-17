@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -151,14 +152,49 @@ class NamespacePortalControllerTest {
                 .andExpect(jsonPath("$.data[0].displayName").value("alice"));
     }
 
+    @Test
+    void createNamespace_requiresPlatformAdminRole() throws Exception {
+        mockMvc.perform(post("/api/v1/namespaces")
+                        .with(csrf())
+                        .with(auth("user-1"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"team-alpha","displayName":"Team Alpha"}
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value(403));
+    }
+
+    @Test
+    void createNamespace_allowsSkillAdmin() throws Exception {
+        Namespace namespace = namespace(2L, "team-admin", NamespaceStatus.ACTIVE, NamespaceType.TEAM);
+        given(namespaceService.createNamespace("team-admin", "Team Admin", null, "admin-1"))
+                .willReturn(namespace);
+
+        mockMvc.perform(post("/api/v1/namespaces")
+                        .with(csrf())
+                        .with(auth("admin-1", Set.of("SKILL_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"slug":"team-admin","displayName":"Team Admin"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.slug").value("team-admin"));
+    }
+
     private RequestPostProcessor auth(String userId) {
+        return auth(userId, Set.of());
+    }
+
+    private RequestPostProcessor auth(String userId, Set<String> platformRoles) {
         PlatformPrincipal principal = new PlatformPrincipal(
                 userId,
                 userId,
                 userId + "@example.com",
                 "",
                 "session",
-                java.util.Set.of()
+                platformRoles
         );
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
                 principal,

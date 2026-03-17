@@ -4,6 +4,8 @@ import com.iflytek.skillhub.controller.BaseApiController;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.domain.namespace.*;
 import com.iflytek.skillhub.dto.*;
+import com.iflytek.skillhub.exception.ForbiddenException;
+import com.iflytek.skillhub.exception.UnauthorizedException;
 import com.iflytek.skillhub.service.NamespaceMemberCandidateService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -79,6 +81,13 @@ public class NamespaceController extends BaseApiController {
     public ApiResponse<NamespaceResponse> createNamespace(
             @Valid @RequestBody NamespaceRequest request,
             @AuthenticationPrincipal PlatformPrincipal principal) {
+        if (principal == null) {
+            throw new UnauthorizedException("error.auth.required");
+        }
+        if (!canCreateNamespace(principal)) {
+            throw new ForbiddenException("error.namespace.create.platformAdminRequired");
+        }
+
         Namespace namespace = namespaceService.createNamespace(
                 request.slug(),
                 request.displayName(),
@@ -86,6 +95,11 @@ public class NamespaceController extends BaseApiController {
                 principal.userId()
         );
         return ok("response.success.created", NamespaceResponse.from(namespace));
+    }
+
+    private boolean canCreateNamespace(PlatformPrincipal principal) {
+        return principal.platformRoles().contains("SKILL_ADMIN")
+                || principal.platformRoles().contains("SUPER_ADMIN");
     }
 
     @PutMapping("/namespaces/{slug}")
