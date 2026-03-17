@@ -7,6 +7,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { Label } from '@/shared/ui/label'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { toast } from '@/shared/lib/toast'
+import { resolveReviewActionErrorDescription } from '@/features/review/review-error'
 import { useReviewDetail, useApproveReview, useRejectReview } from '@/features/review/use-review-detail'
 
 export function ReviewDetailPage() {
@@ -36,8 +37,8 @@ export function ReviewDetailPage() {
           toast.success(t('review.approveSuccess'))
           navigate({ to: '/dashboard/reviews' })
         },
-        onError: () => {
-          toast.error(t('review.approveFailed'))
+        onError: (error) => {
+          toast.error(t('review.approveFailed'), resolveReviewActionErrorDescription(error))
         },
       }
     )
@@ -55,8 +56,8 @@ export function ReviewDetailPage() {
           toast.success(t('review.rejectSuccess'))
           navigate({ to: '/dashboard/reviews' })
         },
-        onError: () => {
-          toast.error(t('review.rejectFailed'))
+        onError: (error) => {
+          toast.error(t('review.rejectFailed'), resolveReviewActionErrorDescription(error))
         },
       }
     )
