@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Button } from '@/shared/ui/button'
 import { ConfirmDialog } from '@/shared/components/confirm-dialog'
 import { useDismissSkillReport, useResolveSkillReport, useSkillReports } from '@/features/report/use-skill-reports'
+import { REPORT_TEXT_WRAP_CLASS_NAME } from '@/features/report/report-text'
 import { toast } from '@/shared/lib/toast'
 import type { ReportDisposition } from '@/api/types'
 
@@ -80,14 +81,14 @@ export function ReportsPage() {
                 <div className="space-y-2 min-w-0">
                   <button
                     type="button"
-                    className="text-left font-semibold font-heading text-foreground hover:text-primary transition-colors"
+                    className={`text-left font-semibold font-heading text-foreground transition-colors hover:text-primary ${REPORT_TEXT_WRAP_CLASS_NAME}`}
                     onClick={() => handleOpenSkill(report.namespace, report.skillSlug)}
                   >
                     {report.namespace && report.skillSlug ? `${report.namespace}/${report.skillSlug}` : skillLabel}
                   </button>
-                  <div className="text-sm text-muted-foreground">{skillLabel}</div>
-                  <div className="text-sm text-foreground">{report.reason}</div>
-                  {report.details ? <div className="text-sm text-muted-foreground whitespace-pre-wrap">{report.details}</div> : null}
+                  <div className={`text-sm text-muted-foreground ${REPORT_TEXT_WRAP_CLASS_NAME}`}>{skillLabel}</div>
+                  <div className={`text-sm text-foreground ${REPORT_TEXT_WRAP_CLASS_NAME}`}>{report.reason}</div>
+                  {report.details ? <div className={`text-sm text-muted-foreground ${REPORT_TEXT_WRAP_CLASS_NAME}`}>{report.details}</div> : null}
                 </div>
                 <div className="text-right text-xs text-muted-foreground space-y-1 shrink-0">
                   <div>{t('reports.reporter')}: {report.reporterId}</div>
