@@ -82,8 +82,10 @@ class SkillSearchAppServiceTest {
     void search_shouldFillVisiblePageAcrossArchivedNamespaceResults() {
         Skill archivedSkill = new Skill(1L, "archived-skill", "owner-1", SkillVisibility.PUBLIC);
         setField(archivedSkill, "id", 10L);
+        archivedSkill.setLatestVersionId(110L);
         Skill visibleSkill = new Skill(2L, "visible-skill", "owner-1", SkillVisibility.PUBLIC);
         setField(visibleSkill, "id", 11L);
+        visibleSkill.setLatestVersionId(111L);
 
         Namespace archivedNamespace = new Namespace("archived-team", "Archived Team", "owner-1");
         setField(archivedNamespace, "id", 1L);
