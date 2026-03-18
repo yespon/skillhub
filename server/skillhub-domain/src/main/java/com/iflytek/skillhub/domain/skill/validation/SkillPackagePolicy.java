@@ -12,13 +12,19 @@ import java.util.Set;
 public final class SkillPackagePolicy {
 
     public static final int MAX_FILE_COUNT = 100;
-    public static final long MAX_SINGLE_FILE_SIZE = 1024 * 1024; // 1MB
-    public static final long MAX_TOTAL_PACKAGE_SIZE = 10 * 1024 * 1024; // 10MB
+    public static final long MAX_SINGLE_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    public static final long MAX_TOTAL_PACKAGE_SIZE = 100 * 1024 * 1024; // 100MB
     public static final String SKILL_MD_PATH = "SKILL.md";
     public static final Set<String> ALLOWED_EXTENSIONS = Set.of(
-            ".md", ".txt", ".json", ".yaml", ".yml",
-            ".js", ".ts", ".py", ".sh",
-            ".png", ".jpg", ".svg"
+            // 文档
+            ".md", ".txt", ".json", ".yaml", ".yml", ".html", ".css", ".csv", ".pdf",
+            // 配置
+            ".toml", ".xml", ".ini", ".cfg", ".env",
+            // 脚本/语言
+            ".js", ".ts", ".py", ".sh", ".rb", ".go", ".rs", ".java", ".kt",
+            ".lua", ".sql", ".r", ".bat", ".ps1", ".zsh", ".bash",
+            // 图片
+            ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp", ".ico"
     );
 
     private SkillPackagePolicy() {
@@ -78,6 +84,33 @@ public final class SkillPackagePolicy {
             String text = new String(content, StandardCharsets.UTF_8).trim().toLowerCase();
             return text.contains("<svg") ? null : "File content does not match extension: " + path;
         }
+        if (lowerPath.endsWith(".jpeg")) {
+            return hasPrefix(content, (byte) 0xff, (byte) 0xd8, (byte) 0xff)
+                    ? null
+                    : "File content does not match extension: " + path;
+        }
+        if (lowerPath.endsWith(".gif")) {
+            return hasPrefix(content, 'G', 'I', 'F', '8')
+                    ? null
+                    : "File content does not match extension: " + path;
+        }
+        if (lowerPath.endsWith(".webp")) {
+            return (content.length >= 12
+                    && hasPrefix(content, 'R', 'I', 'F', 'F')
+                    && content[8] == 'W' && content[9] == 'E' && content[10] == 'B' && content[11] == 'P')
+                    ? null
+                    : "File content does not match extension: " + path;
+        }
+        if (lowerPath.endsWith(".ico")) {
+            return hasPrefix(content, 0x00, 0x00, 0x01, 0x00)
+                    ? null
+                    : "File content does not match extension: " + path;
+        }
+        if (lowerPath.endsWith(".pdf")) {
+            return hasPrefix(content, '%', 'P', 'D', 'F')
+                    ? null
+                    : "File content does not match extension: " + path;
+        }
         if (isTextExtension(lowerPath)) {
             return isUtf8Text(content) ? null : "File content does not match extension: " + path;
         }
@@ -85,15 +118,17 @@ public final class SkillPackagePolicy {
     }
 
     private static boolean isTextExtension(String path) {
-        return path.endsWith(".md")
-                || path.endsWith(".txt")
-                || path.endsWith(".json")
-                || path.endsWith(".yaml")
-                || path.endsWith(".yml")
-                || path.endsWith(".js")
-                || path.endsWith(".ts")
-                || path.endsWith(".py")
-                || path.endsWith(".sh");
+        return path.endsWith(".md") || path.endsWith(".txt")
+                || path.endsWith(".json") || path.endsWith(".yaml") || path.endsWith(".yml")
+                || path.endsWith(".js") || path.endsWith(".ts") || path.endsWith(".py") || path.endsWith(".sh")
+                || path.endsWith(".html") || path.endsWith(".css") || path.endsWith(".csv")
+                || path.endsWith(".toml") || path.endsWith(".xml") || path.endsWith(".ini")
+                || path.endsWith(".cfg") || path.endsWith(".env")
+                || path.endsWith(".rb") || path.endsWith(".go") || path.endsWith(".rs")
+                || path.endsWith(".java") || path.endsWith(".kt") || path.endsWith(".lua")
+                || path.endsWith(".sql") || path.endsWith(".r")
+                || path.endsWith(".bat") || path.endsWith(".ps1")
+                || path.endsWith(".zsh") || path.endsWith(".bash");
     }
 
     private static boolean isUtf8Text(byte[] content) {

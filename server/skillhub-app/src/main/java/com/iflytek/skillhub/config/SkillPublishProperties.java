@@ -11,12 +11,14 @@ import java.util.Set;
 public class SkillPublishProperties {
 
     private int maxFileCount = 100;
-    private long maxSingleFileSize = 1024 * 1024;
+    private long maxSingleFileSize = 10 * 1024 * 1024;  // 10MB
     private long maxPackageSize = 100 * 1024 * 1024;
     private Set<String> allowedFileExtensions = new LinkedHashSet<>(Set.of(
-            ".md", ".txt", ".json", ".yaml", ".yml",
-            ".js", ".ts", ".py", ".sh",
-            ".png", ".jpg", ".svg"
+            ".md", ".txt", ".json", ".yaml", ".yml", ".html", ".css", ".csv", ".pdf",
+            ".toml", ".xml", ".ini", ".cfg", ".env",
+            ".js", ".ts", ".py", ".sh", ".rb", ".go", ".rs", ".java", ".kt",
+            ".lua", ".sql", ".r", ".bat", ".ps1", ".zsh", ".bash",
+            ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp", ".ico"
     ));
 
     public int getMaxFileCount() {
