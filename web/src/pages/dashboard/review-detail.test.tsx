@@ -110,10 +110,10 @@ describe('ReviewDetailPage', () => {
     navigateMock.mockReset()
   })
 
-  it('uses a two-column desktop layout that keeps moderation controls in a sticky sidebar', () => {
+  it('keeps the page in a single-column flow and leaves the skill detail behind a collapsed section', () => {
     const html = renderToStaticMarkup(<ReviewDetailPage />)
 
-    expect(html).toContain('xl:grid xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]')
-    expect(html).toContain('xl:sticky xl:top-6')
+    expect(html).toContain('max-w-3xl animate-fade-up')
+    expect(html).toContain('aria-expanded="false"')
   })
 })

@@ -55,14 +55,14 @@ describe('ReviewSkillDetailSection', () => {
     const html = renderToStaticMarkup(<ReviewSkillDetailSection detail={createDetail()} />)
 
     expect(html).toContain('1.2.0')
-    expect(html).toContain('/api/v1/reviews/1/download')
+    expect(html).toContain('Expand full overview')
   })
 
-  it('renders the detail card as an independently scrollable pane on large screens', () => {
+  it('renders the detail content inside a collapsed disclosure card by default', () => {
     const html = renderToStaticMarkup(<ReviewSkillDetailSection detail={createDetail()} />)
 
-    expect(html).toContain('xl:max-h-[calc(100vh-8rem)]')
-    expect(html).toContain('xl:overflow-y-auto')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain('data-review-skill-detail-panel')
   })
 
   it('renders inline error state without requiring detail data', () => {
