@@ -47,7 +47,7 @@ type ReviewItem = {
   reviewedAt: string | null
 }
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 10
 
 export function ProfileReviewTable() {
   const { t, i18n } = useTranslation()
@@ -163,10 +163,6 @@ export function ProfileReviewTable() {
   }
 
   function renderPagination(status: ReviewStatus, totalElements: number, totalPages: number) {
-    if (totalPages <= 1) {
-      return null
-    }
-
     const currentPage = pages[status]
 
     return (
