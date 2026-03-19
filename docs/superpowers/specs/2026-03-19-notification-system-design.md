@@ -28,7 +28,7 @@ Domain Events (existing + new)
          └── SseEmitterManager (push)
 ```
 
-The notification module consumes domain events via `@TransactionalEventListener`, resolves recipients, filters by user preferences, persists to database, and pushes via SSE. Future third-party channels plug in as additional dispatchers.
+The notification module consumes domain events via `@TransactionalEventListener(phase = AFTER_COMMIT)` + `@Async("skillhubEventExecutor")`, following the same pattern as existing listeners. The async executor pool (max 4 threads) is sufficient for the added load since notification processing is lightweight (DB insert + SSE push).
 
 ## Data Model
 
@@ -41,7 +41,7 @@ The notification module consumes domain events via `@TransactionalEventListener`
 | category | VARCHAR(32) NOT NULL | PUBLISH / REVIEW / PROMOTION / REPORT |
 | event_type | VARCHAR(64) NOT NULL | e.g. skill.published, review.approved |
 | title | VARCHAR(200) NOT NULL | Human-readable title |
-| body_json | TEXT | Structured payload (skill name, version, actor, etc.) |
+| body_json | TEXT | Structured payload (see body_json schema below) |
 | entity_type | VARCHAR(64) | skill / review / report (for navigation) |
 | entity_id | BIGINT | Associated entity ID |
 | status | VARCHAR(20) NOT NULL DEFAULT 'UNREAD' | UNREAD / READ |
@@ -64,6 +64,26 @@ Indexes:
 | UNIQUE(user_id, category, channel) | | |
 
 Behavior: When no explicit preference exists, default to `enabled = true` for all categories on `IN_APP` channel. No pre-inserted rows needed.
+
+### body_json Schema
+
+The `title` column stores an i18n message key (e.g. `notification.review.approved`). The `body_json` column stores interpolation parameters as JSON. The frontend renders the title via `t(title, JSON.parse(bodyJson))`.
+
+Common envelope:
+```json
+{
+  "skillName": "generate-commit",
+  "skillSlug": "generate-commit",
+  "namespace": "team-ai",
+  "version": "1.0.0",
+  "actor": "admin"
+}
+```
+
+Additional fields per event type:
+- `review.*`: `reviewId`, `reason` (for rejected)
+- `promotion.*`: `promotionId`, `reason` (for rejected)
+- `report.*`: `reportId`, `action` (for resolved: "resolved" / "dismissed" / "hidden" / "archived")
 
 ## Domain Events
 
@@ -89,6 +109,30 @@ ReportSubmittedEvent(reportId, skillId, reporterId)
 ReportResolvedEvent(reportId, skillId, handlerId, reporterId, action)
 ```
 
+### Domain Service Modifications
+
+The following existing services need `ApplicationEventPublisher` injected and `publishEvent()` calls added:
+
+| Service | Method | Event to Publish |
+|---------|--------|-----------------|
+| `SkillReviewService.submitForReview()` | After review record created | `ReviewSubmittedEvent` |
+| `SkillReviewService.approve()` | After status set to APPROVED | `ReviewApprovedEvent` |
+| `SkillReviewService.reject()` | After status set to REJECTED | `ReviewRejectedEvent` |
+| `SkillPromotionService.submit()` | After promotion request created | `PromotionSubmittedEvent` |
+| `SkillPromotionService.approve()` | After promotion approved | `PromotionApprovedEvent` |
+| `SkillPromotionService.reject()` | After promotion rejected | `PromotionRejectedEvent` |
+| `SkillReportService.report()` | After report created | `ReportSubmittedEvent` |
+| `SkillReportService.resolve()` / `dismiss()` | After report resolved | `ReportResolvedEvent` |
+
+`SkillPublishService` already publishes `SkillPublishedEvent` — no change needed.
+
+### New Repository Methods for Recipient Resolution
+
+| Repository | New Method | Purpose |
+|-----------|-----------|---------|
+| `NamespaceMemberRepository` | `findByNamespaceIdAndRoleIn(Long nsId, Collection<NamespaceRole> roles)` | Find namespace ADMIN/OWNER for review.submitted |
+| `UserRoleBindingRepository` | `findByRoleCode(String roleCode)` | Find platform SKILL_ADMIN users for promotion/report events |
+
 ### Event → Notification Mapping
 
 | category | event_type | Trigger | Recipients |
@@ -107,8 +151,10 @@ ReportResolvedEvent(reportId, skillId, handlerId, reporterId, action)
 
 New Maven module: `skillhub-notification`
 
+Dependencies: `skillhub-notification` → `skillhub-domain` (domain events, entities, repositories). The `NotificationEventListener` lives in `skillhub-app` (following the existing pattern of `SkillStarEventListener` and `SkillRatingEventListener`), where it can access both `skillhub-notification` services and `skillhub-auth` for role resolution.
+
 ```
-skillhub-notification/
+skillhub-notification/                    -- new module
 ├── domain/
 │   ├── Notification.java
 │   ├── NotificationCategory.java        -- enum: PUBLISH, REVIEW, PROMOTION, REPORT
@@ -120,22 +166,27 @@ skillhub-notification/
 │   ├── NotificationService.java         -- CRUD: create, list, mark read, batch read, unread count
 │   ├── NotificationPreferenceService.java  -- preference CRUD + default fallback
 │   └── NotificationDispatcher.java      -- route by channel (currently IN_APP only)
-├── listener/
-│   └── NotificationEventListener.java   -- consume domain events, resolve recipients, dispatch
 ├── sse/
 │   └── SseEmitterManager.java           -- manage SSE connections: register, push, heartbeat, cleanup
 └── resolver/
     └── RecipientResolver.java           -- resolve recipient list per event type
+
+skillhub-app/                             -- existing module
+└── listener/
+    └── NotificationEventListener.java   -- consume domain events, call RecipientResolver + Dispatcher
 ```
 
 ## SSE Real-Time Push
 
 - Endpoint: `GET /api/notifications/sse`
-- `SseEmitterManager` uses `ConcurrentHashMap<String, List<SseEmitter>>` (one user, multiple tabs)
+- `SseEmitterManager` uses `ConcurrentHashMap<String, CopyOnWriteArrayList<SseEmitter>>` (thread-safe for concurrent tab open/close)
+- Per-user connection limit: max 5 emitters (reject new connections beyond limit)
+- Global connection limit: max 1000 emitters (configurable, reject with 503 when exceeded)
 - SseEmitter timeout: 60s, browser `EventSource` auto-reconnects
 - Heartbeat: `:ping` every 30s to prevent proxy/LB disconnection
 - On emitter complete/timeout/error: auto-remove from map
 - Push failure: silent ignore (notification already persisted, visible on refresh)
+- On `EventSource` reconnect: frontend fetches unread count to sync badge
 
 ## API Design
 
@@ -183,6 +234,7 @@ Response format follows existing SkillHub API conventions (code + data wrapper).
 - Read notifications: retain 30 days
 - Unread notifications: retain 90 days
 - Retention periods configurable
+- Use `ShedLock` or database advisory lock to ensure single-instance execution in multi-pod deployments
 
 ## Configuration
 
