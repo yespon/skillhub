@@ -295,6 +295,14 @@
   "mySkills": {
     "title": "My Skills",
     "subtitle": "Manage your published skills",
+    "filters": {
+      "ALL": "All",
+      "PENDING_REVIEW": "Pending Review",
+      "PUBLISHED": "Published",
+      "REJECTED": "Rejected",
+      "ARCHIVED": "Archived",
+      "HIDDEN": "Hidden"
+    },
     "publishNew": "Publish New Skill",
     "archive": "Archive",
     "unarchive": "Restore",
@@ -302,6 +310,7 @@
     "statusPendingReview": "Pending Review",
     "statusPublished": "Published",
     "statusRejected": "Rejected",
+    "statusHidden": "Hidden",
     "archiveConfirmTitle": "Archive skill",
     "archiveConfirmDescription": "After archiving, regular users will no longer be able to view or download \"{{skill}}\". Continue?",
     "unarchiveConfirmTitle": "Restore skill",
