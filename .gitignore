@@ -88,7 +88,6 @@ deploy/k8s/02-secret.yml
 .superpowers/
 docs/prds/
 docs/requirements/
-docs/review/
 docs/superpowers/
 
 # Local feature notes
