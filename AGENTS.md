@@ -1,18 +1,13 @@
-# AGENTS.md
+# Repository Guidelines
 
-All repository guidelines, development commands, and architecture documentation are maintained in [CLAUDE.md](./CLAUDE.md).
+## Project Structure & Module Organization
+`server/` contains the Java 21 Spring Boot backend as a multi-module Maven project: `skillhub-app`, `skillhub-domain`, `skillhub-auth`, `skillhub-search`, `skillhub-storage`, and `skillhub-infra`. `web/` is the React 19 + Vite frontend. `document/` hosts the Docusaurus documentation site, while `docs/` stores architecture notes, workflow guides, and product decisions. Deployment and ops assets live under `deploy/`, `monitoring/`, and `scripts/`.
 
 Please refer to CLAUDE.md for:
 - Development workflow and commands
 - Architecture and module structure
 - Code conventions and commit guidelines
 - Testing and API contract management
-
-# Repository Guidelines
-
-## Project Structure & Module Organization
-`server/` contains the Java 21 Spring Boot backend as a multi-module Maven project: `skillhub-app`, `skillhub-domain`, `skillhub-auth`, `skillhub-search`, `skillhub-storage`, and `skillhub-infra`. `web/` is the React 19 + Vite frontend. `document/` hosts the Docusaurus documentation site, while `docs/` stores architecture notes, workflow guides, and product decisions. Deployment and ops assets live under `deploy/`, `monitoring/`, and `scripts/`.
-
 ## Build, Test, and Development Commands
 Use the root `Makefile` as the default entry point.
 
