@@ -44,16 +44,12 @@ skillhub:
       enabled: true
   bootstrap:
     admin:
-<<<<<<< Updated upstream
-      enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
-=======
       enabled: true
       user-id: local-admin
       username: admin
       password: Admin@2026
       display-name: Local Admin
       email: admin@skillhub.local
->>>>>>> Stashed changes
   profile:
     moderation:
       machine-review: ${SKILLHUB_PROFILE_MACHINE_REVIEW_ENABLED:true}
