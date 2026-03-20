@@ -82,3 +82,5 @@ docs/requirements/
 docs/review/
 docs/superpowers/
 
+# Local feature notes
+feature_auth.md
