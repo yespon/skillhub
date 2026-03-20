@@ -82,3 +82,4 @@ docs/prds/
 
 #local
 *.local.json
+feature_auth.md

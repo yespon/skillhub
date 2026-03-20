@@ -37,6 +37,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
                 .forEach(authorities::add);
 
+        String registrationId = request.getClientRegistration().getRegistrationId();
         String nameAttributeKey = "sourceid".equals(registrationId) ? "id" : "login";
         return new DefaultOAuth2User(authorities, attrs, nameAttributeKey);
     }
