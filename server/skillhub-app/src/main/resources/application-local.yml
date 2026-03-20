@@ -1,3 +1,6 @@
+server:
+  port: 8081
+
 spring:
   jpa:
     hibernate:
@@ -22,6 +25,18 @@ spring:
           github:
             client-id: ${OAUTH2_GITHUB_CLIENT_ID:local-placeholder}
             client-secret: ${OAUTH2_GITHUB_CLIENT_SECRET:local-placeholder}
+          sourceid:
+            client-id: ${OAUTH2_SOURCEID_CLIENT_ID:skillhub}
+            client-secret: ${OAUTH2_SOURCEID_CLIENT_SECRET:6N5PrPUkNDhK_yiMJln_OcK_GwM4bK5nSKTCtkhWgMcQT3GTng7-zB6tu18MAtMO}
+            authorization-grant-type: authorization_code
+            redirect-uri: https://skillhub.ruijie.com.cn/login/oauth2/code/sourceid
+            client-name: 锐捷单点登录
+        provider:
+          sourceid:
+            authorization-uri: https://sid.ruijie.com.cn/oauth2.0/authorize
+            token-uri: https://sid.ruijie.com.cn/oauth2.0/accessToken
+            user-info-uri: https://sid.ruijie.com.cn/oauth2.0/profile
+            user-name-attribute: id
 
 skillhub:
   auth:
@@ -41,7 +56,16 @@ skillhub:
       reclaim-interval: ${SKILLHUB_SCAN_STREAM_RECLAIM_INTERVAL:PT30S}
   bootstrap:
     admin:
+<<<<<<< Updated upstream
       enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
+=======
+      enabled: true
+      user-id: local-admin
+      username: admin
+      password: Admin@2026
+      display-name: Local Admin
+      email: admin@skillhub.local
+>>>>>>> Stashed changes
   profile:
     moderation:
       machine-review: ${SKILLHUB_PROFILE_MACHINE_REVIEW_ENABLED:true}
