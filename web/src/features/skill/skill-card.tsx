@@ -47,6 +47,11 @@ export function SkillCard({ skill, onClick, highlightStarred = true }: SkillCard
             <h3 className="font-semibold text-lg group-hover:text-primary transition-colors" style={{ color: 'hsl(var(--foreground))' }}>
               {skill.preferredDisplayName ?? skill.displayName}
             </h3>
+            {skill.canonicalDisplayName && skill.canonicalDisplayName !== (skill.preferredDisplayName ?? skill.displayName) ? (
+              <p className="text-xs text-muted-foreground">
+                {skill.canonicalDisplayName}
+              </p>
+            ) : null}
           </div>
           <div className="flex items-center gap-2">
             <NamespaceBadge type="TEAM" name={`@${skill.namespace}`} />
