@@ -171,6 +171,18 @@
     "filters": {
       "label": "Filter:"
     },
+    "facets": {
+      "eyebrow": "Discovery Filters",
+      "title": "Label Facets",
+      "selectedCount": "{{count}} selected",
+      "matchMode": "Match Mode",
+      "modeAny": "Match Any",
+      "modeAll": "Match All",
+      "activeFilters": "Active Filters",
+      "clear": "Clear labels",
+      "empty": "No label facets are available for the current result set.",
+      "starredHint": "Starred mode filters your saved skills locally. Label facets resume after you leave this mode."
+    },
     "sort": {
       "label": "Sort:",
       "relevance": "Relevance",
@@ -703,6 +715,15 @@
   "namespace": {
     "notFound": "Namespace not found",
     "skillList": "Skills",
+    "filtersEyebrow": "Namespace Filters",
+    "filtersTitle": "Label Filters",
+    "matchMode": "Match Mode",
+    "modeAny": "Match Any",
+    "modeAll": "Match All",
+    "activeFilters": "Active Filters",
+    "clearFilters": "Clear labels",
+    "noFacetFilters": "No label facets are available in this namespace.",
+    "resultsCount": "{{count}} skills",
     "emptyTitle": "No skills",
     "emptyDescription": "No skills have been published in this namespace yet"
   },
