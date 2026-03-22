@@ -26,6 +26,12 @@ import java.util.Set;
  * <p>The query pipeline combines structured visibility filters, full-text
  * ranking, and an optional semantic re-ranking pass over a bounded candidate
  * set.
+ *
+ * <p>This class is a deliberate direct-persistence exception. Search ranking,
+ * FTS predicates, and candidate-window tuning are storage-engine-specific
+ * concerns, so keeping the native SQL close to the search adapter is clearer
+ * than forcing that logic through domain repository ports or generic
+ * controller-facing query repositories.
  */
 @Service
 public class PostgresFullTextQueryService implements SearchQueryService {
@@ -130,6 +136,14 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             sql.append("AND d.namespace_id = :namespaceId ");
         }
 
+        if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
+            sql.append("AND d.skill_id IN (");
+            sql.append("SELECT sl.skill_id FROM skill_label sl ");
+            sql.append("JOIN label_definition ld ON ld.id = sl.label_id ");
+            sql.append("WHERE LOWER(ld.slug) IN :labelSlugs");
+            sql.append(") ");
+        }
+
         // Full-text search
         if (hasKeyword) {
             sql.append("AND (");
@@ -185,6 +199,10 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             nativeQuery.setParameter("namespaceId", query.namespaceId());
         }
 
+        if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
+            nativeQuery.setParameter("labelSlugs", query.labelSlugs());
+        }
+
         if (hasKeyword) {
             if (hasTsQuery) {
                 nativeQuery.setParameter("tsQuery", tsQuery);
@@ -225,6 +243,10 @@ public class PostgresFullTextQueryService implements SearchQueryService {
 
         if (query.namespaceId() != null) {
             countQuery.setParameter("namespaceId", query.namespaceId());
+        }
+
+        if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
+            countQuery.setParameter("labelSlugs", query.labelSlugs());
         }
 
         if (hasKeyword) {
