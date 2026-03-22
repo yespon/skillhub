@@ -1189,6 +1189,8 @@
       "private": "Private"
     },
     "file": "Skill Package File",
+    "labels": "Labels",
+    "labelsHint": "Optionally tag your skill with labels for easier discovery.",
     "removeSelectedFile": "Remove selected file",
     "publishing": "Publishing...",
     "confirm": "Confirm Publish",
