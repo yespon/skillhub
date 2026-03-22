@@ -66,7 +66,7 @@ public class ReviewSkillDetailAppService {
         SkillDetailResponse skill = new SkillDetailResponse(
                 snapshot.skill().getId(),
                 snapshot.skill().getSlug(),
-                snapshot.skill().getDisplayName(),
+                preferredDisplayName,
                 preferredDisplayName,
                 snapshot.skill().getDisplayName(),
                 snapshot.skill().getOwnerId(),

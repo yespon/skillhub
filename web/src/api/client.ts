@@ -600,10 +600,23 @@ export const skillTranslationApi = {
 export const namespaceApi = {
   async create(request: CreateNamespaceRequest): Promise<Namespace> {
     const namespace = await fetchJson<Namespace>('/api/v1/namespaces', {
-      method: 'POST',
       headers: await ensureCsrfHeaders({
         'Content-Type': 'application/json',
       }),
+      body: JSON.stringify({
+        displayName: request.displayName.trim(),
+      }),
+    })
+  },
+
+  async remove(namespace: string, slug: string, locale: string): Promise<void> {
+    const cleanNamespace = normalizeNamespaceSlug(namespace)
+    await fetchJson<void>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/translations/${encodeURIComponent(locale)}`, {
+      method: 'DELETE',
+      headers: await ensureCsrfHeaders(),
+    })
+  },
+}
       body: JSON.stringify({
         slug: normalizeNamespaceSlug(request.slug),
         displayName: request.displayName.trim(),
