@@ -5,9 +5,9 @@ import com.iflytek.skillhub.domain.namespace.NamespaceRole;
 import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.namespace.NamespaceStatus;
 import com.iflytek.skillhub.domain.namespace.NamespaceService;
+import com.iflytek.skillhub.domain.label.LabelDefinitionService;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
-import com.iflytek.skillhub.domain.skill.VisibilityChecker;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillLifecycleProjectionService;
@@ -49,6 +49,12 @@ class SkillSearchAppServiceTest {
     @Mock
     private NamespaceService namespaceService;
 
+        @Mock
+        private LabelDefinitionService labelDefinitionService;
+
+        @Mock
+        private LabelLocalizationService labelLocalizationService;
+
     private SkillSearchAppService service;
 
     @BeforeEach
@@ -58,7 +64,9 @@ class SkillSearchAppServiceTest {
                 skillRepository,
                 namespaceRepository,
                 namespaceService,
-                new SkillLifecycleProjectionService(skillVersionRepository)
+                                new SkillLifecycleProjectionService(skillVersionRepository),
+                                labelDefinitionService,
+                                labelLocalizationService
         );
     }
 
@@ -182,12 +190,49 @@ class SkillSearchAppServiceTest {
         when(searchQueryService.search(any()))
                 .thenReturn(new SearchResult(List.of(), 0, 0, 20));
 
-        service.search("skill", null, "newest", 0, 20, List.of(" Code-Generation ", "official", "official"), null, null);
+        service.search("skill", null, "newest", 0, 20, List.of(" Code-Generation ", "official", "official"), "any", true, null, null);
 
         ArgumentCaptor<com.iflytek.skillhub.search.SearchQuery> captor =
                 ArgumentCaptor.forClass(com.iflytek.skillhub.search.SearchQuery.class);
         verify(searchQueryService).search(captor.capture());
         assertEquals(List.of("code-generation", "official"), captor.getValue().labelSlugs());
+        assertEquals("any", captor.getValue().labelMode());
+        assertEquals(true, captor.getValue().includeFacets());
+    }
+
+    @Test
+    void search_shouldMapAppliedFiltersAndFacetMode() {
+        when(searchQueryService.search(any()))
+                .thenReturn(new SearchResult(
+                        List.of(),
+                        0,
+                        0,
+                        20,
+                        List.of(new SearchResult.LabelFacet("official", 3, "PRIVILEGED", true))));
+        when(labelDefinitionService.listVisibleFilters()).thenReturn(List.of());
+        Namespace namespace = new Namespace("global", "Global", "owner-1");
+        setField(namespace, "id", 1L);
+        when(namespaceService.getNamespaceBySlugForRead("global", null, Map.of())).thenReturn(namespace);
+
+        SkillSearchAppService.SearchResponse response = service.search(
+                "skill",
+                "global",
+                "relevance",
+                0,
+                20,
+                List.of("official"),
+                "all",
+                true,
+                null,
+                null);
+
+        assertEquals(List.of("official"), response.appliedFilters().labels());
+        assertEquals("all", response.appliedFilters().labelMode());
+        assertEquals("global", response.appliedFilters().namespace());
+        assertEquals("relevance", response.appliedFilters().sort());
+        assertEquals("all", response.facets().labels().mode());
+        assertEquals(1, response.facets().labels().items().size());
+        assertEquals("official", response.facets().labels().items().getFirst().slug());
     }
 
     private void setField(Object target, String fieldName, Object value) {

@@ -4,6 +4,7 @@ import com.iflytek.skillhub.infra.jpa.SkillSearchDocumentEntity;
 import com.iflytek.skillhub.infra.jpa.SkillSearchDocumentJpaRepository;
 import com.iflytek.skillhub.search.HashingSearchEmbeddingService;
 import com.iflytek.skillhub.search.SearchQuery;
+import com.iflytek.skillhub.search.SearchResult;
 import com.iflytek.skillhub.search.SearchTextTokenizer;
 import com.iflytek.skillhub.search.SearchVisibilityScope;
 import jakarta.persistence.EntityManager;
@@ -290,7 +291,7 @@ class PostgresFullTextQueryServiceTest {
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
         verify(entityManager, org.mockito.Mockito.times(2)).createNativeQuery(sqlCaptor.capture());
         assertThat(sqlCaptor.getAllValues().getFirst()).contains("JOIN label_definition ld ON ld.id = sl.label_id");
-        assertThat(sqlCaptor.getAllValues().getFirst()).contains("WHERE LOWER(ld.slug) IN :labelSlugs");
+        assertThat(sqlCaptor.getAllValues().getFirst()).contains("WHERE ld.slug IN :labelSlugs");
         verify(nativeQuery).setParameter("labelSlugs", List.of("code-generation", "official"));
         verify(countQuery).setParameter("labelSlugs", List.of("code-generation", "official"));
     }
@@ -576,6 +577,80 @@ class PostgresFullTextQueryServiceTest {
         ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
         verify(entityManager, org.mockito.Mockito.times(2)).createNativeQuery(sqlCaptor.capture());
         assertThat(sqlCaptor.getAllValues().getFirst()).contains("JOIN label_definition ld ON ld.id = sl.label_id");
-        assertThat(sqlCaptor.getAllValues().getFirst()).contains("WHERE LOWER(ld.slug) IN :labelSlugs");
+        assertThat(sqlCaptor.getAllValues().getFirst()).contains("WHERE ld.slug IN :labelSlugs");
     }
+
+        @Test
+        void labelModeAllShouldUseGroupByHavingConstraint() {
+                EntityManager entityManager = mock(EntityManager.class);
+                Query nativeQuery = mock(Query.class);
+                Query countQuery = mock(Query.class);
+                when(entityManager.createNativeQuery(anyString()))
+                                .thenReturn(nativeQuery)
+                                .thenReturn(countQuery);
+                when(nativeQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(nativeQuery);
+                when(countQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(countQuery);
+                when(nativeQuery.getResultList()).thenReturn(List.of());
+                when(countQuery.getSingleResult()).thenReturn(0L);
+
+                PostgresFullTextQueryService service = new PostgresFullTextQueryService(entityManager);
+
+                service.search(new SearchQuery(
+                                "agent",
+                                null,
+                                new SearchVisibilityScope(null, Set.of(), Set.of()),
+                                "relevance",
+                                0,
+                                20,
+                                List.of("official", "code-generation"),
+                                "all",
+                                false
+                ));
+
+                verify(nativeQuery).setParameter("labelCount", 2L);
+                verify(countQuery).setParameter("labelCount", 2L);
+                ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+                verify(entityManager, org.mockito.Mockito.times(2)).createNativeQuery(sqlCaptor.capture());
+                assertThat(sqlCaptor.getAllValues().getFirst()).contains("GROUP BY sl.skill_id HAVING COUNT(DISTINCT ld.slug) = :labelCount");
+        }
+
+        @Test
+        void includeFacetsShouldQueryFacetAggregationWhenResultsExist() {
+                EntityManager entityManager = mock(EntityManager.class);
+                Query nativeQuery = mock(Query.class);
+                Query countQuery = mock(Query.class);
+                Query facetQuery = mock(Query.class);
+                when(entityManager.createNativeQuery(anyString()))
+                                .thenReturn(nativeQuery)
+                                .thenReturn(countQuery)
+                                .thenReturn(facetQuery);
+                when(nativeQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(nativeQuery);
+                when(countQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(countQuery);
+                when(facetQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(facetQuery);
+                when(nativeQuery.getResultList()).thenReturn(List.of(1L));
+                when(countQuery.getSingleResult()).thenReturn(1L);
+                when(facetQuery.getResultList()).thenReturn(List.<Object[]>of(new Object[]{"official", 1L, "PRIVILEGED"}));
+
+                PostgresFullTextQueryService service = new PostgresFullTextQueryService(entityManager);
+
+                SearchResult result = service.search(new SearchQuery(
+                                "agent",
+                                null,
+                                new SearchVisibilityScope(null, Set.of(), Set.of()),
+                                "relevance",
+                                0,
+                                20,
+                                List.of("official"),
+                                "any",
+                                true
+                ));
+
+                ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
+                verify(entityManager, org.mockito.Mockito.times(3)).createNativeQuery(sqlCaptor.capture());
+                assertThat(sqlCaptor.getAllValues().get(2)).contains("WITH matched_skills AS");
+                assertThat(sqlCaptor.getAllValues().get(2)).contains("WHERE ld.visible_in_filter = TRUE");
+                assertThat(result.labelFacets()).hasSize(1);
+                assertThat(result.labelFacets().getFirst().slug()).isEqualTo("official");
+                assertThat(result.labelFacets().getFirst().selected()).isTrue();
+        }
 }

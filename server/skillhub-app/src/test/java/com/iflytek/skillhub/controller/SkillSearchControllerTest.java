@@ -43,6 +43,8 @@ class SkillSearchControllerTest {
                 eq(0),
                 eq(20),
                 eq(null),
+                eq("any"),
+                eq(true),
                 any(),
                 any()))
                 .thenReturn(new SkillSearchAppService.SearchResponse(List.of(), 0, 0, 20));
@@ -67,6 +69,8 @@ class SkillSearchControllerTest {
                 eq(0),
                 eq(12),
                 eq(null),
+                eq("any"),
+                eq(true),
                 any(),
                 any()))
                 .thenReturn(new SkillSearchAppService.SearchResponse(List.of(), 0, 0, 12));
@@ -89,6 +93,8 @@ class SkillSearchControllerTest {
                 eq(0),
                 eq(20),
                 eq(List.of("code-generation", "official")),
+                eq("any"),
+                eq(true),
                 any(),
                 any()))
                 .thenReturn(new SkillSearchAppService.SearchResponse(List.of(), 0, 0, 20));
@@ -97,6 +103,31 @@ class SkillSearchControllerTest {
                         .param("q", "review")
                         .param("label", "code-generation")
                         .param("label", "official"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.items").isArray());
+    }
+
+    @Test
+    void searchShouldPassLabelModeAndIncludeFacets() throws Exception {
+        when(skillSearchAppService.search(
+                eq("review"),
+                eq(null),
+                eq("newest"),
+                eq(0),
+                eq(20),
+                eq(List.of("official", "code-generation")),
+                eq("all"),
+                eq(false),
+                any(),
+                any()))
+                .thenReturn(new SkillSearchAppService.SearchResponse(List.of(), 0, 0, 20));
+
+        mockMvc.perform(get("/api/web/skills")
+                        .param("q", "review")
+                        .param("label", "official")
+                        .param("label", "code-generation")
+                        .param("labelMode", "all")
+                        .param("includeFacets", "false"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.items").isArray());
     }
