@@ -33,6 +33,8 @@ public class SkillSearchController extends BaseApiController {
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String namespace,
             @RequestParam(name = "label", required = false) java.util.List<String> labels,
+            @RequestParam(defaultValue = "any") String labelMode,
+            @RequestParam(defaultValue = "true") boolean includeFacets,
             @RequestParam(defaultValue = "newest") String sort,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
@@ -46,6 +48,8 @@ public class SkillSearchController extends BaseApiController {
                 page,
                 size,
                 labels,
+                labelMode,
+                includeFacets,
                 userId,
                 userNsRoles
         );
