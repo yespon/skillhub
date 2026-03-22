@@ -53,6 +53,9 @@ class MySkillAppServiceTest {
     @Mock
     private PromotionRequestRepository promotionRequestRepository;
 
+    @Mock
+    private SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+
     private MySkillAppService service;
     private SkillLifecycleProjectionService skillLifecycleProjectionService;
     private JpaMySkillQueryRepository mySkillQueryRepository;
@@ -63,7 +66,8 @@ class MySkillAppServiceTest {
         mySkillQueryRepository = new JpaMySkillQueryRepository(
                 namespaceRepository,
                 promotionRequestRepository,
-                skillLifecycleProjectionService
+            skillLifecycleProjectionService,
+            skillDisplayNameLocalizationService
         );
         service = new MySkillAppService(
                 skillRepository,
@@ -101,6 +105,8 @@ class MySkillAppServiceTest {
         ReflectionTestUtils.setField(secondSkill, "updatedAt", Instant.parse("2026-03-14T11:00:00Z"));
 
         given(skillRepository.findByIdIn(List.of(2L))).willReturn(List.of(secondSkill));
+        given(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(secondSkill)))
+            .willReturn(java.util.Map.of(2L, "Second Skill"));
         given(skillVersionRepository.findBySkillIdAndStatus(2L, SkillVersionStatus.PUBLISHED)).willReturn(List.of());
         given(skillVersionRepository.findBySkillId(2L)).willReturn(List.of());
         given(namespaceRepository.findByIdIn(List.of(101L))).willReturn(List.of(new Namespace("team-ai", "Team AI", "user-1")));

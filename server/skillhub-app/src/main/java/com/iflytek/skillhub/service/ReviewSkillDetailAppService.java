@@ -33,19 +33,22 @@ public class ReviewSkillDetailAppService {
     private final RbacService rbacService;
     private final SkillQueryService skillQueryService;
     private final SkillDownloadService skillDownloadService;
+        private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
 
     public ReviewSkillDetailAppService(ReviewTaskRepository reviewTaskRepository,
                                        NamespaceRepository namespaceRepository,
                                        ReviewService reviewService,
                                        RbacService rbacService,
                                        SkillQueryService skillQueryService,
-                                       SkillDownloadService skillDownloadService) {
+                                                                           SkillDownloadService skillDownloadService,
+                                                                           SkillDisplayNameLocalizationService skillDisplayNameLocalizationService) {
         this.reviewTaskRepository = reviewTaskRepository;
         this.namespaceRepository = namespaceRepository;
         this.reviewService = reviewService;
         this.rbacService = rbacService;
         this.skillQueryService = skillQueryService;
         this.skillDownloadService = skillDownloadService;
+                this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
     }
 
     public ReviewSkillDetailResponse getReviewSkillDetail(Long reviewId,
@@ -54,10 +57,16 @@ public class ReviewSkillDetailAppService {
         ReviewAccessContext context = loadAuthorizedContext(reviewId, userId, userNsRoles);
         SkillQueryService.ReviewSkillSnapshotDTO snapshot =
                 skillQueryService.getReviewSkillSnapshot(context.task().getSkillVersionId());
+        String preferredDisplayName = skillDisplayNameLocalizationService.resolveDisplayName(
+                snapshot.skill().getId(),
+                snapshot.skill().getDisplayName()
+        );
 
         SkillDetailResponse skill = new SkillDetailResponse(
                 snapshot.skill().getId(),
                 snapshot.skill().getSlug(),
+                preferredDisplayName,
+                preferredDisplayName,
                 snapshot.skill().getDisplayName(),
                 snapshot.skill().getOwnerId(),
                 snapshot.ownerDisplayName(),

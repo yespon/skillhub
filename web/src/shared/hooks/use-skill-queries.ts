@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, SkillFile, SearchParams, PagedResponse, PublishResult, Namespace, NamespaceMember, ManagedNamespace, CreateNamespaceRequest, NamespaceCandidateUser, NamespaceRole, LabelItem, LabelDefinition, SearchResponse } from '@/api/types'
-import { fetchJson, fetchText, getCsrfHeaders, labelApi, meApi, namespaceApi, promotionApi, skillLifecycleApi, WEB_API_PREFIX } from '@/api/client'
+import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, SkillFile, SearchParams, PagedResponse, PublishResult, Namespace, NamespaceMember, ManagedNamespace, CreateNamespaceRequest, NamespaceCandidateUser, NamespaceRole, LabelItem, LabelDefinition, SearchResponse, SkillTranslation, SkillTranslationInput } from '@/api/types'
+import { fetchJson, fetchText, getCsrfHeaders, labelApi, meApi, namespaceApi, promotionApi, skillLifecycleApi, skillTranslationApi, WEB_API_PREFIX } from '@/api/client'
 import { appendNamespaceMember, replaceNamespaceMemberRole } from '@/shared/lib/namespace-member-cache'
 import i18n from '@/i18n/config'
 import { buildSkillSearchUrl, shouldEnableNamespaceMemberCandidates } from './skill-query-helpers'
@@ -29,6 +29,10 @@ export function getSkillLabelsQueryKey(namespace: string, slug: string) {
   return ['labels', 'skill', namespace, slug, getI18nCacheKey()] as const
 }
 
+export function getSkillTranslationsQueryKey(namespace: string, slug: string) {
+  return ['skills', namespace, slug, 'translations'] as const
+}
+
 export function getAdminLabelDefinitionsQueryKey() {
   return ['labels', 'admin', getI18nCacheKey()] as const
 }
@@ -50,6 +54,10 @@ async function getSkillLabels(namespace: string, slug: string): Promise<LabelIte
   return labelApi.listSkillLabels(namespace, slug)
 }
 
+async function getSkillTranslations(namespace: string, slug: string): Promise<SkillTranslation[]> {
+  return skillTranslationApi.list(namespace, slug)
+}
+
 async function getAdminLabelDefinitions(): Promise<LabelDefinition[]> {
   return labelApi.listAdminDefinitions()
 }
@@ -60,6 +68,14 @@ async function attachSkillLabel(params: { namespace: string; slug: string; label
 
 async function detachSkillLabel(params: { namespace: string; slug: string; labelSlug: string }): Promise<void> {
   return labelApi.detachSkillLabel(params.namespace, params.slug, params.labelSlug)
+}
+
+async function upsertSkillTranslation(params: { namespace: string; slug: string; locale: string; request: SkillTranslationInput }): Promise<SkillTranslation> {
+  return skillTranslationApi.upsert(params.namespace, params.slug, params.locale, params.request)
+}
+
+async function deleteSkillTranslation(params: { namespace: string; slug: string; locale: string }): Promise<void> {
+  return skillTranslationApi.remove(params.namespace, params.slug, params.locale)
 }
 
 async function getSkillVersions(namespace: string, slug: string): Promise<SkillVersion[]> {
@@ -136,11 +152,14 @@ async function removeNamespaceMember(params: { slug: string; userId: string }): 
   return namespaceApi.removeMember(params.slug, params.userId)
 }
 
-async function publishSkill(params: { namespace: string; file: File; visibility: string; labels?: string[] }): Promise<PublishResult> {
+async function publishSkill(params: { namespace: string; file: File; visibility: string; labels?: string[]; displayNameZhCn?: string }): Promise<PublishResult> {
   const cleanNamespace = params.namespace.startsWith('@') ? params.namespace.slice(1) : params.namespace
   const formData = new FormData()
   formData.append('file', params.file)
   formData.append('visibility', params.visibility)
+  if (params.displayNameZhCn) {
+    formData.append('displayNameZhCn', params.displayNameZhCn)
+  }
   if (params.labels) {
     for (const label of params.labels) {
       formData.append('label', label)
@@ -185,6 +204,14 @@ export function useSkillLabels(namespace: string, slug: string, enabled = true) 
   return useQuery({
     queryKey: getSkillLabelsQueryKey(namespace, slug),
     queryFn: () => getSkillLabels(namespace, slug),
+    enabled: enabled && !!namespace && !!slug,
+  })
+}
+
+export function useSkillTranslations(namespace: string, slug: string, enabled = true) {
+  return useQuery({
+    queryKey: getSkillTranslationsQueryKey(namespace, slug),
+    queryFn: () => getSkillTranslations(namespace, slug),
     enabled: enabled && !!namespace && !!slug,
   })
 }
@@ -392,6 +419,12 @@ function invalidateSkillLabelQueries(queryClient: ReturnType<typeof useQueryClie
   queryClient.invalidateQueries({ queryKey: ['skills'] })
 }
 
+function invalidateSkillTranslationQueries(queryClient: ReturnType<typeof useQueryClient>, namespace: string, slug: string) {
+  queryClient.invalidateQueries({ queryKey: ['skills', namespace, slug] })
+  queryClient.invalidateQueries({ queryKey: getSkillTranslationsQueryKey(namespace, slug) })
+  queryClient.invalidateQueries({ queryKey: ['skills'] })
+}
+
 export function useAttachSkillLabel() {
   const queryClient = useQueryClient()
 
@@ -410,6 +443,28 @@ export function useDetachSkillLabel() {
     mutationFn: detachSkillLabel,
     onSuccess: (_data, variables) => {
       invalidateSkillLabelQueries(queryClient, variables.namespace, variables.slug)
+    },
+  })
+}
+
+export function useUpsertSkillTranslation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: upsertSkillTranslation,
+    onSuccess: (_data, variables) => {
+      invalidateSkillTranslationQueries(queryClient, variables.namespace, variables.slug)
+    },
+  })
+}
+
+export function useDeleteSkillTranslation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteSkillTranslation,
+    onSuccess: (_data, variables) => {
+      invalidateSkillTranslationQueries(queryClient, variables.namespace, variables.slug)
     },
   })
 }

@@ -54,6 +54,8 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class SkillPublishService {
 
+    private static final String ZH_CN_LOCALE = "zh-cn";
+
     private static final DateTimeFormatter AUTO_VERSION_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneOffset.UTC);
 
@@ -66,6 +68,7 @@ public class SkillPublishService {
     private final NamespaceRepository namespaceRepository;
     private final NamespaceMemberRepository namespaceMemberRepository;
     private final SkillRepository skillRepository;
+    private final SkillTranslationRepository skillTranslationRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final SkillFileRepository skillFileRepository;
     private final ObjectStorageService objectStorageService;
@@ -81,6 +84,7 @@ public class SkillPublishService {
             NamespaceRepository namespaceRepository,
             NamespaceMemberRepository namespaceMemberRepository,
             SkillRepository skillRepository,
+            SkillTranslationRepository skillTranslationRepository,
             SkillVersionRepository skillVersionRepository,
             SkillFileRepository skillFileRepository,
             ObjectStorageService objectStorageService,
@@ -94,6 +98,7 @@ public class SkillPublishService {
         this.namespaceRepository = namespaceRepository;
         this.namespaceMemberRepository = namespaceMemberRepository;
         this.skillRepository = skillRepository;
+        this.skillTranslationRepository = skillTranslationRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.skillFileRepository = skillFileRepository;
         this.objectStorageService = objectStorageService;
@@ -119,7 +124,18 @@ public class SkillPublishService {
             String publisherId,
             SkillVisibility visibility,
             java.util.Set<String> platformRoles) {
-        return publishFromEntriesInternal(namespaceSlug, entries, publisherId, visibility, platformRoles, false, false);
+        return publishFromEntries(namespaceSlug, entries, publisherId, visibility, platformRoles, null);
+    }
+
+    @Transactional
+    public PublishResult publishFromEntries(
+            String namespaceSlug,
+            List<PackageEntry> entries,
+            String publisherId,
+            SkillVisibility visibility,
+            java.util.Set<String> platformRoles,
+            String displayNameZhCn) {
+        return publishFromEntriesInternal(namespaceSlug, entries, publisherId, visibility, platformRoles, false, false, displayNameZhCn);
     }
 
     /**
@@ -155,7 +171,8 @@ public class SkillPublishService {
                 skill.getVisibility(),
                 Set.of(),
                 true,
-                true
+                true,
+                null
         );
     }
 
@@ -166,7 +183,8 @@ public class SkillPublishService {
             SkillVisibility visibility,
             Set<String> platformRoles,
             boolean forceAutoPublish,
-            boolean bypassMembershipCheck) {
+            boolean bypassMembershipCheck,
+            String displayNameZhCn) {
 
         // 1. Find namespace by slug
         Namespace namespace = namespaceRepository.findBySlug(namespaceSlug)
@@ -351,6 +369,7 @@ public class SkillPublishService {
         // 12. Update skill metadata and move the published pointer for auto-publish flows
         skill.setDisplayName(metadata.name());
         skill.setSummary(metadata.description());
+        upsertLocalizedDisplayName(skill.getId(), displayNameZhCn);
         if (autoPublish) {
             skill.setLatestVersionId(version.getId());
             skill.setVisibility(visibility);
@@ -364,6 +383,34 @@ public class SkillPublishService {
 
         // 13. Return identifiers for the created version
         return new PublishResult(skill.getId(), skill.getSlug(), version);
+    }
+
+    private void upsertLocalizedDisplayName(Long skillId, String displayNameZhCn) {
+        String normalizedDisplayName = normalizeLocalizedDisplayName(displayNameZhCn);
+        if (normalizedDisplayName == null) {
+            return;
+        }
+
+        SkillTranslation translation = skillTranslationRepository.findBySkillIdAndLocale(skillId, ZH_CN_LOCALE)
+                .orElseGet(() -> new SkillTranslation(skillId, ZH_CN_LOCALE, normalizedDisplayName));
+        translation.setDisplayName(normalizedDisplayName);
+        translation.setSourceType(SkillTranslationSourceType.USER);
+        translation.setSourceHash(null);
+        skillTranslationRepository.save(translation);
+    }
+
+    private String normalizeLocalizedDisplayName(String displayName) {
+        if (displayName == null) {
+            return null;
+        }
+        String normalized = displayName.trim();
+        if (normalized.isBlank()) {
+            return null;
+        }
+        if (normalized.length() > 200) {
+            throw new DomainBadRequestException("error.skill.translation.displayName.tooLong", 200);
+        }
+        return normalized;
     }
 
     private void deleteReplaceableVersionArtifacts(Skill skill, SkillVersion version) {

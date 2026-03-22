@@ -56,6 +56,8 @@ class ClawHubCompatControllerTest {
                                 1L,
                                 "my-skill",
                                 "My Skill",
+                                "My Skill",
+                                "My Skill",
                                 "test summary",
                                 "ACTIVE",
                                 10L,

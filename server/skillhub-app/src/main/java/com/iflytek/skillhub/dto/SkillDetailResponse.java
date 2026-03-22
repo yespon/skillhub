@@ -7,6 +7,8 @@ public record SkillDetailResponse(
         Long id,
         String slug,
         String displayName,
+        String preferredDisplayName,
+        String canonicalDisplayName,
         String ownerId,
         String ownerDisplayName,
         String summary,

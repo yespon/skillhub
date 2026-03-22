@@ -5,6 +5,7 @@ const navigateMock = vi.fn()
 const hasRoleMock = vi.fn((role: string) => role === 'USER')
 const useSkillDetailMock = vi.fn()
 const useSkillLabelsMock = vi.fn()
+const useSkillTranslationsMock = vi.fn()
 const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
 
 vi.mock('@tanstack/react-router', () => ({
@@ -113,6 +114,7 @@ vi.mock('@/features/social/star-button', () => ({
 vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useSkillDetail: () => useSkillDetailMock(),
   useSkillLabels: () => useSkillLabelsMock(),
+  useSkillTranslations: () => useSkillTranslationsMock(),
   useVisibleLabels: () => ({
     data: [{ slug: 'code-generation', type: 'RECOMMENDED', displayName: 'Code Generation' }],
     isLoading: false,
@@ -120,6 +122,8 @@ vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useAdminLabelDefinitions: () => ({ data: [], isLoading: false }),
   useAttachSkillLabel: () => ({ mutate: vi.fn(), isPending: false }),
   useDetachSkillLabel: () => ({ mutate: vi.fn(), isPending: false }),
+  useUpsertSkillTranslation: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useDeleteSkillTranslation: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useSkillVersions: () => ({
     data: [
       {
@@ -189,6 +193,9 @@ describe('SkillDetailPage', () => {
     useSkillLabelsMock.mockReturnValue({
       data: undefined,
     })
+    useSkillTranslationsMock.mockReturnValue({
+      data: [],
+    })
   })
 
   it('shows hard delete action for the skill owner', () => {
@@ -223,6 +230,18 @@ describe('SkillDetailPage', () => {
     expect(html).toContain('skillDetail.labelsSectionTitle')
     expect(html).toContain('skillDetail.removeLabel')
     expect(html).toContain('skillDetail.addLabel')
+  })
+
+  it('shows the zh-CN translation management card for lifecycle managers', () => {
+    useSkillTranslationsMock.mockReturnValue({
+      data: [{ locale: 'zh-cn', displayName: '演示技能', sourceType: 'USER', updatedAt: '2026-03-22T00:00:00Z' }],
+    })
+
+    const html = renderToStaticMarkup(<SkillDetailPage />)
+
+    expect(html).toContain('skillDetail.translationSectionTitle')
+    expect(html).toContain('演示技能')
+    expect(html).toContain('skillDetail.translationEditAction')
   })
 
   it('navigates to search with the clicked label filter', () => {

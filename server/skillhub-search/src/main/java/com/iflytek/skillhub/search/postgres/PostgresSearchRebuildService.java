@@ -12,6 +12,8 @@ import com.iflytek.skillhub.domain.label.SkillLabelRepository;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
 import com.iflytek.skillhub.domain.skill.SkillStatus;
+import com.iflytek.skillhub.domain.skill.SkillTranslation;
+import com.iflytek.skillhub.domain.skill.SkillTranslationRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.search.SearchIndexService;
@@ -47,6 +49,7 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
     private final LabelDefinitionRepository labelDefinitionRepository;
     private final LabelTranslationRepository labelTranslationRepository;
     private final SkillLabelRepository skillLabelRepository;
+    private final SkillTranslationRepository skillTranslationRepository;
     private final SearchIndexService searchIndexService;
     private final SearchTextTokenizer searchTextTokenizer;
     private final ObjectMapper objectMapper;
@@ -64,6 +67,7 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
                 null,
                 null,
                 null,
+                null,
                 searchIndexService,
                 searchTextTokenizer
         );
@@ -77,6 +81,7 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
             LabelDefinitionRepository labelDefinitionRepository,
             LabelTranslationRepository labelTranslationRepository,
             SkillLabelRepository skillLabelRepository,
+            SkillTranslationRepository skillTranslationRepository,
             SearchIndexService searchIndexService,
             SearchTextTokenizer searchTextTokenizer) {
         this.skillRepository = skillRepository;
@@ -85,6 +90,7 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
         this.labelDefinitionRepository = labelDefinitionRepository;
         this.labelTranslationRepository = labelTranslationRepository;
         this.skillLabelRepository = skillLabelRepository;
+        this.skillTranslationRepository = skillTranslationRepository;
         this.searchIndexService = searchIndexService;
         this.searchTextTokenizer = searchTextTokenizer;
         this.objectMapper = new ObjectMapper();
@@ -125,6 +131,7 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
         addPart(searchParts, skill.getSummary());
 
         Set<String> keywords = new TreeSet<>();
+        appendSkillTranslations(skill.getId(), keywords, searchParts);
         resolveLatestVersion(skill)
                 .map(this::extractParsedMetadata)
                 .map(metadata -> metadata.get("frontmatter"))
@@ -136,6 +143,16 @@ public class PostgresSearchRebuildService implements SearchRebuildService {
                 searchTextTokenizer.enrichForIndex(String.join(" ", keywords)),
                 searchTextTokenizer.enrichForIndex(String.join(" ", searchParts).trim())
         );
+    }
+
+    private void appendSkillTranslations(Long skillId, Set<String> keywords, List<String> searchParts) {
+        if (skillTranslationRepository == null) {
+            return;
+        }
+        for (SkillTranslation translation : skillTranslationRepository.findBySkillId(skillId)) {
+            addKeyword(keywords, translation.getDisplayName());
+            addPart(searchParts, translation.getDisplayName());
+        }
     }
 
     private Optional<SkillVersion> resolveLatestVersion(Skill skill) {
