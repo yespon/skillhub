@@ -34,6 +34,7 @@ import {
 
 type LabelFormState = AdminLabelInput
 type LabelDisplayMode = 'sort-order' | 'usage'
+type LabelTypeFilter = 'ALL' | 'RECOMMENDED' | 'PRIVILEGED'
 
 const EMPTY_TRANSLATION: LabelTranslation = { locale: '', displayName: '' }
 const LABEL_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
@@ -139,8 +140,18 @@ export function getLabelDisplayDefinitions(definitions: LabelDefinition[], mode:
   })
 }
 
-export function getTopUsedDefinitions(definitions: LabelDefinition[], limit = 3) {
-  return getLabelDisplayDefinitions(definitions.filter((definition) => definition.usageCount > 0), 'usage').slice(0, limit)
+export function filterLabelDefinitions(definitions: LabelDefinition[], typeFilter: LabelTypeFilter) {
+  if (typeFilter === 'ALL') {
+    return definitions
+  }
+  return definitions.filter((definition) => definition.type === typeFilter)
+}
+
+export function getTopUsedDefinitions(definitions: LabelDefinition[], limit = 3, typeFilter: LabelTypeFilter = 'ALL') {
+  return getLabelDisplayDefinitions(
+    filterLabelDefinitions(definitions, typeFilter).filter((definition) => definition.usageCount > 0),
+    'usage',
+  ).slice(0, limit)
 }
 
 export function AdminLabelsPage() {
@@ -157,10 +168,12 @@ export function AdminLabelsPage() {
   const [pendingDelete, setPendingDelete] = useState<LabelDefinition | null>(null)
   const [form, setForm] = useState<LabelFormState>(toFormState())
   const [displayMode, setDisplayMode] = useState<LabelDisplayMode>('sort-order')
+  const [typeFilter, setTypeFilter] = useState<LabelTypeFilter>('ALL')
 
   const sortedDefinitions = getLabelDisplayDefinitions(definitions ?? [], 'sort-order')
-  const displayedDefinitions = getLabelDisplayDefinitions(definitions ?? [], displayMode)
-  const topUsedDefinitions = getTopUsedDefinitions(definitions ?? [])
+  const filteredDefinitions = filterLabelDefinitions(definitions ?? [], typeFilter)
+  const displayedDefinitions = getLabelDisplayDefinitions(filteredDefinitions, displayMode)
+  const topUsedDefinitions = getTopUsedDefinitions(definitions ?? [], 3, typeFilter)
 
   const totalUsageCount = sortedDefinitions.reduce((sum, definition) => sum + definition.usageCount, 0)
   const mostUsedLabel = sortedDefinitions.reduce<LabelDefinition | null>((current, definition) => {
@@ -273,6 +286,18 @@ export function AdminLabelsPage() {
     }
   }
 
+  const typeFilterLabel = (filter: LabelTypeFilter) => {
+    if (filter === 'RECOMMENDED') {
+      return t('adminLabels.typeRecommended')
+    }
+    if (filter === 'PRIVILEGED') {
+      return t('adminLabels.typePrivileged')
+    }
+    return t('adminLabels.typeAll')
+  }
+
+  const canReorder = displayMode === 'sort-order' && typeFilter === 'ALL'
+
   return (
     <div className="space-y-8 animate-fade-up">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -323,7 +348,9 @@ export function AdminLabelsPage() {
           <div className="flex items-start justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-foreground">{t('adminLabels.hotLabelsTitle')}</div>
-              <div className="mt-1 text-sm text-muted-foreground">{t('adminLabels.hotLabelsDescription')}</div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {t('adminLabels.hotLabelsDescription', { type: typeFilterLabel(typeFilter) })}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button
@@ -343,6 +370,19 @@ export function AdminLabelsPage() {
                 {t('adminLabels.displayModeUsage')}
               </Button>
             </div>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {(['ALL', 'RECOMMENDED', 'PRIVILEGED'] as const).map((filter) => (
+              <Button
+                key={filter}
+                type="button"
+                size="sm"
+                variant={typeFilter === filter ? 'default' : 'outline'}
+                onClick={() => setTypeFilter(filter)}
+              >
+                {typeFilterLabel(filter)}
+              </Button>
+            ))}
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-3">
             {topUsedDefinitions.map((definition, index) => (
@@ -378,25 +418,44 @@ export function AdminLabelsPage() {
           <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
             <div>
               <div className="text-sm font-semibold text-foreground">{t('adminLabels.tableTitle')}</div>
-              <div className="text-xs text-muted-foreground">{t('adminLabels.tableDescription')}</div>
+              <div className="text-xs text-muted-foreground">
+                {canReorder
+                  ? t('adminLabels.tableDescription')
+                  : t('adminLabels.tableReadonlyHint')}
+              </div>
             </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                variant={displayMode === 'sort-order' ? 'default' : 'outline'}
-                onClick={() => setDisplayMode('sort-order')}
-              >
-                {t('adminLabels.displayModeSortOrder')}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant={displayMode === 'usage' ? 'default' : 'outline'}
-                onClick={() => setDisplayMode('usage')}
-              >
-                {t('adminLabels.displayModeUsage')}
-              </Button>
+            <div className="flex flex-wrap gap-2">
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={displayMode === 'sort-order' ? 'default' : 'outline'}
+                  onClick={() => setDisplayMode('sort-order')}
+                >
+                  {t('adminLabels.displayModeSortOrder')}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={displayMode === 'usage' ? 'default' : 'outline'}
+                  onClick={() => setDisplayMode('usage')}
+                >
+                  {t('adminLabels.displayModeUsage')}
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                {(['ALL', 'RECOMMENDED', 'PRIVILEGED'] as const).map((filter) => (
+                  <Button
+                    key={filter}
+                    type="button"
+                    size="sm"
+                    variant={typeFilter === filter ? 'default' : 'outline'}
+                    onClick={() => setTypeFilter(filter)}
+                  >
+                    {typeFilterLabel(filter)}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
           <Table>
@@ -431,7 +490,7 @@ export function AdminLabelsPage() {
                   <TableCell>{definition.createdAt ? formatLocalDateTime(definition.createdAt, i18n.language) : '-'}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => handleMove(index, -1)} disabled={displayMode !== 'sort-order' || index === 0 || updateSortOrderMutation.isPending}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => handleMove(index, -1)} disabled={!canReorder || index === 0 || updateSortOrderMutation.isPending}>
                         {t('adminLabels.moveUp')}
                       </Button>
                       <Button
@@ -439,7 +498,7 @@ export function AdminLabelsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleMove(index, 1)}
-                        disabled={displayMode !== 'sort-order' || index === displayedDefinitions.length - 1 || updateSortOrderMutation.isPending}
+                        disabled={!canReorder || index === displayedDefinitions.length - 1 || updateSortOrderMutation.isPending}
                       >
                         {t('adminLabels.moveDown')}
                       </Button>
