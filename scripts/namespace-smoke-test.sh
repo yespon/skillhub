@@ -91,15 +91,15 @@ if [[ -z "$USER_CSRF" || -z "$ADMIN_CSRF" ]]; then
   exit 1
 fi
 
-CREATE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+CREATE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -H "Content-Type: application/json" \
   -X POST "$BASE_URL/api/web/namespaces" \
   -d "{\"slug\":\"$SLUG\",\"displayName\":\"Namespace Smoke $SLUG\",\"description\":\"namespace workflow smoke test\"}")"
-assert_code "Owner can create namespace" "$CREATE_RESPONSE" "0"
+assert_code "Platform admin can create namespace" "$CREATE_RESPONSE" "0"
 NAMESPACE_ID="$(json_field "$CREATE_RESPONSE" "data.id")"
 
-MINE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" "$BASE_URL/api/web/me/namespaces")"
+MINE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" "$BASE_URL/api/web/me/namespaces")"
 assert_code "Owner can list my namespaces" "$MINE_RESPONSE" "0"
 if JSON_INPUT="$MINE_RESPONSE" python3 - "$SLUG" <<'PY'
 import json
@@ -122,9 +122,9 @@ else
   fail "Created namespace should appear in owner namespace list with OWNER role"
 fi
 
-ADMIN_MINE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" "$BASE_URL/api/web/me/namespaces")"
-assert_code "Other user can list my namespaces" "$ADMIN_MINE_RESPONSE" "0"
-if JSON_INPUT="$ADMIN_MINE_RESPONSE" python3 - "$SLUG" <<'PY'
+USER_MINE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" "$BASE_URL/api/web/me/namespaces")"
+assert_code "Other user can list my namespaces" "$USER_MINE_RESPONSE" "0"
+if JSON_INPUT="$USER_MINE_RESPONSE" python3 - "$SLUG" <<'PY'
 import json
 import os
 import sys
@@ -139,12 +139,12 @@ else
   fail "Unrelated user should not see team namespace in my namespaces"
 fi
 
-FREEZE_FORBIDDEN_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
+FREEZE_FORBIDDEN_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $USER_CSRF" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/freeze")"
 assert_code "Unrelated user cannot freeze namespace" "$FREEZE_FORBIDDEN_RESPONSE" "403"
 
-CANDIDATES_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" "$BASE_URL/api/web/namespaces/$SLUG/member-candidates?search=local")"
+CANDIDATES_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" "$BASE_URL/api/web/namespaces/$SLUG/member-candidates?search=local")"
 assert_code "Owner can search namespace member candidates" "$CANDIDATES_RESPONSE" "0"
 if JSON_INPUT="$CANDIDATES_RESPONSE" python3 - <<'PY'
 import json
@@ -152,22 +152,22 @@ import os
 import sys
 data = json.loads(os.environ["JSON_INPUT"])
 ids = {item["userId"] for item in data["data"]}
-raise SystemExit(0 if "local-admin" in ids else 1)
+raise SystemExit(0 if "local-user" in ids else 1)
 PY
 then
-  pass "Candidate search returns local-admin"
+  pass "Candidate search returns local-user"
 else
-  fail "Candidate search should include local-admin"
+  fail "Candidate search should include local-user"
 fi
 
-ADD_MEMBER_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+ADD_MEMBER_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -H "Content-Type: application/json" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/members" \
-  -d '{"userId":"local-admin","role":"MEMBER"}')"
+  -d '{"userId":"local-user","role":"MEMBER"}')"
 assert_code "Owner can add namespace members" "$ADD_MEMBER_RESPONSE" "0"
 
-MEMBERS_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" "$BASE_URL/api/web/namespaces/$SLUG/members")"
+MEMBERS_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" "$BASE_URL/api/web/namespaces/$SLUG/members")"
 assert_code "Owner can list namespace members" "$MEMBERS_RESPONSE" "0"
 if JSON_INPUT="$MEMBERS_RESPONSE" python3 - <<'PY'
 import json
@@ -179,23 +179,23 @@ ids = {item["userId"] for item in items}
 raise SystemExit(0 if {"local-user", "local-admin"}.issubset(ids) else 1)
 PY
 then
-  pass "Member list shows owner and invited admin user"
+  pass "Member list shows owner and invited member user"
 else
   fail "Member list should contain owner and invited user"
 fi
 
-REVIEWS_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" "$BASE_URL/api/web/reviews?status=PENDING&namespaceId=$NAMESPACE_ID")"
+REVIEWS_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" "$BASE_URL/api/web/reviews?status=PENDING&namespaceId=$NAMESPACE_ID")"
 assert_code "Owner can open namespace review list" "$REVIEWS_RESPONSE" "0"
 
-PROMOTE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+PROMOTE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -H "Content-Type: application/json" \
-  -X PUT "$BASE_URL/api/web/namespaces/$SLUG/members/local-admin/role" \
+  -X PUT "$BASE_URL/api/web/namespaces/$SLUG/members/local-user/role" \
   -d '{"role":"ADMIN"}')"
 assert_code "Owner can promote member to admin" "$PROMOTE_RESPONSE" "0"
 
-ADMIN_FREEZE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
+ADMIN_FREEZE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $USER_CSRF" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/freeze")"
 assert_code "Namespace admin can freeze namespace" "$ADMIN_FREEZE_RESPONSE" "0"
 if [[ "$(json_field "$ADMIN_FREEZE_RESPONSE" "data.status")" == "FROZEN" ]]; then
@@ -204,27 +204,27 @@ else
   fail "Freeze should set namespace status to FROZEN"
 fi
 
-ADD_WHILE_FROZEN_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+ADD_WHILE_FROZEN_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -H "Content-Type: application/json" \
-  -X POST "$BASE_URL/api/web/namespaces/$SLUG/members" \
-  -d '{"userId":"local-user","role":"MEMBER"}')"
+  -X PUT "$BASE_URL/api/web/namespaces/$SLUG/members/local-user/role" \
+  -d '{"role":"MEMBER"}')"
 assert_code "Frozen namespace rejects member mutation" "$ADD_WHILE_FROZEN_RESPONSE" "400"
 
-ADMIN_UNFREEZE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
+ADMIN_UNFREEZE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $USER_CSRF" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/unfreeze")"
 assert_code "Namespace admin can unfreeze namespace" "$ADMIN_UNFREEZE_RESPONSE" "0"
 
-ADMIN_ARCHIVE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
+ADMIN_ARCHIVE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $USER_CSRF" \
   -H "Content-Type: application/json" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/archive" \
   -d '{"reason":"smoke"}')"
 assert_code "Namespace admin cannot archive namespace" "$ADMIN_ARCHIVE_RESPONSE" "403"
 
-OWNER_ARCHIVE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+OWNER_ARCHIVE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -H "Content-Type: application/json" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/archive" \
   -d '{"reason":"smoke"}')"
@@ -235,8 +235,8 @@ else
   fail "Archive should set namespace status to ARCHIVED"
 fi
 
-OWNER_RESTORE_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
+OWNER_RESTORE_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
   -X POST "$BASE_URL/api/web/namespaces/$SLUG/restore")"
 assert_code "Owner can restore archived namespace" "$OWNER_RESTORE_RESPONSE" "0"
 if [[ "$(json_field "$OWNER_RESTORE_RESPONSE" "data.status")" == "ACTIVE" ]]; then
@@ -245,9 +245,9 @@ else
   fail "Restore should set namespace status back to ACTIVE"
 fi
 
-REMOVE_MEMBER_RESPONSE="$(curl -sS "${USER_HEADERS[@]}" \
-  -H "X-XSRF-TOKEN: $USER_CSRF" \
-  -X DELETE "$BASE_URL/api/web/namespaces/$SLUG/members/local-admin")"
+REMOVE_MEMBER_RESPONSE="$(curl -sS "${ADMIN_HEADERS[@]}" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF" \
+  -X DELETE "$BASE_URL/api/web/namespaces/$SLUG/members/local-user")"
 assert_code "Owner can remove namespace admin" "$REMOVE_MEMBER_RESPONSE" "0"
 
 echo
