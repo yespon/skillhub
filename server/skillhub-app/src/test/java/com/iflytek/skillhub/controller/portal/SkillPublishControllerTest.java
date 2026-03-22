@@ -19,6 +19,7 @@ import com.iflytek.skillhub.domain.skill.SkillVersionStatus;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillPublishService;
 import com.iflytek.skillhub.metrics.SkillHubMetrics;
+import com.iflytek.skillhub.service.SkillTranslationTaskService;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -59,6 +60,9 @@ class SkillPublishControllerTest {
     @MockBean
     private SkillHubMetrics skillHubMetrics;
 
+    @MockBean
+    private SkillTranslationTaskService skillTranslationTaskService;
+
     @Test
     void publish_recordsMetricsAfterSuccess() throws Exception {
         SkillVersion version = new SkillVersion(12L, "1.0.0", "usr_1");
@@ -72,7 +76,8 @@ class SkillPublishControllerTest {
             anyList(),
             eq("usr_1"),
             eq(SkillVisibility.PUBLIC),
-            eq(Set.of("SUPER_ADMIN"))))
+            eq(Set.of("SUPER_ADMIN")),
+            eq("演示技能")))
             .willReturn(new SkillPublishService.PublishResult(12L, "demo-skill", version));
 
         PlatformPrincipal principal = new PlatformPrincipal(
@@ -99,14 +104,17 @@ class SkillPublishControllerTest {
         mockMvc.perform(multipart("/api/v1/skills/global/publish")
                 .file(file)
                 .param("visibility", "PUBLIC")
+                .param("displayNameZhCn", "演示技能")
                 .with(authentication(auth))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
             .andExpect(jsonPath("$.data.skillId").value(12))
-            .andExpect(jsonPath("$.data.slug").value("demo-skill"));
+            .andExpect(jsonPath("$.data.slug").value("demo-skill"))
+            .andExpect(jsonPath("$.data.displayNameZhCn").value("演示技能"));
 
         verify(skillHubMetrics).incrementSkillPublish("global", "PENDING_REVIEW");
+        verify(skillTranslationTaskService).maybeEnqueueForSkill(12L);
     }
 
     private byte[] buildZipBytes() throws Exception {

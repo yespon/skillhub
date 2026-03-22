@@ -38,6 +38,8 @@ import type {
   AdminLabelInput,
   LabelDefinition,
   LabelItem,
+  SkillTranslation,
+  SkillTranslationInput,
 } from './types'
 import { ApiError } from '@/shared/lib/api-error'
 import i18n from '@/i18n/config'
@@ -554,6 +556,34 @@ export const labelApi = {
         'Content-Type': 'application/json',
       }),
       body: JSON.stringify({ items }),
+    })
+  },
+}
+
+export const skillTranslationApi = {
+  async list(namespace: string, slug: string): Promise<SkillTranslation[]> {
+    const cleanNamespace = normalizeNamespaceSlug(namespace)
+    return fetchJson<SkillTranslation[]>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/translations`)
+  },
+
+  async upsert(namespace: string, slug: string, locale: string, request: SkillTranslationInput): Promise<SkillTranslation> {
+    const cleanNamespace = normalizeNamespaceSlug(namespace)
+    return fetchJson<SkillTranslation>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/translations/${encodeURIComponent(locale)}`, {
+      method: 'PUT',
+      headers: await ensureCsrfHeaders({
+        'Content-Type': 'application/json',
+      }),
+      body: JSON.stringify({
+        displayName: request.displayName.trim(),
+      }),
+    })
+  },
+
+  async remove(namespace: string, slug: string, locale: string): Promise<void> {
+    const cleanNamespace = normalizeNamespaceSlug(namespace)
+    await fetchJson<void>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/${slug}/translations/${encodeURIComponent(locale)}`, {
+      method: 'DELETE',
+      headers: await ensureCsrfHeaders(),
     })
   },
 }
