@@ -51,6 +51,9 @@ class ReviewSkillDetailAppServiceTest {
     @Mock
     private SkillDownloadService skillDownloadService;
 
+    @Mock
+    private SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+
     private ReviewSkillDetailAppService service;
 
     @BeforeEach
@@ -61,7 +64,8 @@ class ReviewSkillDetailAppServiceTest {
                 reviewService,
                 rbacService,
                 skillQueryService,
-                skillDownloadService
+            skillDownloadService,
+            skillDisplayNameLocalizationService
         );
     }
 
@@ -78,6 +82,7 @@ class ReviewSkillDetailAppServiceTest {
         given(namespaceRepository.findById(20L)).willReturn(Optional.of(namespace));
         given(rbacService.getUserRoleCodes("admin")).willReturn(Set.of("SKILL_ADMIN"));
         given(reviewService.canViewReview(task, "admin", namespace.getType(), Map.of(), Set.of("SKILL_ADMIN"))).willReturn(true);
+        given(skillDisplayNameLocalizationService.resolveDisplayName(101L, "Skill A")).willReturn("Skill A");
         given(skillQueryService.getReviewSkillSnapshot(101L)).willReturn(
                 new SkillQueryService.ReviewSkillSnapshotDTO(
                         skill,
@@ -114,6 +119,7 @@ class ReviewSkillDetailAppServiceTest {
         given(namespaceRepository.findById(20L)).willReturn(Optional.of(namespace));
         given(rbacService.getUserRoleCodes("admin")).willReturn(Set.of("SKILL_ADMIN"));
         given(reviewService.canViewReview(task, "admin", namespace.getType(), Map.of(), Set.of("SKILL_ADMIN"))).willReturn(true);
+        given(skillDisplayNameLocalizationService.resolveDisplayName(101L, "Skill A")).willReturn("Skill A");
         given(skillQueryService.getReviewSkillSnapshot(101L)).willReturn(
                 new SkillQueryService.ReviewSkillSnapshotDTO(
                         skill,

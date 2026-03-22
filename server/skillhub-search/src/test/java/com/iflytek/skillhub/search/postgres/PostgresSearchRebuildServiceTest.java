@@ -11,6 +11,8 @@ import com.iflytek.skillhub.domain.namespace.Namespace;
 import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
+import com.iflytek.skillhub.domain.skill.SkillTranslation;
+import com.iflytek.skillhub.domain.skill.SkillTranslationRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
@@ -273,6 +275,7 @@ class PostgresSearchRebuildServiceTest {
         LabelDefinitionRepository labelDefinitionRepository = mock(LabelDefinitionRepository.class);
         LabelTranslationRepository labelTranslationRepository = mock(LabelTranslationRepository.class);
         SkillLabelRepository skillLabelRepository = mock(SkillLabelRepository.class);
+        SkillTranslationRepository skillTranslationRepository = mock(SkillTranslationRepository.class);
         SearchIndexService searchIndexService = mock(SearchIndexService.class);
 
         Skill skill = new Skill(7L, "smart-agent", "owner-1", SkillVisibility.PUBLIC);
@@ -303,6 +306,9 @@ class PostgresSearchRebuildServiceTest {
                 new LabelTranslation(10L, "en", "Code Generation"),
                 new LabelTranslation(10L, "zh", "代码生成")
         ));
+        when(skillTranslationRepository.findBySkillId(1L)).thenReturn(List.of(
+          new SkillTranslation(1L, "zh-cn", "智能代理")
+        ));
 
         PostgresSearchRebuildService service = new PostgresSearchRebuildService(
                 skillRepository,
@@ -311,6 +317,7 @@ class PostgresSearchRebuildServiceTest {
                 labelDefinitionRepository,
                 labelTranslationRepository,
                 skillLabelRepository,
+          skillTranslationRepository,
                 searchIndexService,
                 new SearchTextTokenizer()
         );
@@ -323,6 +330,8 @@ class PostgresSearchRebuildServiceTest {
         assertThat(document.keywords()).contains("workflow");
         assertThat(document.keywords()).contains("Code Generation");
         assertThat(document.keywords()).contains("代码生成");
+        assertThat(document.keywords()).contains("智能代理");
+        assertThat(document.searchText()).contains("智能代理");
     }
 
     private PostgresSearchRebuildService newService(SkillRepository skillRepository,
@@ -332,9 +341,11 @@ class PostgresSearchRebuildServiceTest {
         LabelDefinitionRepository labelDefinitionRepository = mock(LabelDefinitionRepository.class);
         LabelTranslationRepository labelTranslationRepository = mock(LabelTranslationRepository.class);
         SkillLabelRepository skillLabelRepository = mock(SkillLabelRepository.class);
+        SkillTranslationRepository skillTranslationRepository = mock(SkillTranslationRepository.class);
         when(skillLabelRepository.findBySkillId(org.mockito.ArgumentMatchers.anyLong())).thenReturn(List.of());
         when(labelDefinitionRepository.findByIdIn(org.mockito.ArgumentMatchers.anyList())).thenReturn(List.of());
         when(labelTranslationRepository.findByLabelIdIn(org.mockito.ArgumentMatchers.anyList())).thenReturn(List.of());
+        when(skillTranslationRepository.findBySkillId(org.mockito.ArgumentMatchers.anyLong())).thenReturn(List.of());
         return new PostgresSearchRebuildService(
                 skillRepository,
                 namespaceRepository,
@@ -342,6 +353,7 @@ class PostgresSearchRebuildServiceTest {
                 labelDefinitionRepository,
                 labelTranslationRepository,
                 skillLabelRepository,
+          skillTranslationRepository,
                 searchIndexService,
                 new SearchTextTokenizer()
         );

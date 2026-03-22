@@ -19,6 +19,7 @@ import com.iflytek.skillhub.dto.SkillVersionResponse;
 import com.iflytek.skillhub.metrics.SkillHubMetrics;
 import com.iflytek.skillhub.ratelimit.RateLimit;
 import com.iflytek.skillhub.service.SkillLabelAppService;
+import com.iflytek.skillhub.service.SkillDisplayNameLocalizationService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -46,18 +47,21 @@ public class SkillController extends BaseApiController {
     private final SkillQueryService skillQueryService;
     private final SkillDownloadService skillDownloadService;
     private final SkillLabelAppService skillLabelAppService;
+        private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
     private final SkillHubMetrics metrics;
 
     public SkillController(
             SkillQueryService skillQueryService,
             SkillDownloadService skillDownloadService,
             SkillLabelAppService skillLabelAppService,
+                        SkillDisplayNameLocalizationService skillDisplayNameLocalizationService,
             SkillHubMetrics metrics,
             ApiResponseFactory responseFactory) {
         super(responseFactory);
         this.skillQueryService = skillQueryService;
         this.skillDownloadService = skillDownloadService;
         this.skillLabelAppService = skillLabelAppService;
+                this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
         this.metrics = metrics;
     }
 
@@ -74,10 +78,13 @@ public class SkillController extends BaseApiController {
 
         SkillQueryService.SkillDetailDTO detail = skillQueryService.getSkillDetail(
                 namespace, slug, userId, userNsRoles != null ? userNsRoles : Map.of());
+        String preferredDisplayName = skillDisplayNameLocalizationService.resolveDisplayName(detail.id(), detail.displayName());
 
         SkillDetailResponse response = new SkillDetailResponse(
                 detail.id(),
                 detail.slug(),
+                preferredDisplayName,
+                preferredDisplayName,
                 detail.displayName(),
                 detail.ownerId(),
                 detail.ownerDisplayName(),

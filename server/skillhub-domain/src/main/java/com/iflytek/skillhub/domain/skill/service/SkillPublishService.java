@@ -1,7 +1,6 @@
 package com.iflytek.skillhub.domain.skill.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iflytek.skillhub.domain.event.ReviewSubmittedEvent;
 import com.iflytek.skillhub.domain.event.SkillPublishedEvent;
 import com.iflytek.skillhub.domain.namespace.Namespace;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
@@ -12,7 +11,6 @@ import com.iflytek.skillhub.domain.namespace.SlugValidator;
 import com.iflytek.skillhub.domain.review.ReviewTaskStatus;
 import com.iflytek.skillhub.domain.review.ReviewTask;
 import com.iflytek.skillhub.domain.review.ReviewTaskRepository;
-import com.iflytek.skillhub.domain.security.SecurityScanService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.shared.exception.DomainForbiddenException;
 import com.iflytek.skillhub.domain.skill.*;
@@ -23,14 +21,10 @@ import com.iflytek.skillhub.domain.skill.validation.PrePublishValidator;
 import com.iflytek.skillhub.domain.skill.validation.SkillPackageValidator;
 import com.iflytek.skillhub.domain.skill.validation.ValidationResult;
 import com.iflytek.skillhub.storage.ObjectStorageService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -39,7 +33,7 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.time.Instant;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -60,9 +54,10 @@ import java.util.zip.ZipOutputStream;
 @Service
 public class SkillPublishService {
 
+    private static final String ZH_CN_LOCALE = "zh-cn";
+
     private static final DateTimeFormatter AUTO_VERSION_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.systemDefault());
-    private static final Logger log = LoggerFactory.getLogger(SkillPublishService.class);
+            DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneOffset.UTC);
 
     public record PublishResult(
             Long skillId,
@@ -73,6 +68,7 @@ public class SkillPublishService {
     private final NamespaceRepository namespaceRepository;
     private final NamespaceMemberRepository namespaceMemberRepository;
     private final SkillRepository skillRepository;
+    private final SkillTranslationRepository skillTranslationRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final SkillFileRepository skillFileRepository;
     private final ObjectStorageService objectStorageService;
@@ -81,8 +77,6 @@ public class SkillPublishService {
     private final PrePublishValidator prePublishValidator;
     private final ObjectMapper objectMapper;
     private final ReviewTaskRepository reviewTaskRepository;
-    private final SecurityScanService securityScanService;
-    private final SkillStorageDeletionCompensationService compensationService;
     private final ApplicationEventPublisher eventPublisher;
     private final Clock clock;
 
@@ -90,6 +84,7 @@ public class SkillPublishService {
             NamespaceRepository namespaceRepository,
             NamespaceMemberRepository namespaceMemberRepository,
             SkillRepository skillRepository,
+            SkillTranslationRepository skillTranslationRepository,
             SkillVersionRepository skillVersionRepository,
             SkillFileRepository skillFileRepository,
             ObjectStorageService objectStorageService,
@@ -98,13 +93,12 @@ public class SkillPublishService {
             PrePublishValidator prePublishValidator,
             ObjectMapper objectMapper,
             ReviewTaskRepository reviewTaskRepository,
-            SecurityScanService securityScanService,
-            SkillStorageDeletionCompensationService compensationService,
             ApplicationEventPublisher eventPublisher,
             Clock clock) {
         this.namespaceRepository = namespaceRepository;
         this.namespaceMemberRepository = namespaceMemberRepository;
         this.skillRepository = skillRepository;
+        this.skillTranslationRepository = skillTranslationRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.skillFileRepository = skillFileRepository;
         this.objectStorageService = objectStorageService;
@@ -113,8 +107,6 @@ public class SkillPublishService {
         this.prePublishValidator = prePublishValidator;
         this.objectMapper = objectMapper;
         this.reviewTaskRepository = reviewTaskRepository;
-        this.securityScanService = securityScanService;
-        this.compensationService = compensationService;
         this.eventPublisher = eventPublisher;
         this.clock = clock;
     }
@@ -132,7 +124,18 @@ public class SkillPublishService {
             String publisherId,
             SkillVisibility visibility,
             java.util.Set<String> platformRoles) {
-        return publishFromEntriesInternal(namespaceSlug, entries, publisherId, visibility, platformRoles, false, false);
+        return publishFromEntries(namespaceSlug, entries, publisherId, visibility, platformRoles, null);
+    }
+
+    @Transactional
+    public PublishResult publishFromEntries(
+            String namespaceSlug,
+            List<PackageEntry> entries,
+            String publisherId,
+            SkillVisibility visibility,
+            java.util.Set<String> platformRoles,
+            String displayNameZhCn) {
+        return publishFromEntriesInternal(namespaceSlug, entries, publisherId, visibility, platformRoles, false, false, displayNameZhCn);
     }
 
     /**
@@ -168,7 +171,8 @@ public class SkillPublishService {
                 skill.getVisibility(),
                 Set.of(),
                 true,
-                true
+                true,
+                null
         );
     }
 
@@ -179,7 +183,8 @@ public class SkillPublishService {
             SkillVisibility visibility,
             Set<String> platformRoles,
             boolean forceAutoPublish,
-            boolean bypassMembershipCheck) {
+            boolean bypassMembershipCheck,
+            String displayNameZhCn) {
 
         // 1. Find namespace by slug
         Namespace namespace = namespaceRepository.findBySlug(namespaceSlug)
@@ -270,7 +275,7 @@ public class SkillPublishService {
             if (matchedVersion.getStatus() == SkillVersionStatus.PUBLISHED) {
                 throw new DomainBadRequestException("error.skill.version.exists", metadata.version());
             }
-            deleteReplaceableVersionArtifacts(skill, matchedVersion, namespaceSlug);
+            deleteReplaceableVersionArtifacts(skill, matchedVersion);
         }
 
         // 8. Create SkillVersion
@@ -358,22 +363,13 @@ public class SkillPublishService {
 
         if (!autoPublish) {
             ReviewTask reviewTask = new ReviewTask(version.getId(), namespace.getId(), publisherId);
-            ReviewTask savedReviewTask = reviewTaskRepository.save(reviewTask);
-            eventPublisher.publishEvent(new ReviewSubmittedEvent(
-                    savedReviewTask.getId(),
-                    skill.getId(),
-                    version.getId(),
-                    savedReviewTask.getSubmittedBy(),
-                    savedReviewTask.getNamespaceId()
-            ));
-            if (securityScanService.isEnabled()) {
-                securityScanService.triggerScan(version.getId(), entries, publisherId);
-            }
+            reviewTaskRepository.save(reviewTask);
         }
 
         // 12. Update skill metadata and move the published pointer for auto-publish flows
         skill.setDisplayName(metadata.name());
         skill.setSummary(metadata.description());
+        upsertLocalizedDisplayName(skill.getId(), displayNameZhCn);
         if (autoPublish) {
             skill.setLatestVersionId(version.getId());
             skill.setVisibility(visibility);
@@ -389,7 +385,35 @@ public class SkillPublishService {
         return new PublishResult(skill.getId(), skill.getSlug(), version);
     }
 
-    private void deleteReplaceableVersionArtifacts(Skill skill, SkillVersion version, String namespaceSlug) {
+    private void upsertLocalizedDisplayName(Long skillId, String displayNameZhCn) {
+        String normalizedDisplayName = normalizeLocalizedDisplayName(displayNameZhCn);
+        if (normalizedDisplayName == null) {
+            return;
+        }
+
+        SkillTranslation translation = skillTranslationRepository.findBySkillIdAndLocale(skillId, ZH_CN_LOCALE)
+                .orElseGet(() -> new SkillTranslation(skillId, ZH_CN_LOCALE, normalizedDisplayName));
+        translation.setDisplayName(normalizedDisplayName);
+        translation.setSourceType(SkillTranslationSourceType.USER);
+        translation.setSourceHash(null);
+        skillTranslationRepository.save(translation);
+    }
+
+    private String normalizeLocalizedDisplayName(String displayName) {
+        if (displayName == null) {
+            return null;
+        }
+        String normalized = displayName.trim();
+        if (normalized.isBlank()) {
+            return null;
+        }
+        if (normalized.length() > 200) {
+            throw new DomainBadRequestException("error.skill.translation.displayName.tooLong", 200);
+        }
+        return normalized;
+    }
+
+    private void deleteReplaceableVersionArtifacts(Skill skill, SkillVersion version) {
         if (version.getStatus() == SkillVersionStatus.PUBLISHED) {
             throw new DomainBadRequestException("error.skill.version.exists", version.getVersion());
         }
@@ -398,17 +422,12 @@ public class SkillPublishService {
                 .ifPresent(reviewTaskRepository::delete);
 
         List<SkillFile> files = skillFileRepository.findByVersionId(version.getId());
-        List<String> storageKeys = new ArrayList<>();
-        files.stream()
-                .map(SkillFile::getStorageKey)
-                .filter(key -> key != null && !key.isBlank())
-                .forEach(storageKeys::add);
-        storageKeys.add(buildBundleStorageKey(skill.getId(), version.getId()));
-        deleteStorageAfterCommit(skill, namespaceSlug, storageKeys);
+        if (!files.isEmpty()) {
+            objectStorageService.deleteObjects(files.stream().map(SkillFile::getStorageKey).toList());
+        }
+        objectStorageService.deleteObject(String.format("packages/%d/%d/bundle.zip", skill.getId(), version.getId()));
         skillFileRepository.deleteByVersionId(version.getId());
-        securityScanService.softDeleteByVersionId(version.getId());
         skillVersionRepository.delete(version);
-        skillVersionRepository.flush();
 
         if (version.getId().equals(skill.getLatestVersionId())) {
             skill.setLatestVersionId(null);
@@ -419,42 +438,6 @@ public class SkillPublishService {
         return namespaceRepository.findById(namespaceId)
                 .orElseThrow(() -> new DomainBadRequestException("error.namespace.notFound", namespaceId))
                 .getSlug();
-    }
-
-    private void deleteStorageAfterCommit(Skill skill, String namespaceSlug, List<String> storageKeys) {
-        if (storageKeys.isEmpty()) {
-            return;
-        }
-        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-            deleteStorageWithCompensation(skill, namespaceSlug, storageKeys);
-            return;
-        }
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                deleteStorageWithCompensation(skill, namespaceSlug, storageKeys);
-            }
-        });
-    }
-
-    private void deleteStorageWithCompensation(Skill skill, String namespaceSlug, List<String> storageKeys) {
-        try {
-            objectStorageService.deleteObjects(storageKeys);
-        } catch (RuntimeException ex) {
-            compensationService.recordFailure(
-                    skill.getId(),
-                    namespaceSlug,
-                    skill.getSlug(),
-                    storageKeys,
-                    ex.getMessage()
-            );
-            log.error("Failed to delete replaced version storage after commit [skillId={}, versionKeys={}]",
-                    skill.getId(), storageKeys, ex);
-        }
-    }
-
-    private String buildBundleStorageKey(Long skillId, Long versionId) {
-        return String.format("packages/%d/%d/bundle.zip", skillId, versionId);
     }
 
     private void assertNamespaceWritable(Namespace namespace) {

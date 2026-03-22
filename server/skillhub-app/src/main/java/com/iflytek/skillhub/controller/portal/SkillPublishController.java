@@ -15,6 +15,7 @@ import com.iflytek.skillhub.metrics.SkillHubMetrics;
 import com.iflytek.skillhub.ratelimit.RateLimit;
 import com.iflytek.skillhub.service.AuditRequestContext;
 import com.iflytek.skillhub.service.SkillLabelAppService;
+import com.iflytek.skillhub.service.SkillTranslationTaskService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,17 +41,20 @@ public class SkillPublishController extends BaseApiController {
 
     private final SkillPublishService skillPublishService;
     private final SkillLabelAppService skillLabelAppService;
+    private final SkillTranslationTaskService skillTranslationTaskService;
     private final SkillPackageArchiveExtractor skillPackageArchiveExtractor;
     private final SkillHubMetrics skillHubMetrics;
 
     public SkillPublishController(SkillPublishService skillPublishService,
                                   SkillLabelAppService skillLabelAppService,
+                                  SkillTranslationTaskService skillTranslationTaskService,
                                   SkillPackageArchiveExtractor skillPackageArchiveExtractor,
                                   ApiResponseFactory responseFactory,
                                   SkillHubMetrics skillHubMetrics) {
         super(responseFactory);
         this.skillPublishService = skillPublishService;
         this.skillLabelAppService = skillLabelAppService;
+        this.skillTranslationTaskService = skillTranslationTaskService;
         this.skillPackageArchiveExtractor = skillPackageArchiveExtractor;
         this.skillHubMetrics = skillHubMetrics;
     }
@@ -65,6 +69,7 @@ public class SkillPublishController extends BaseApiController {
             @PathVariable String namespace,
             @RequestParam("file") MultipartFile file,
             @RequestParam("visibility") String visibility,
+            @RequestParam(name = "displayNameZhCn", required = false) String displayNameZhCn,
             @RequestParam(name = "label", required = false) List<String> labels,
             @AuthenticationPrincipal PlatformPrincipal principal,
             @RequestAttribute(value = "userNsRoles", required = false) Map<Long, NamespaceRole> userNsRoles,
@@ -84,7 +89,8 @@ public class SkillPublishController extends BaseApiController {
                 entries,
                 principal.userId(),
                 skillVisibility,
-                principal.platformRoles()
+                principal.platformRoles(),
+                normalizeOptionalDisplayName(displayNameZhCn)
         );
 
         if (labels != null && !labels.isEmpty()) {
@@ -105,6 +111,8 @@ public class SkillPublishController extends BaseApiController {
             }
         }
 
+        skillTranslationTaskService.maybeEnqueueForSkill(publishResult.skillId());
+
         PublishResponse response = new PublishResponse(
                 publishResult.skillId(),
                 namespace,
@@ -112,10 +120,19 @@ public class SkillPublishController extends BaseApiController {
                 publishResult.version().getVersion(),
                 publishResult.version().getStatus().name(),
                 publishResult.version().getFileCount(),
-                publishResult.version().getTotalSize()
+                publishResult.version().getTotalSize(),
+                normalizeOptionalDisplayName(displayNameZhCn)
         );
         skillHubMetrics.incrementSkillPublish(namespace, publishResult.version().getStatus().name());
 
         return ok("response.success.published", response);
+    }
+
+    private String normalizeOptionalDisplayName(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isBlank() ? null : normalized;
     }
 }

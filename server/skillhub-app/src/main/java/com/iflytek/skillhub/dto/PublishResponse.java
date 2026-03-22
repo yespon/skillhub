@@ -7,5 +7,6 @@ public record PublishResponse(
         String version,
         String status,
         int fileCount,
-        long totalSize
+        long totalSize,
+        String displayNameZhCn
 ) {}
