@@ -4,6 +4,7 @@ import { Layout } from './layout'
 import { getCurrentUser } from '@/api/client'
 import { RoleGuard } from '@/shared/components/role-guard'
 import { normalizeSearchQuery } from '@/shared/lib/search-query'
+import { normalizeSearchLabelMode, normalizeSearchLabels } from '@/shared/hooks/skill-query-helpers'
 
 /**
  * Central route registry for the SkillHub web app.
@@ -202,10 +203,23 @@ const searchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: 'search',
   component: SearchPage,
-  validateSearch: (search: Record<string, unknown>): { q: string; label?: string; sort: string; page: number; starredOnly: boolean } => {
+  validateSearch: (search: Record<string, unknown>): { q: string; labels?: string[]; labelMode?: 'any' | 'all'; sort: string; page: number; starredOnly: boolean } => {
+    const labels = normalizeSearchLabels(
+      Array.isArray(search.labels)
+        ? search.labels.filter((value): value is string => typeof value === 'string')
+        : typeof search.labels === 'string'
+          ? search.labels
+          : typeof search.label === 'string'
+            ? search.label
+            : Array.isArray(search.label)
+              ? search.label.filter((value): value is string => typeof value === 'string')
+              : undefined
+    )
+
     return {
       q: normalizeSearchQuery(typeof search.q === 'string' ? search.q : ''),
-      label: typeof search.label === 'string' && search.label ? search.label : undefined,
+      labels: labels.length > 0 ? labels : undefined,
+      labelMode: normalizeSearchLabelMode(typeof search.labelMode === 'string' ? search.labelMode : undefined),
       sort: (search.sort as string) || 'newest',
       page: Number(search.page) || 0,
       starredOnly: search.starredOnly === true || search.starredOnly === 'true',
@@ -222,6 +236,24 @@ const termsRoute = createRoute({
 const namespaceRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/space/$namespace',
+  validateSearch: (search: Record<string, unknown>): { labels?: string[]; labelMode?: 'any' | 'all' } => {
+    const labels = normalizeSearchLabels(
+      Array.isArray(search.labels)
+        ? search.labels.filter((value): value is string => typeof value === 'string')
+        : typeof search.labels === 'string'
+          ? search.labels
+          : typeof search.label === 'string'
+            ? search.label
+            : Array.isArray(search.label)
+              ? search.label.filter((value): value is string => typeof value === 'string')
+              : undefined
+    )
+
+    return {
+      labels: labels.length > 0 ? labels : undefined,
+      labelMode: normalizeSearchLabelMode(typeof search.labelMode === 'string' ? search.labelMode : undefined),
+    }
+  },
   component: NamespacePage,
 })
 

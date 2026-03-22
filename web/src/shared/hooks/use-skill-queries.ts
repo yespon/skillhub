@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, SkillFile, SearchParams, PagedResponse, PublishResult, Namespace, NamespaceMember, ManagedNamespace, CreateNamespaceRequest, NamespaceCandidateUser, NamespaceRole, LabelItem, LabelDefinition } from '@/api/types'
+import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, SkillFile, SearchParams, PagedResponse, PublishResult, Namespace, NamespaceMember, ManagedNamespace, CreateNamespaceRequest, NamespaceCandidateUser, NamespaceRole, LabelItem, LabelDefinition, SearchResponse } from '@/api/types'
 import { fetchJson, fetchText, getCsrfHeaders, labelApi, meApi, namespaceApi, promotionApi, skillLifecycleApi, WEB_API_PREFIX } from '@/api/client'
 import { appendNamespaceMember, replaceNamespaceMemberRole } from '@/shared/lib/namespace-member-cache'
 import i18n from '@/i18n/config'
@@ -33,8 +33,8 @@ export function getAdminLabelDefinitionsQueryKey() {
   return ['labels', 'admin', getI18nCacheKey()] as const
 }
 
-async function searchSkills(params: SearchParams): Promise<PagedResponse<SkillSummary>> {
-  return fetchJson<PagedResponse<SkillSummary>>(buildSkillSearchUrl(params))
+async function searchSkills(params: SearchParams): Promise<SearchResponse> {
+  return fetchJson<SearchResponse>(buildSkillSearchUrl(params))
 }
 
 async function getSkillDetail(namespace: string, slug: string): Promise<SkillDetail> {
