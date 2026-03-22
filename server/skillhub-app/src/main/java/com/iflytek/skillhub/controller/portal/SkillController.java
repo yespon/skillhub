@@ -47,21 +47,21 @@ public class SkillController extends BaseApiController {
     private final SkillQueryService skillQueryService;
     private final SkillDownloadService skillDownloadService;
     private final SkillLabelAppService skillLabelAppService;
-        private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+    private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
     private final SkillHubMetrics metrics;
 
     public SkillController(
             SkillQueryService skillQueryService,
             SkillDownloadService skillDownloadService,
             SkillLabelAppService skillLabelAppService,
-                        SkillDisplayNameLocalizationService skillDisplayNameLocalizationService,
+            SkillDisplayNameLocalizationService skillDisplayNameLocalizationService,
             SkillHubMetrics metrics,
             ApiResponseFactory responseFactory) {
         super(responseFactory);
         this.skillQueryService = skillQueryService;
         this.skillDownloadService = skillDownloadService;
         this.skillLabelAppService = skillLabelAppService;
-                this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
+        this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
         this.metrics = metrics;
     }
 
@@ -83,7 +83,7 @@ public class SkillController extends BaseApiController {
         SkillDetailResponse response = new SkillDetailResponse(
                 detail.id(),
                 detail.slug(),
-                preferredDisplayName,
+                detail.displayName(),
                 preferredDisplayName,
                 detail.displayName(),
                 detail.ownerId(),

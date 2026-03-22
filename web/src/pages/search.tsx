@@ -32,7 +32,7 @@ function filterStarredSkills(skills: SkillSummary[], query: string): SkillSummar
   }
 
   return skills.filter((skill) =>
-    [skill.displayName, skill.summary, skill.namespace, skill.slug]
+    [skill.preferredDisplayName ?? skill.displayName, skill.summary, skill.namespace, skill.slug]
       .filter(Boolean)
       .some((value) => value!.toLowerCase().includes(normalizedQuery))
   )
