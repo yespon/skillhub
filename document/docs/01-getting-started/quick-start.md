@@ -38,10 +38,11 @@ make dev-all
 
 | 用户 | 角色 | 说明 |
 |------|------|------|
-| `local-user` | 普通用户 | 可发布技能、管理命名空间 |
-| `local-admin` | 超级管理员 | 拥有所有权限，包括审核和用户管理 |
+| `local-user` | 普通用户 | 可发布技能；加入团队命名空间后可按命名空间角色参与协作 |
+| `local-admin` | 超级管理员 | 拥有所有权限，包括创建命名空间、审核和用户管理 |
 
 使用 `X-Mock-User-Id` 请求头在本地开发中模拟用户登录。
+当前实现中，团队命名空间创建需要平台角色 `SKILL_ADMIN` 或 `SUPER_ADMIN`，因此本地开发默认应使用 `local-admin` 创建命名空间，再邀请 `local-user` 加入。
 本地开发环境还会默认创建可密码登录的 bootstrap 管理员账号：
 
 - 用户名：`admin`
@@ -63,8 +64,11 @@ make dev-all-down
 # 重置并重新启动
 make dev-all-reset
 
-# 仅启动后端
+# 仅启动依赖服务（Postgres/Redis/MinIO）
 make dev
+
+# 启动后端开发服务
+make dev-server
 
 # 仅启动前端
 make dev-web
