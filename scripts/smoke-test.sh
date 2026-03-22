@@ -58,7 +58,6 @@ fetch_csrf_token() {
   curl -s -c "$cookie_jar" "$BASE_URL/api/v1/auth/me" >/dev/null
   awk '$6 == "XSRF-TOKEN" { print $7 }' "$cookie_jar" | tail -n 1
 }
-
 echo "=== SkillHub Smoke Test ==="
 echo "Target: $BASE_URL"
 echo
@@ -80,7 +79,6 @@ else
   echo "FAIL: Prometheus metrics (admin login failed, got $ADMIN_LOGIN_STATUS)"
   FAIL=$((FAIL + 1))
 fi
-
 check "Namespaces API" "$BASE_URL/api/v1/namespaces" "200"
 check "Auth required" "$BASE_URL/api/v1/auth/me" "401"
 
