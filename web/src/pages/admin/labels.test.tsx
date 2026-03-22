@@ -35,6 +35,7 @@ vi.mock('@/features/admin/use-admin-labels', () => ({
 
 import {
   AdminLabelsPage,
+  filterLabelDefinitions,
   getLabelDisplayDefinitions,
   getTopUsedDefinitions,
   normalizeLabelFormState,
@@ -130,10 +131,18 @@ describe('AdminLabelsPage', () => {
       'official',
       'internal-only',
     ])
+    expect(filterLabelDefinitions(definitions, 'PRIVILEGED').map((item) => item.slug)).toEqual([
+      'internal-only',
+    ])
     expect(getTopUsedDefinitions(definitions).map((item) => item.slug)).toEqual([
       'code-generation',
       'official',
     ])
+    expect(getTopUsedDefinitions(definitions, 3, 'RECOMMENDED').map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+    ])
+    expect(getTopUsedDefinitions(definitions, 3, 'PRIVILEGED')).toEqual([])
   })
 
   it('normalizes slugs and locales before submission', () => {
