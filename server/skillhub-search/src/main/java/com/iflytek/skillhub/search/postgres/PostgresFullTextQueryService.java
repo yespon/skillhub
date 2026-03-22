@@ -106,22 +106,66 @@ public class PostgresFullTextQueryService implements SearchQueryService {
                 ? Set.of(-1L)
                 : query.visibilityScope().adminNamespaceIds();
 
+        String baseSql = buildBaseSql(query, hasKeyword, hasTsQuery, useShortPrefixTitleSearch);
+        String searchSql = "SELECT d.skill_id " + baseSql + buildOrderByClause(query.sortBy(), useRelevanceOrdering, useShortPrefixTitleSearch, hasTsQuery)
+                + "LIMIT :limit OFFSET :offset";
+
+        Query nativeQuery = entityManager.createNativeQuery(searchSql);
+        applyCommonParameters(nativeQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+                hasKeyword, useRelevanceOrdering, sqlLimit, sqlOffset, true);
+
+        @SuppressWarnings("unchecked")
+        List<Long> skillIds = (List<Long>) nativeQuery.getResultList().stream()
+                .map(obj -> ((Number) obj).longValue())
+                .toList();
+
+        String countSql = "SELECT COUNT(*) " + baseSql;
+        Query countQuery = entityManager.createNativeQuery(countSql);
+        applyCommonParameters(countQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+                hasKeyword, false, null, null, false);
+
+        long total = ((Number) countQuery.getSingleResult()).longValue();
+
+        if (useSemanticRerank && !skillIds.isEmpty()) {
+            skillIds = rerankBySemanticSimilarity(skillIds, normalizedKeyword, requestedOffset, query.size());
+        }
+
+        List<SearchResult.LabelFacet> labelFacets = query.includeFacets() && !skillIds.isEmpty()
+                ? queryLabelFacets(baseSql, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery, hasKeyword)
+                : List.of();
+
+        return new SearchResult(skillIds, total, query.page(), query.size(), labelFacets);
+    }
+
+    private String buildBaseSql(SearchQuery query,
+                                boolean hasKeyword,
+                                boolean hasTsQuery,
+                                boolean useShortPrefixTitleSearch) {
         StringBuilder sql = new StringBuilder();
-        sql.append("SELECT d.skill_id ");
         sql.append("FROM skill_search_document d ");
         sql.append("JOIN skill s ON s.id = d.skill_id ");
         sql.append("JOIN namespace n ON n.id = d.namespace_id ");
         sql.append("WHERE 1=1 ");
 
-        // Visibility filtering
+        appendVisibilityFilters(sql, query);
+        appendStatusFilters(sql, query);
+        appendNamespaceFilter(sql, query);
+        appendLabelFilter(sql, query);
+        appendKeywordFilter(sql, hasKeyword, hasTsQuery, useShortPrefixTitleSearch);
+
+        return sql.toString();
+    }
+
+    private void appendVisibilityFilters(StringBuilder sql, SearchQuery query) {
         sql.append("AND (d.visibility = 'PUBLIC' ");
         if (query.visibilityScope().userId() != null) {
             sql.append("OR (d.visibility = 'NAMESPACE_ONLY' AND d.namespace_id IN :memberNamespaceIds) ");
             sql.append("OR (d.visibility = 'PRIVATE' AND (d.namespace_id IN :adminNamespaceIds OR d.owner_id = :userId)) ");
         }
         sql.append(") ");
+    }
 
-        // Status filtering
+    private void appendStatusFilters(StringBuilder sql, SearchQuery query) {
         sql.append("AND d.status = 'ACTIVE' ");
         sql.append("AND s.status = 'ACTIVE' ");
         sql.append("AND s.hidden = FALSE ");
@@ -130,41 +174,59 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             sql.append("OR d.namespace_id IN :memberNamespaceIds ");
         }
         sql.append(") ");
+    }
 
-        // Namespace filtering
+    private void appendNamespaceFilter(StringBuilder sql, SearchQuery query) {
         if (query.namespaceId() != null) {
             sql.append("AND d.namespace_id = :namespaceId ");
         }
+    }
 
-        if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
-            sql.append("AND d.skill_id IN (");
-            sql.append("SELECT sl.skill_id FROM skill_label sl ");
-            sql.append("JOIN label_definition ld ON ld.id = sl.label_id ");
-            sql.append("WHERE LOWER(ld.slug) IN :labelSlugs");
-            sql.append(") ");
+    private void appendLabelFilter(StringBuilder sql, SearchQuery query) {
+        if (query.labelSlugs() == null || query.labelSlugs().isEmpty()) {
+            return;
         }
 
-        // Full-text search
-        if (hasKeyword) {
-            sql.append("AND (");
-            if (hasTsQuery) {
-                if (useShortPrefixTitleSearch) {
-                    sql.append(TITLE_VECTOR_SQL).append(" @@ to_tsquery('simple', :tsQuery) ");
-                } else {
-                    sql.append("d.search_vector @@ to_tsquery('simple', :tsQuery) ");
-                }
-                sql.append(" OR ");
+        sql.append("AND d.skill_id IN (");
+        sql.append("SELECT sl.skill_id FROM skill_label sl ");
+        sql.append("JOIN label_definition ld ON ld.id = sl.label_id ");
+        sql.append("WHERE ld.slug IN :labelSlugs ");
+        if ("all".equals(query.labelMode())) {
+            sql.append("GROUP BY sl.skill_id HAVING COUNT(DISTINCT ld.slug) = :labelCount ");
+        }
+        sql.append(") ");
+    }
+
+    private void appendKeywordFilter(StringBuilder sql,
+                                     boolean hasKeyword,
+                                     boolean hasTsQuery,
+                                     boolean useShortPrefixTitleSearch) {
+        if (!hasKeyword) {
+            return;
+        }
+        sql.append("AND (");
+        if (hasTsQuery) {
+            if (useShortPrefixTitleSearch) {
+                sql.append(TITLE_VECTOR_SQL).append(" @@ to_tsquery('simple', :tsQuery) ");
+            } else {
+                sql.append("d.search_vector @@ to_tsquery('simple', :tsQuery) ");
             }
-            sql.append(TITLE_SQL).append(" LIKE :titleLike");
-            sql.append(") ");
+            sql.append(" OR ");
         }
+        sql.append(TITLE_SQL).append(" LIKE :titleLike");
+        sql.append(") ");
+    }
 
-        // Sorting
-        if ("downloads".equals(query.sortBy())) {
+    private String buildOrderByClause(String sortBy,
+                                      boolean useRelevanceOrdering,
+                                      boolean useShortPrefixTitleSearch,
+                                      boolean hasTsQuery) {
+        StringBuilder sql = new StringBuilder();
+        if ("downloads".equals(sortBy)) {
             sql.append("ORDER BY s.download_count DESC, s.updated_at DESC, d.skill_id DESC ");
-        } else if ("rating".equals(query.sortBy())) {
+        } else if ("rating".equals(sortBy)) {
             sql.append("ORDER BY s.rating_avg DESC, s.updated_at DESC, d.skill_id DESC ");
-        } else if ("newest".equals(query.sortBy())) {
+        } else if ("newest".equals(sortBy)) {
             sql.append("ORDER BY s.updated_at DESC, d.skill_id DESC ");
         } else if (useRelevanceOrdering) {
             sql.append("ORDER BY CASE ");
@@ -183,86 +245,87 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         } else {
             sql.append("ORDER BY s.updated_at DESC, d.skill_id DESC ");
         }
+        return sql.toString();
+    }
 
-        // Pagination
-        sql.append("LIMIT :limit OFFSET :offset");
-
-        Query nativeQuery = entityManager.createNativeQuery(sql.toString());
-
+    private void applyCommonParameters(Query queryObject,
+                                       SearchQuery query,
+                                       Set<Long> memberNamespaceIds,
+                                       Set<Long> adminNamespaceIds,
+                                       String normalizedKeyword,
+                                       String tsQuery,
+                                       boolean hasKeyword,
+                                       boolean includeRelevanceOrderingParameters,
+                                       Integer limit,
+                                       Integer offset,
+                                       boolean includePagination) {
         if (query.visibilityScope().userId() != null) {
-            nativeQuery.setParameter("memberNamespaceIds", memberNamespaceIds);
-            nativeQuery.setParameter("adminNamespaceIds", adminNamespaceIds);
-            nativeQuery.setParameter("userId", query.visibilityScope().userId());
+            queryObject.setParameter("memberNamespaceIds", memberNamespaceIds);
+            queryObject.setParameter("adminNamespaceIds", adminNamespaceIds);
+            queryObject.setParameter("userId", query.visibilityScope().userId());
         }
 
         if (query.namespaceId() != null) {
-            nativeQuery.setParameter("namespaceId", query.namespaceId());
+            queryObject.setParameter("namespaceId", query.namespaceId());
         }
 
         if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
-            nativeQuery.setParameter("labelSlugs", query.labelSlugs());
+            queryObject.setParameter("labelSlugs", query.labelSlugs());
+            if ("all".equals(query.labelMode())) {
+                queryObject.setParameter("labelCount", (long) query.labelSlugs().size());
+            }
         }
 
         if (hasKeyword) {
-            if (hasTsQuery) {
-                nativeQuery.setParameter("tsQuery", tsQuery);
+            if (tsQuery != null) {
+                queryObject.setParameter("tsQuery", tsQuery);
             }
-            if (useRelevanceOrdering) {
-                nativeQuery.setParameter("titleExact", normalizedKeyword.toLowerCase(Locale.ROOT));
-                nativeQuery.setParameter("titlePrefix", normalizedKeyword.toLowerCase(Locale.ROOT) + "%");
+            if (includeRelevanceOrderingParameters) {
+                queryObject.setParameter("titleExact", normalizedKeyword.toLowerCase(Locale.ROOT));
+                queryObject.setParameter("titlePrefix", normalizedKeyword.toLowerCase(Locale.ROOT) + "%");
             }
-            nativeQuery.setParameter("titleLike", "%" + normalizedKeyword.toLowerCase(Locale.ROOT) + "%");
+            queryObject.setParameter("titleLike", "%" + normalizedKeyword.toLowerCase(Locale.ROOT) + "%");
         }
 
-        nativeQuery.setParameter("limit", sqlLimit);
-        nativeQuery.setParameter("offset", sqlOffset);
+        if (includePagination) {
+            queryObject.setParameter("limit", limit);
+            queryObject.setParameter("offset", offset);
+        }
+    }
+
+    private List<SearchResult.LabelFacet> queryLabelFacets(String baseSql,
+                                                           SearchQuery query,
+                                                           Set<Long> memberNamespaceIds,
+                                                           Set<Long> adminNamespaceIds,
+                                                           String normalizedKeyword,
+                                                           String tsQuery,
+                                                           boolean hasKeyword) {
+        String facetSql = "WITH matched_skills AS (SELECT DISTINCT d.skill_id " + baseSql + ") "
+                + "SELECT ld.slug, COUNT(DISTINCT ms.skill_id) AS skill_count, ld.type "
+                + "FROM matched_skills ms "
+                + "JOIN skill_label sl ON sl.skill_id = ms.skill_id "
+                + "JOIN label_definition ld ON ld.id = sl.label_id "
+                + "WHERE ld.visible_in_filter = TRUE "
+                + "GROUP BY ld.slug, ld.type, ld.sort_order "
+                + "ORDER BY ld.sort_order ASC, ld.slug ASC";
+        Query facetQuery = entityManager.createNativeQuery(facetSql);
+        applyCommonParameters(facetQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+                hasKeyword, false, null, null, false);
 
         @SuppressWarnings("unchecked")
-        List<Long> skillIds = (List<Long>) nativeQuery.getResultList().stream()
-                .map(obj -> ((Number) obj).longValue())
+        List<Object[]> rows = facetQuery.getResultList();
+        Set<String> selectedSlugs = query.labelSlugs() == null
+            ? Set.of()
+            : query.labelSlugs().stream().collect(java.util.stream.Collectors.toSet());
+
+        return rows.stream()
+                .map(row -> new SearchResult.LabelFacet(
+                        (String) row[0],
+                        ((Number) row[1]).longValue(),
+                        row[2] != null ? row[2].toString() : null,
+                        selectedSlugs.contains((String) row[0])
+                ))
                 .toList();
-
-        // Count total
-        String countSql = sql.toString().replaceFirst("SELECT d\\.skill_id", "SELECT COUNT(*)");
-        int orderByIndex = countSql.indexOf("ORDER BY");
-        if (orderByIndex >= 0) {
-            countSql = countSql.substring(0, orderByIndex);
-        }
-        int limitIndex = countSql.indexOf("LIMIT");
-        if (limitIndex >= 0) {
-            countSql = countSql.substring(0, limitIndex);
-        }
-
-        Query countQuery = entityManager.createNativeQuery(countSql);
-
-        if (query.visibilityScope().userId() != null) {
-            countQuery.setParameter("memberNamespaceIds", memberNamespaceIds);
-            countQuery.setParameter("adminNamespaceIds", adminNamespaceIds);
-            countQuery.setParameter("userId", query.visibilityScope().userId());
-        }
-
-        if (query.namespaceId() != null) {
-            countQuery.setParameter("namespaceId", query.namespaceId());
-        }
-
-        if (query.labelSlugs() != null && !query.labelSlugs().isEmpty()) {
-            countQuery.setParameter("labelSlugs", query.labelSlugs());
-        }
-
-        if (hasKeyword) {
-            if (hasTsQuery) {
-                countQuery.setParameter("tsQuery", tsQuery);
-            }
-            countQuery.setParameter("titleLike", "%" + normalizedKeyword.toLowerCase(Locale.ROOT) + "%");
-        }
-
-        long total = ((Number) countQuery.getSingleResult()).longValue();
-
-        if (useSemanticRerank && !skillIds.isEmpty()) {
-            skillIds = rerankBySemanticSimilarity(skillIds, normalizedKeyword, requestedOffset, query.size());
-        }
-
-        return new SearchResult(skillIds, total, query.page(), query.size());
     }
 
     private List<Long> rerankBySemanticSimilarity(List<Long> candidateSkillIds,

@@ -9,5 +9,18 @@ public record SearchResult(
         List<Long> skillIds,
         long total,
         int page,
-        int size
-) {}
+        int size,
+        List<LabelFacet> labelFacets
+) {
+    public SearchResult(List<Long> skillIds, long total, int page, int size) {
+        this(skillIds, total, page, size, List.of());
+    }
+
+    public record LabelFacet(
+            String slug,
+            long count,
+            String type,
+            boolean selected
+    ) {
+    }
+}
