@@ -33,22 +33,22 @@ public class ReviewSkillDetailAppService {
     private final RbacService rbacService;
     private final SkillQueryService skillQueryService;
     private final SkillDownloadService skillDownloadService;
-        private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+    private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
 
     public ReviewSkillDetailAppService(ReviewTaskRepository reviewTaskRepository,
                                        NamespaceRepository namespaceRepository,
                                        ReviewService reviewService,
                                        RbacService rbacService,
                                        SkillQueryService skillQueryService,
-                                                                           SkillDownloadService skillDownloadService,
-                                                                           SkillDisplayNameLocalizationService skillDisplayNameLocalizationService) {
+                                       SkillDownloadService skillDownloadService,
+                                       SkillDisplayNameLocalizationService skillDisplayNameLocalizationService) {
         this.reviewTaskRepository = reviewTaskRepository;
         this.namespaceRepository = namespaceRepository;
         this.reviewService = reviewService;
         this.rbacService = rbacService;
         this.skillQueryService = skillQueryService;
         this.skillDownloadService = skillDownloadService;
-                this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
+        this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
     }
 
     public ReviewSkillDetailResponse getReviewSkillDetail(Long reviewId,
@@ -65,7 +65,7 @@ public class ReviewSkillDetailAppService {
         SkillDetailResponse skill = new SkillDetailResponse(
                 snapshot.skill().getId(),
                 snapshot.skill().getSlug(),
-                preferredDisplayName,
+                snapshot.skill().getDisplayName(),
                 preferredDisplayName,
                 snapshot.skill().getDisplayName(),
                 snapshot.skill().getOwnerId(),

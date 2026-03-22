@@ -49,6 +49,9 @@ public class SkillTranslationTask {
     @Column(name = "locked_at")
     private Instant lockedAt;
 
+    @Column(name = "locked_by", length = 128)
+    private String lockedBy;
+
     @Column(name = "completed_at")
     private Instant completedAt;
 
@@ -146,6 +149,14 @@ public class SkillTranslationTask {
 
     public void setLockedAt(Instant lockedAt) {
         this.lockedAt = lockedAt;
+    }
+
+    public String getLockedBy() {
+        return lockedBy;
+    }
+
+    public void setLockedBy(String lockedBy) {
+        this.lockedBy = lockedBy;
     }
 
     public Instant getCompletedAt() {

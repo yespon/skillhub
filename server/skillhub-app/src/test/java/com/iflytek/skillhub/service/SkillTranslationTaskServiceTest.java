@@ -1,6 +1,8 @@
 package com.iflytek.skillhub.service;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -66,7 +68,8 @@ class SkillTranslationTaskServiceTest {
         Skill skill = skill(88L, "Demo Skill");
         SkillTranslationTask task = new SkillTranslationTask(88L, "zh-cn", "Demo Skill", sha256("Demo Skill"));
         ReflectionTestUtils.setField(task, "id", 100L);
-        when(skillTranslationTaskRepository.findProcessableTasks(Instant.parse("2026-03-22T00:00:00Z"), 10)).thenReturn(List.of(task));
+        when(skillTranslationTaskRepository.claimProcessableTasks(eq(Instant.parse("2026-03-22T00:00:00Z")), anyInt(), anyString())).thenReturn(1);
+        when(skillTranslationTaskRepository.findByStatusAndLockedBy(eq(SkillTranslationTaskStatus.RUNNING), anyString())).thenReturn(List.of(task));
         when(skillRepository.findById(88L)).thenReturn(Optional.of(skill));
         when(skillTranslationRepository.findBySkillIdAndLocale(88L, "zh-cn")).thenReturn(Optional.empty());
         when(translationProvider.translateToZhCn("Demo Skill")).thenReturn(Optional.of("演示技能"));

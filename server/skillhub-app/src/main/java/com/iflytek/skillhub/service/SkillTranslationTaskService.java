@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,7 @@ public class SkillTranslationTaskService {
     private final Clock clock;
     private final boolean autoTranslationEnabled;
     private final int batchSize;
+    private final String workerId;
 
     public SkillTranslationTaskService(SkillRepository skillRepository,
                                        SkillTranslationRepository skillTranslationRepository,
@@ -61,6 +63,7 @@ public class SkillTranslationTaskService {
         this.clock = clock;
         this.autoTranslationEnabled = autoTranslationEnabled;
         this.batchSize = batchSize;
+        this.workerId = UUID.randomUUID().toString().substring(0, 8);
     }
 
     @Transactional
@@ -125,7 +128,13 @@ public class SkillTranslationTaskService {
         if (!autoTranslationEnabled) {
             return 0;
         }
-        List<SkillTranslationTask> tasks = skillTranslationTaskRepository.findProcessableTasks(Instant.now(clock), Math.max(batchSize, 1));
+        Instant now = Instant.now(clock);
+        int claimed = skillTranslationTaskRepository.claimProcessableTasks(now, Math.max(batchSize, 1), workerId);
+        if (claimed == 0) {
+            return 0;
+        }
+        List<SkillTranslationTask> tasks = skillTranslationTaskRepository.findByStatusAndLockedBy(
+                SkillTranslationTaskStatus.RUNNING, workerId);
         int processed = 0;
         for (SkillTranslationTask task : tasks) {
             processTask(task);
@@ -135,12 +144,6 @@ public class SkillTranslationTaskService {
     }
 
     private void processTask(SkillTranslationTask task) {
-        Instant now = Instant.now(clock);
-        task.setStatus(SkillTranslationTaskStatus.RUNNING);
-        task.setLockedAt(now);
-        task.setAttemptCount(task.getAttemptCount() + 1);
-        skillTranslationTaskRepository.save(task);
-
         try {
             Skill skill = skillRepository.findById(task.getSkillId()).orElse(null);
             if (skill == null) {
