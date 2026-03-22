@@ -5,6 +5,7 @@ const navigateMock = vi.fn()
 const hasRoleMock = vi.fn((role: string) => role === 'USER')
 const useSkillDetailMock = vi.fn()
 const useSkillLabelsMock = vi.fn()
+const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -43,6 +44,26 @@ vi.mock('@/features/report/use-skill-reports', () => ({
 vi.mock('@/shared/lib/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }))
+
+vi.mock('@/shared/ui/button', async () => {
+  const actual = await vi.importActual<typeof import('@/shared/ui/button')>('@/shared/ui/button')
+  return {
+    ...actual,
+    Button: ({
+      children,
+      onClick,
+      'aria-label': ariaLabel,
+    }: {
+      children?: React.ReactNode
+      onClick?: () => void
+      'aria-label'?: string
+    }) => {
+      const label = ariaLabel ?? (Array.isArray(children) ? children.join('') : String(children ?? ''))
+      buttonRecords.push({ label, onClick })
+      return <button onClick={onClick}>{children}</button>
+    },
+  }
+})
 
 vi.mock('@/api/client', () => ({
   adminApi: {
@@ -158,6 +179,7 @@ function createSkill(overrides: Record<string, unknown> = {}) {
 describe('SkillDetailPage', () => {
   beforeEach(() => {
     navigateMock.mockReset()
+    buttonRecords.length = 0
     hasRoleMock.mockImplementation((role: string) => role === 'USER')
     useSkillDetailMock.mockReturnValue({
       data: createSkill(),
@@ -201,6 +223,33 @@ describe('SkillDetailPage', () => {
     expect(html).toContain('skillDetail.labelsSectionTitle')
     expect(html).toContain('skillDetail.removeLabel')
     expect(html).toContain('skillDetail.addLabel')
+  })
+
+  it('navigates to search with the clicked label filter', () => {
+    useSkillDetailMock.mockReturnValue({
+      data: createSkill({
+        labels: [{ slug: 'official', type: 'RECOMMENDED', displayName: 'Official' }],
+      }),
+      isLoading: false,
+      error: null,
+    })
+
+    renderToStaticMarkup(<SkillDetailPage />)
+
+    const labelButton = buttonRecords.find((button) => button.label === 'Official')
+    labelButton?.onClick?.()
+
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: '/search',
+      search: {
+        q: '',
+        labels: ['official'],
+        labelMode: 'any',
+        sort: 'relevance',
+        page: 0,
+        starredOnly: false,
+      },
+    })
   })
 
   it('hides the label management panel when the viewer lacks label permissions', () => {
