@@ -112,7 +112,6 @@ public class SkillPublishController extends BaseApiController {
         }
 
         skillTranslationTaskService.maybeEnqueueForSkill(publishResult.skillId());
-
         PublishResponse response = new PublishResponse(
                 publishResult.skillId(),
                 namespace,
