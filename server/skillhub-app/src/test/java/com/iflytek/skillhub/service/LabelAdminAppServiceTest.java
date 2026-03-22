@@ -16,6 +16,7 @@ import com.iflytek.skillhub.dto.LabelSortOrderUpdateRequest;
 import com.iflytek.skillhub.dto.LabelTranslationItemRequest;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -65,6 +66,7 @@ class LabelAdminAppServiceTest {
         );
 
         assertThat(response.slug()).isEqualTo("official");
+        assertThat(response.usageCount()).isZero();
         assertThat(response.translations()).extracting(com.iflytek.skillhub.dto.LabelTranslationResponse::displayName)
                 .containsExactly("Official");
         verify(auditLogService).record(eq("admin"), eq("LABEL_CREATE"), eq("LABEL"), eq(10L), any(), eq("127.0.0.1"), eq("JUnit"), eq("{\"slug\":\"official\"}"));
@@ -100,9 +102,26 @@ class LabelAdminAppServiceTest {
         );
 
         assertThat(response.type()).isEqualTo("PRIVILEGED");
+                assertThat(response.usageCount()).isEqualTo(2L);
         verify(labelSearchSyncService).rebuildSkills(List.of(100L, 200L));
         verify(auditLogService).record(eq("admin"), eq("LABEL_UPDATE"), eq("LABEL"), eq(10L), any(), eq("127.0.0.1"), eq("JUnit"), eq("{\"slug\":\"official\"}"));
     }
+
+        @Test
+        void listAll_includesUsageCounts() {
+                LabelDefinition official = label(10L, "official", LabelType.RECOMMENDED, true, 0);
+                LabelDefinition featured = label(11L, "featured", LabelType.RECOMMENDED, true, 1);
+                when(labelDefinitionService.listAll()).thenReturn(List.of(official, featured));
+                when(skillLabelService.countDistinctSkillsByLabelIds(List.of(10L, 11L))).thenReturn(Map.of(10L, 5L));
+                when(labelDefinitionService.listTranslations(10L)).thenReturn(List.of(new LabelTranslation(10L, "en", "Official")));
+                when(labelDefinitionService.listTranslations(11L)).thenReturn(List.of(new LabelTranslation(11L, "en", "Featured")));
+
+                List<LabelDefinitionResponse> responses = service.listAll();
+
+                assertThat(responses)
+                                .extracting(LabelDefinitionResponse::usageCount)
+                                .containsExactly(5L, 0L);
+        }
 
     @Test
     void delete_snapshotsAffectedSkillsBeforeCascadeDelete() {
@@ -128,8 +147,10 @@ class LabelAdminAppServiceTest {
         when(rbacService.getUserRoleCodes("admin")).thenReturn(Set.of("SUPER_ADMIN"));
         when(labelDefinitionService.getBySlug("official")).thenReturn(official);
         when(labelDefinitionService.getBySlug("featured")).thenReturn(featured);
+        List<LabelDefinition> reordered = List.of(featured, official);
         when(labelDefinitionService.updateSortOrders(any(), eq(Set.of("SUPER_ADMIN"))))
-                .thenReturn(List.of(featured, official));
+                .thenReturn(reordered);
+        when(skillLabelService.countDistinctSkillsByLabelIds(List.of(11L, 10L))).thenReturn(Map.of(10L, 2L, 11L, 7L));
         when(labelDefinitionService.listTranslations(10L)).thenReturn(List.of());
         when(labelDefinitionService.listTranslations(11L)).thenReturn(List.of());
 
@@ -143,6 +164,7 @@ class LabelAdminAppServiceTest {
         );
 
         assertThat(responses).hasSize(2);
+                assertThat(responses).extracting(LabelDefinitionResponse::usageCount).containsExactly(7L, 2L);
         verify(labelDefinitionService).updateSortOrders(any(), eq(Set.of("SUPER_ADMIN")));
         verify(auditLogService).record(eq("admin"), eq("LABEL_SORT_ORDER_UPDATE"), eq("LABEL"), eq(null), any(), eq("127.0.0.1"), eq("JUnit"), eq("{\"count\":2}"));
     }

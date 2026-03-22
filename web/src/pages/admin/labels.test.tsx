@@ -58,6 +58,7 @@ describe('AdminLabelsPage', () => {
           visibleInFilter: true,
           sortOrder: 0,
           translations: [{ locale: 'en', displayName: 'Official' }],
+          usageCount: 7,
           createdAt: '2026-03-20T00:00:00Z',
         },
       ],
@@ -68,6 +69,8 @@ describe('AdminLabelsPage', () => {
 
     expect(html).toContain('official')
     expect(html).toContain('Official')
+    expect(html).toContain('7')
+    expect(html).toContain('adminLabels.summaryUsageTitle')
     expect(html).toContain('adminLabels.editAction')
     expect(html).toContain('adminLabels.deleteAction')
   })

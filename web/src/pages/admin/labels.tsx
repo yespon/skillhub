@@ -136,6 +136,14 @@ export function AdminLabelsPage() {
     return a.slug.localeCompare(b.slug)
   })
 
+  const totalUsageCount = sortedDefinitions.reduce((sum, definition) => sum + definition.usageCount, 0)
+  const mostUsedLabel = sortedDefinitions.reduce<LabelDefinition | null>((current, definition) => {
+    if (!current || definition.usageCount > current.usageCount) {
+      return definition
+    }
+    return current
+  }, null)
+
   useEffect(() => {
     if (!dialogOpen) {
       setForm(toFormState())
@@ -252,7 +260,7 @@ export function AdminLabelsPage() {
       </div>
 
       <Card className="p-5">
-        <div className="grid gap-4 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="grid gap-4 md:grid-cols-4">
           <div>
             <div className="text-sm font-semibold text-foreground">{t('adminLabels.summaryDefinitionsTitle')}</div>
             <div className="mt-1 text-3xl font-bold font-heading text-foreground">{sortedDefinitions.length}</div>
@@ -267,6 +275,18 @@ export function AdminLabelsPage() {
             <div className="text-sm font-semibold text-foreground">{t('adminLabels.summaryPrivilegedTitle')}</div>
             <div className="mt-1 text-3xl font-bold font-heading text-foreground">
               {sortedDefinitions.filter((definition) => definition.type === 'PRIVILEGED').length}
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground">{t('adminLabels.summaryUsageTitle')}</div>
+            <div className="mt-1 text-3xl font-bold font-heading text-foreground">{totalUsageCount}</div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              {mostUsedLabel
+                ? t('adminLabels.summaryUsageHint', {
+                  label: mostUsedLabel.translations[0]?.displayName ?? mostUsedLabel.slug,
+                  count: mostUsedLabel.usageCount,
+                })
+                : t('adminLabels.summaryUsageEmpty')}
             </div>
           </div>
         </div>
@@ -291,6 +311,7 @@ export function AdminLabelsPage() {
                 <TableHead>{t('adminLabels.colType')}</TableHead>
                 <TableHead>{t('adminLabels.colVisibility')}</TableHead>
                 <TableHead>{t('adminLabels.colSortOrder')}</TableHead>
+                <TableHead>{t('adminLabels.colUsageCount')}</TableHead>
                 <TableHead>{t('adminLabels.colTranslations')}</TableHead>
                 <TableHead>{t('adminLabels.colCreatedAt')}</TableHead>
                 <TableHead>{t('adminLabels.colActions')}</TableHead>
@@ -310,6 +331,7 @@ export function AdminLabelsPage() {
                     {definition.visibleInFilter ? t('adminLabels.visibilityVisible') : t('adminLabels.visibilityHidden')}
                   </TableCell>
                   <TableCell>{definition.sortOrder}</TableCell>
+                  <TableCell>{definition.usageCount}</TableCell>
                   <TableCell>{definition.translations.length}</TableCell>
                   <TableCell>{definition.createdAt ? formatLocalDateTime(definition.createdAt, i18n.language) : '-'}</TableCell>
                   <TableCell>

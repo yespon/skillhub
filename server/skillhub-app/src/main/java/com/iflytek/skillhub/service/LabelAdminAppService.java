@@ -11,7 +11,9 @@ import com.iflytek.skillhub.dto.AdminLabelUpdateRequest;
 import com.iflytek.skillhub.dto.LabelDefinitionResponse;
 import com.iflytek.skillhub.dto.LabelSortOrderUpdateRequest;
 import com.iflytek.skillhub.dto.LabelTranslationResponse;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
@@ -41,8 +43,10 @@ public class LabelAdminAppService {
     }
 
     public List<LabelDefinitionResponse> listAll() {
-        return labelDefinitionService.listAll().stream()
-                .map(this::toResponse)
+        List<LabelDefinition> definitions = labelDefinitionService.listAll();
+        Map<Long, Long> usageCounts = usageCounts(definitions);
+        return definitions.stream()
+            .map(definition -> toResponse(definition, usageCounts.getOrDefault(definition.getId(), 0L)))
                 .toList();
     }
 
@@ -60,7 +64,7 @@ public class LabelAdminAppService {
                 platformRoles(userId)
         );
         recordAudit("LABEL_CREATE", userId, labelDefinition.getId(), auditContext, "{\"slug\":\"" + labelDefinition.getSlug() + "\"}");
-        return toResponse(labelDefinition);
+        return toResponse(labelDefinition, 0L);
     }
 
     @Transactional
@@ -85,7 +89,7 @@ public class LabelAdminAppService {
             afterCommit(() -> labelSearchSyncService.rebuildSkills(affectedSkillIds));
         }
         recordAudit("LABEL_UPDATE", userId, updated.getId(), auditContext, "{\"slug\":\"" + updated.getSlug() + "\"}");
-        return toResponse(updated);
+        return toResponse(updated, affectedSkillIds.size());
     }
 
     @Transactional
@@ -112,11 +116,13 @@ public class LabelAdminAppService {
                     return new LabelDefinitionService.LabelSortOrderUpdate(labelDefinition.getId(), item.sortOrder());
                 })
                 .toList();
-        List<LabelDefinitionResponse> responses = labelDefinitionService.updateSortOrders(updates, platformRoles(userId)).stream()
-                .map(this::toResponse)
+        List<LabelDefinition> reorderedDefinitions = labelDefinitionService.updateSortOrders(updates, platformRoles(userId));
+        Map<Long, Long> usageCounts = usageCounts(reorderedDefinitions);
+        List<LabelDefinitionResponse> hydratedResponses = reorderedDefinitions.stream()
+                .map(definition -> toResponse(definition, usageCounts.getOrDefault(definition.getId(), 0L)))
                 .toList();
         recordAudit("LABEL_SORT_ORDER_UPDATE", userId, null, auditContext, "{\"count\":" + request.items().size() + "}");
-        return responses;
+        return hydratedResponses;
     }
 
     private List<LabelTranslation> toTranslations(List<com.iflytek.skillhub.dto.LabelTranslationItemRequest> items) {
@@ -125,7 +131,7 @@ public class LabelAdminAppService {
                 .toList();
     }
 
-    private LabelDefinitionResponse toResponse(LabelDefinition labelDefinition) {
+    private LabelDefinitionResponse toResponse(LabelDefinition labelDefinition, long usageCount) {
         List<LabelTranslationResponse> translations = labelDefinitionService.listTranslations(labelDefinition.getId()).stream()
                 .map(translation -> new LabelTranslationResponse(translation.getLocale(), translation.getDisplayName()))
                 .toList();
@@ -135,7 +141,19 @@ public class LabelAdminAppService {
                 labelDefinition.isVisibleInFilter(),
                 labelDefinition.getSortOrder(),
                 translations,
+                usageCount,
                 labelDefinition.getCreatedAt()
+        );
+    }
+
+    private Map<Long, Long> usageCounts(List<LabelDefinition> definitions) {
+        if (definitions == null || definitions.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return skillLabelService.countDistinctSkillsByLabelIds(
+                definitions.stream()
+                        .map(LabelDefinition::getId)
+                        .toList()
         );
     }
 
