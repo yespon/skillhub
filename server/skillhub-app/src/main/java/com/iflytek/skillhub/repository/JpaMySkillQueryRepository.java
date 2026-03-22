@@ -76,7 +76,7 @@ public class JpaMySkillQueryRepository implements MySkillQueryRepository {
         return new SkillSummaryResponse(
                 skill.getId(),
                 skill.getSlug(),
-                preferredDisplayName,
+                skill.getDisplayName(),
                 preferredDisplayName,
                 skill.getDisplayName(),
                 skill.getSummary(),

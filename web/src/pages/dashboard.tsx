@@ -140,7 +140,7 @@ export function DashboardPage() {
                         params={{ namespace: skill.namespace, slug: encodeURIComponent(skill.slug) }}
                         className="rounded-lg border border-border/60 px-3 py-3 transition-colors hover:bg-accent/40"
                       >
-                        <div className="truncate text-sm font-medium">{skill.displayName}</div>
+                        <div className="truncate text-sm font-medium">{skill.preferredDisplayName ?? skill.displayName}</div>
                         <div className="mt-1 truncate text-xs text-muted-foreground">@{skill.namespace}</div>
                         {getHeadlineVersion(skill) ? (
                           <div className="mt-2 inline-flex rounded-full bg-secondary px-2 py-1 text-xs text-muted-foreground">

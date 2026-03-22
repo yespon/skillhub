@@ -480,7 +480,7 @@ export function SkillDetailPage() {
       await deleteSkillMutation.mutateAsync({ namespace, slug })
       toast.success(
         t('skillDetail.deleteSkillSuccessTitle'),
-        t('skillDetail.deleteSkillSuccessDescription', { skill: skill.displayName }),
+        t('skillDetail.deleteSkillSuccessDescription', { skill: skill.preferredDisplayName ?? skill.displayName }),
       )
       setDeleteSkillInputOpen(false)
       navigate({ to: resolveDeletedSkillReturnTo(search.returnTo) })
@@ -575,7 +575,7 @@ export function SkillDetailPage() {
       })
       toast.success(
         t('skillDetail.promotionSuccessTitle'),
-        t('skillDetail.promotionSuccessDescription', { skill: skill.displayName, version: publishedVersion.version }),
+        t('skillDetail.promotionSuccessDescription', { skill: skill.preferredDisplayName ?? skill.displayName, version: publishedVersion.version }),
       )
       setPromotionConfirmOpen(false)
     } catch (error) {
@@ -667,7 +667,7 @@ export function SkillDetailPage() {
               </span>
             )}
           </div>
-          <h1 className="text-balance text-4xl font-bold font-heading text-foreground">{skill.displayName}</h1>
+          <h1 className="text-balance text-4xl font-bold font-heading text-foreground">{skill.preferredDisplayName ?? skill.displayName}</h1>
           {skill.ownerDisplayName && (
             <div className="flex min-w-0">
               <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
@@ -1202,7 +1202,7 @@ export function SkillDetailPage() {
         onOpenChange={setPromotionConfirmOpen}
         title={t('skillDetail.promotionConfirmTitle')}
         description={t('skillDetail.promotionConfirmDescription', {
-          skill: skill.displayName,
+          skill: skill.preferredDisplayName ?? skill.displayName,
           version: publishedVersion?.version ?? '',
         })}
         confirmText={t('skillDetail.promoteToGlobal')}
@@ -1213,7 +1213,7 @@ export function SkillDetailPage() {
         open={archiveConfirmOpen}
         onOpenChange={setArchiveConfirmOpen}
         title={t('skillDetail.archiveConfirmTitle')}
-        description={t('skillDetail.archiveConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.archiveConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.archiveSkill')}
         onConfirm={handleArchive}
       />
@@ -1222,7 +1222,7 @@ export function SkillDetailPage() {
         open={unarchiveConfirmOpen}
         onOpenChange={setUnarchiveConfirmOpen}
         title={t('skillDetail.unarchiveConfirmTitle')}
-        description={t('skillDetail.unarchiveConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.unarchiveConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.unarchiveSkill')}
         onConfirm={handleUnarchive}
       />
@@ -1231,7 +1231,7 @@ export function SkillDetailPage() {
         open={deleteSkillConfirmOpen}
         onOpenChange={setDeleteSkillConfirmOpen}
         title={t('skillDetail.deleteSkillConfirmTitle')}
-        description={t('skillDetail.deleteSkillConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.deleteSkillConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.deleteSkillContinue')}
         variant="destructive"
         onConfirm={handleOpenDeleteSkillInput}

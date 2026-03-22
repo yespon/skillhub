@@ -32,7 +32,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true }: SkillCard
           <div className="flex items-start justify-between mb-3">
             <div className="space-y-2">
               <h3 className="font-semibold text-lg group-hover:text-primary transition-colors" style={{ color: 'hsl(var(--foreground))' }}>
-                {skill.displayName}
+                {skill.preferredDisplayName ?? skill.displayName}
               </h3>
             </div>
             <div className="flex items-center gap-2">
