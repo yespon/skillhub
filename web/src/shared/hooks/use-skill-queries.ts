@@ -213,6 +213,10 @@ export function useSkillTranslations(namespace: string, slug: string, enabled = 
     queryKey: getSkillTranslationsQueryKey(namespace, slug),
     queryFn: () => getSkillTranslations(namespace, slug),
     enabled: enabled && !!namespace && !!slug,
+    retry: false,
+    meta: {
+      skipGlobalErrorHandler: true,
+    },
   })
 }
 
@@ -237,6 +241,10 @@ export function useSkillFiles(namespace: string, slug: string, version?: string)
     queryKey: ['skills', namespace, slug, 'versions', version, 'files'],
     queryFn: () => getSkillFiles(namespace, slug, version!),
     enabled: !!namespace && !!slug && !!version,
+    retry: false,
+    meta: {
+      skipGlobalErrorHandler: true,
+    },
   })
 }
 
@@ -245,6 +253,10 @@ export function useSkillReadme(namespace: string, slug: string, version?: string
     queryKey: ['skills', namespace, slug, 'versions', version, 'readme', path],
     queryFn: () => getSkillDocumentation(namespace, slug, version!, path!),
     enabled: !!namespace && !!slug && !!version && !!path,
+    retry: false,
+    meta: {
+      skipGlobalErrorHandler: true,
+    },
   })
 }
 
