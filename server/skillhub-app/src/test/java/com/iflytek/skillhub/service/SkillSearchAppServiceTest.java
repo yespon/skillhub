@@ -74,9 +74,9 @@ class SkillSearchAppServiceTest {
                 namespaceRepository,
                 namespaceService,
                 new SkillLifecycleProjectionService(skillVersionRepository),
-                                labelDefinitionService,
-                                labelLocalizationService,
-                                skillDisplayNameLocalizationService,
+                labelDefinitionService,
+                labelLocalizationService,
+                skillDisplayNameLocalizationService,
                 rbacService
         );
     }

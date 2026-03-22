@@ -31,7 +31,6 @@ public interface SkillTranslationTaskJpaRepository extends JpaRepository<SkillTr
                                                                  List<SkillTranslationTaskStatus> statuses);
 
     List<SkillTranslationTask> findByStatusAndLockedBy(SkillTranslationTaskStatus status, String lockedBy);
-
     @Override
     default List<SkillTranslationTask> findProcessableTasks(Instant now, int limit) {
         return findByStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(

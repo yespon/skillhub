@@ -196,6 +196,19 @@ export function PublishPage() {
           </Select>
         </div>
 
+        <div className="space-y-3">
+          <Label htmlFor="display-name-zh-cn" className="text-sm font-semibold font-heading">{t('publish.displayNameZhCn')}</Label>
+          <Input
+            id="display-name-zh-cn"
+            value={displayNameZhCn}
+            maxLength={200}
+            placeholder={t('publish.displayNameZhCnPlaceholder')}
+            onChange={(event) => setDisplayNameZhCn(event.target.value)}
+            disabled={publishMutation.isPending}
+          />
+          <p className="text-xs text-muted-foreground">{t('publish.displayNameZhCnHint')}</p>
+        </div>
+
         {visibleLabels && visibleLabels.length > 0 && (
           <div className="space-y-3">
             <Label className="text-sm font-semibold font-heading">{t('publish.labels')}</Label>

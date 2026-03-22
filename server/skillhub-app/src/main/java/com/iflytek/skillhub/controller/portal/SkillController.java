@@ -83,6 +83,8 @@ public class SkillController extends BaseApiController {
         SkillDetailResponse response = new SkillDetailResponse(
                 detail.id(),
                 detail.slug(),
+                preferredDisplayName,
+                preferredDisplayName,
                 detail.displayName(),
                 preferredDisplayName,
                 detail.displayName(),
