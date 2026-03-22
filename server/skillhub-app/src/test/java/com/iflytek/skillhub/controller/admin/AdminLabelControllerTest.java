@@ -156,6 +156,7 @@ class AdminLabelControllerTest {
                 visibleInFilter,
                 sortOrder,
                 List.of(new com.iflytek.skillhub.dto.LabelTranslationResponse("en", "Official")),
+          0L,
                 Instant.parse("2026-03-20T00:00:00Z")
         );
     }

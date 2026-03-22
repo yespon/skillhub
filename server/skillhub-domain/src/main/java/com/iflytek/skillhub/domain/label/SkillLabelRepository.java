@@ -9,6 +9,7 @@ public interface SkillLabelRepository {
     List<SkillLabel> findByLabelId(Long labelId);
     Optional<SkillLabel> findBySkillIdAndLabelId(Long skillId, Long labelId);
     long countBySkillId(Long skillId);
+    List<LabelUsageCount> countDistinctSkillsByLabelIds(List<Long> labelIds);
     SkillLabel save(SkillLabel skillLabel);
     void delete(SkillLabel skillLabel);
 }

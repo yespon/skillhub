@@ -160,13 +160,14 @@ export type LabelTranslation = Omit<components['schemas']['LabelTranslationRespo
 
 export type LabelDefinition = Omit<
   components['schemas']['LabelDefinitionResponse'],
-  'slug' | 'type' | 'translations' | 'sortOrder' | 'visibleInFilter'
+  'slug' | 'type' | 'translations' | 'sortOrder' | 'visibleInFilter' | 'usageCount'
 > & {
   slug: string
   type: 'RECOMMENDED' | 'PRIVILEGED' | string
   visibleInFilter: boolean
   sortOrder: number
   translations: LabelTranslation[]
+  usageCount: number
 }
 
 export interface AdminLabelInput {
