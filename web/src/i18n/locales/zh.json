@@ -170,6 +170,18 @@
     "filters": {
       "label": "筛选:"
     },
+    "facets": {
+      "eyebrow": "Discovery Filters",
+      "title": "标签导航",
+      "selectedCount": "已选 {{count}} 个",
+      "matchMode": "匹配模式",
+      "modeAny": "任一命中",
+      "modeAll": "全部命中",
+      "activeFilters": "当前筛选",
+      "clear": "清空标签",
+      "empty": "当前条件下没有可用标签聚合。",
+      "starredHint": "已收藏模式使用本地收藏结果过滤，标签 facets 会在退出该模式后恢复。"
+    },
     "sort": {
       "label": "排序:",
       "relevance": "相关性",
@@ -702,6 +714,15 @@
   "namespace": {
     "notFound": "命名空间不存在",
     "skillList": "技能列表",
+    "filtersEyebrow": "Namespace Filters",
+    "filtersTitle": "标签筛选",
+    "matchMode": "匹配模式",
+    "modeAny": "任一命中",
+    "modeAll": "全部命中",
+    "activeFilters": "当前筛选",
+    "clearFilters": "清空标签",
+    "noFacetFilters": "当前命名空间下没有可用标签聚合。",
+    "resultsCount": "共 {{count}} 个技能",
     "emptyTitle": "暂无技能",
     "emptyDescription": "该命名空间下还没有发布任何技能"
   },
