@@ -600,6 +600,7 @@ export const skillTranslationApi = {
 export const namespaceApi = {
   async create(request: CreateNamespaceRequest): Promise<Namespace> {
     const namespace = await fetchJson<Namespace>('/api/v1/namespaces', {
+      method: 'POST',
       headers: await ensureCsrfHeaders({
         'Content-Type': 'application/json',
       }),

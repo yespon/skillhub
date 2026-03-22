@@ -315,6 +315,8 @@ public class SkillSearchAppService {
         return new SkillSummaryResponse(
                 skill.getId(),
                 skill.getSlug(),
+                preferredDisplayName,
+                preferredDisplayName,
                 skill.getDisplayName(),
                 preferredDisplayName,
                 skill.getDisplayName(),
