@@ -1146,6 +1146,8 @@
       "private": "私有"
     },
     "file": "技能包文件",
+    "labels": "标签",
+    "labelsHint": "可选为技能添加标签，便于搜索和发现。",
     "removeSelectedFile": "删除已选文件",
     "publishing": "发布中...",
     "confirm": "确认发布",

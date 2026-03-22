@@ -136,11 +136,16 @@ async function removeNamespaceMember(params: { slug: string; userId: string }): 
   return namespaceApi.removeMember(params.slug, params.userId)
 }
 
-async function publishSkill(params: { namespace: string; file: File; visibility: string }): Promise<PublishResult> {
+async function publishSkill(params: { namespace: string; file: File; visibility: string; labels?: string[] }): Promise<PublishResult> {
   const cleanNamespace = params.namespace.startsWith('@') ? params.namespace.slice(1) : params.namespace
   const formData = new FormData()
   formData.append('file', params.file)
   formData.append('visibility', params.visibility)
+  if (params.labels) {
+    for (const label of params.labels) {
+      formData.append('label', label)
+    }
+  }
 
   return fetchJson<PublishResult>(`${WEB_API_PREFIX}/skills/${cleanNamespace}/publish`, {
     method: 'POST',
