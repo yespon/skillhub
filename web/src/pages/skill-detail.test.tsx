@@ -243,7 +243,6 @@ describe('SkillDetailPage', () => {
     expect(html).toContain('演示技能')
     expect(html).toContain('skillDetail.translationEditAction')
   })
-
   it('navigates to search with the clicked label filter', () => {
     useSkillDetailMock.mockReturnValue({
       data: createSkill({
