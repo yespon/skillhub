@@ -33,6 +33,7 @@ import {
 } from '@/features/admin/use-admin-labels'
 
 type LabelFormState = AdminLabelInput
+type LabelDisplayMode = 'sort-order' | 'usage'
 
 const EMPTY_TRANSLATION: LabelTranslation = { locale: '', displayName: '' }
 const LABEL_SLUG_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/
@@ -115,6 +116,33 @@ function moveItem(definitions: LabelDefinition[], fromIndex: number, toIndex: nu
   return next.map((definition, index) => ({ ...definition, sortOrder: index }))
 }
 
+export function getLabelDisplayDefinitions(definitions: LabelDefinition[], mode: LabelDisplayMode) {
+  const base = [...definitions]
+
+  if (mode === 'usage') {
+    return base.sort((a, b) => {
+      if (a.usageCount !== b.usageCount) {
+        return b.usageCount - a.usageCount
+      }
+      if (a.visibleInFilter !== b.visibleInFilter) {
+        return Number(b.visibleInFilter) - Number(a.visibleInFilter)
+      }
+      return a.slug.localeCompare(b.slug)
+    })
+  }
+
+  return base.sort((a, b) => {
+    if (a.sortOrder !== b.sortOrder) {
+      return a.sortOrder - b.sortOrder
+    }
+    return a.slug.localeCompare(b.slug)
+  })
+}
+
+export function getTopUsedDefinitions(definitions: LabelDefinition[], limit = 3) {
+  return getLabelDisplayDefinitions(definitions.filter((definition) => definition.usageCount > 0), 'usage').slice(0, limit)
+}
+
 export function AdminLabelsPage() {
   const { t, i18n } = useTranslation()
   const { data: definitions, isLoading } = useAdminLabelDefinitions()
@@ -128,13 +156,11 @@ export function AdminLabelsPage() {
   const [editingSlug, setEditingSlug] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<LabelDefinition | null>(null)
   const [form, setForm] = useState<LabelFormState>(toFormState())
+  const [displayMode, setDisplayMode] = useState<LabelDisplayMode>('sort-order')
 
-  const sortedDefinitions: LabelDefinition[] = [...(definitions ?? [])].sort((a: LabelDefinition, b: LabelDefinition) => {
-    if (a.sortOrder !== b.sortOrder) {
-      return a.sortOrder - b.sortOrder
-    }
-    return a.slug.localeCompare(b.slug)
-  })
+  const sortedDefinitions = getLabelDisplayDefinitions(definitions ?? [], 'sort-order')
+  const displayedDefinitions = getLabelDisplayDefinitions(definitions ?? [], displayMode)
+  const topUsedDefinitions = getTopUsedDefinitions(definitions ?? [])
 
   const totalUsageCount = sortedDefinitions.reduce((sum, definition) => sum + definition.usageCount, 0)
   const mostUsedLabel = sortedDefinitions.reduce<LabelDefinition | null>((current, definition) => {
@@ -292,6 +318,51 @@ export function AdminLabelsPage() {
         </div>
       </Card>
 
+      {topUsedDefinitions.length > 0 ? (
+        <Card className="p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-semibold text-foreground">{t('adminLabels.hotLabelsTitle')}</div>
+              <div className="mt-1 text-sm text-muted-foreground">{t('adminLabels.hotLabelsDescription')}</div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={displayMode === 'sort-order' ? 'default' : 'outline'}
+                onClick={() => setDisplayMode('sort-order')}
+              >
+                {t('adminLabels.displayModeSortOrder')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={displayMode === 'usage' ? 'default' : 'outline'}
+                onClick={() => setDisplayMode('usage')}
+              >
+                {t('adminLabels.displayModeUsage')}
+              </Button>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            {topUsedDefinitions.map((definition, index) => (
+              <div key={definition.slug} className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  {t('adminLabels.hotRankLabel', { rank: index + 1 })}
+                </div>
+                <div className="mt-2 text-lg font-semibold text-foreground">
+                  {definition.translations[0]?.displayName ?? definition.slug}
+                </div>
+                <div className="mt-1 text-sm text-muted-foreground">{definition.slug}</div>
+                <div className="mt-3 inline-flex rounded-full bg-background px-3 py-1 text-xs font-semibold text-foreground shadow-sm">
+                  {t('adminLabels.hotUsageCount', { count: definition.usageCount })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
+
       {isLoading ? (
         <div className="space-y-3">
           {Array.from({ length: 5 }).map((_, index) => (
@@ -304,6 +375,30 @@ export function AdminLabelsPage() {
         </Card>
       ) : (
         <Card>
+          <div className="flex items-center justify-between gap-4 border-b border-border/60 px-6 py-4">
+            <div>
+              <div className="text-sm font-semibold text-foreground">{t('adminLabels.tableTitle')}</div>
+              <div className="text-xs text-muted-foreground">{t('adminLabels.tableDescription')}</div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={displayMode === 'sort-order' ? 'default' : 'outline'}
+                onClick={() => setDisplayMode('sort-order')}
+              >
+                {t('adminLabels.displayModeSortOrder')}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={displayMode === 'usage' ? 'default' : 'outline'}
+                onClick={() => setDisplayMode('usage')}
+              >
+                {t('adminLabels.displayModeUsage')}
+              </Button>
+            </div>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -318,7 +413,7 @@ export function AdminLabelsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedDefinitions.map((definition: LabelDefinition, index: number) => (
+              {displayedDefinitions.map((definition: LabelDefinition, index: number) => (
                 <TableRow key={definition.slug}>
                   <TableCell>
                     <div className="font-medium">{definition.slug}</div>
@@ -336,7 +431,7 @@ export function AdminLabelsPage() {
                   <TableCell>{definition.createdAt ? formatLocalDateTime(definition.createdAt, i18n.language) : '-'}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-2">
-                      <Button type="button" size="sm" variant="outline" onClick={() => handleMove(index, -1)} disabled={index === 0 || updateSortOrderMutation.isPending}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => handleMove(index, -1)} disabled={displayMode !== 'sort-order' || index === 0 || updateSortOrderMutation.isPending}>
                         {t('adminLabels.moveUp')}
                       </Button>
                       <Button
@@ -344,7 +439,7 @@ export function AdminLabelsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleMove(index, 1)}
-                        disabled={index === sortedDefinitions.length - 1 || updateSortOrderMutation.isPending}
+                        disabled={displayMode !== 'sort-order' || index === displayedDefinitions.length - 1 || updateSortOrderMutation.isPending}
                       >
                         {t('adminLabels.moveDown')}
                       </Button>

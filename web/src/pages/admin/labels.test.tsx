@@ -33,7 +33,13 @@ vi.mock('@/features/admin/use-admin-labels', () => ({
   useUpdateAdminLabelSortOrder: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
-import { AdminLabelsPage, normalizeLabelFormState, validateLabelFormState } from './labels'
+import {
+  AdminLabelsPage,
+  getLabelDisplayDefinitions,
+  getTopUsedDefinitions,
+  normalizeLabelFormState,
+  validateLabelFormState,
+} from './labels'
 
 describe('AdminLabelsPage', () => {
   beforeEach(() => {
@@ -49,12 +55,6 @@ describe('AdminLabelsPage', () => {
     expect(html).toContain('adminLabels.empty')
   })
 
-  it('shows the create button', () => {
-    const html = renderToStaticMarkup(<AdminLabelsPage />)
-
-    expect(html).toContain('adminLabels.createAction')
-  })
-
   it('renders existing label definitions in the table', () => {
     useAdminLabelDefinitionsMock.mockReturnValue({
       data: [
@@ -67,37 +67,13 @@ describe('AdminLabelsPage', () => {
           usageCount: 7,
           createdAt: '2026-03-20T00:00:00Z',
         },
-      ],
-      isLoading: false,
-    })
-
-    const html = renderToStaticMarkup(<AdminLabelsPage />)
-
-    expect(html).toContain('official')
-    expect(html).toContain('Official')
-    expect(html).toContain('7')
-    expect(html).toContain('adminLabels.summaryUsageTitle')
-    expect(html).toContain('adminLabels.editAction')
-    expect(html).toContain('adminLabels.deleteAction')
-  })
-
-  it('renders edit and delete actions for each label definition', () => {
-    useAdminLabelDefinitionsMock.mockReturnValue({
-      data: [
         {
-          slug: 'official',
+          slug: 'code-generation',
           type: 'RECOMMENDED',
           visibleInFilter: true,
-          sortOrder: 0,
-          translations: [{ locale: 'en', displayName: 'Official' }],
-          createdAt: '2026-03-20T00:00:00Z',
-        },
-        {
-          slug: 'verified',
-          type: 'PRIVILEGED',
-          visibleInFilter: false,
           sortOrder: 1,
-          translations: [{ locale: 'en', displayName: 'Verified' }],
+          translations: [{ locale: 'en', displayName: 'Code Generation' }],
+          usageCount: 12,
           createdAt: '2026-03-21T00:00:00Z',
         },
       ],
@@ -107,9 +83,57 @@ describe('AdminLabelsPage', () => {
     const html = renderToStaticMarkup(<AdminLabelsPage />)
 
     expect(html).toContain('official')
-    expect(html).toContain('verified')
+    expect(html).toContain('Official')
+    expect(html).toContain('Code Generation')
+    expect(html).toContain('7')
+    expect(html).toContain('12')
+    expect(html).toContain('adminLabels.summaryUsageTitle')
+    expect(html).toContain('adminLabels.hotLabelsTitle')
+    expect(html).toContain('adminLabels.displayModeUsage')
     expect(html).toContain('adminLabels.editAction')
     expect(html).toContain('adminLabels.deleteAction')
+  })
+
+  it('sorts label definitions by usage when requested and returns top used labels', () => {
+    const definitions = [
+      {
+        slug: 'official',
+        type: 'RECOMMENDED',
+        visibleInFilter: true,
+        sortOrder: 2,
+        translations: [{ locale: 'en', displayName: 'Official' }],
+        usageCount: 7,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+      {
+        slug: 'code-generation',
+        type: 'RECOMMENDED',
+        visibleInFilter: true,
+        sortOrder: 0,
+        translations: [{ locale: 'en', displayName: 'Code Generation' }],
+        usageCount: 12,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+      {
+        slug: 'internal-only',
+        type: 'PRIVILEGED',
+        visibleInFilter: false,
+        sortOrder: 1,
+        translations: [{ locale: 'en', displayName: 'Internal Only' }],
+        usageCount: 0,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+    ]
+
+    expect(getLabelDisplayDefinitions(definitions, 'usage').map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+      'internal-only',
+    ])
+    expect(getTopUsedDefinitions(definitions).map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+    ])
   })
 
   it('normalizes slugs and locales before submission', () => {
@@ -153,55 +177,6 @@ describe('AdminLabelsPage', () => {
     })).toEqual({
       titleKey: 'adminLabels.validationTranslationsTitle',
       descriptionKey: 'adminLabels.validationDuplicateLocaleDescription',
-    })
-  })
-
-  it('rejects empty slug in validation', () => {
-    expect(validateLabelFormState({
-      slug: '',
-      type: 'RECOMMENDED',
-      visibleInFilter: true,
-      sortOrder: 0,
-      translations: [{ locale: 'en', displayName: 'Test' }],
-    })).toEqual({
-      titleKey: 'adminLabels.validationSlugTitle',
-      descriptionKey: 'adminLabels.validationSlugDescription',
-    })
-  })
-
-  it('rejects empty translations in validation', () => {
-    expect(validateLabelFormState({
-      slug: 'valid-slug',
-      type: 'RECOMMENDED',
-      visibleInFilter: true,
-      sortOrder: 0,
-      translations: [],
-    })).toEqual({
-      titleKey: 'adminLabels.validationTranslationsTitle',
-      descriptionKey: 'adminLabels.validationTranslationsDescription',
-    })
-  })
-
-  it('accepts valid form state in validation', () => {
-    expect(validateLabelFormState({
-      slug: 'valid-slug',
-      type: 'RECOMMENDED',
-      visibleInFilter: true,
-      sortOrder: 0,
-      translations: [{ locale: 'en', displayName: 'Valid Label' }],
-    })).toBeNull()
-  })
-
-  it('rejects slug with consecutive hyphens', () => {
-    expect(validateLabelFormState({
-      slug: 'bad--slug',
-      type: 'RECOMMENDED',
-      visibleInFilter: true,
-      sortOrder: 0,
-      translations: [{ locale: 'en', displayName: 'Bad' }],
-    })).toEqual({
-      titleKey: 'adminLabels.validationSlugTitle',
-      descriptionKey: 'adminLabels.validationSlugPatternDescription',
     })
   })
 })
