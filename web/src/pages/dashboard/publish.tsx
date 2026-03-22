@@ -13,8 +13,7 @@ import {
 } from '@/shared/ui/select'
 import { Label } from '@/shared/ui/label'
 import { Card } from '@/shared/ui/card'
-import { usePublishSkill } from '@/shared/hooks/use-skill-queries'
-import { useMyNamespaces } from '@/shared/hooks/use-namespace-queries'
+import { useMyNamespaces, usePublishSkill, useVisibleLabels } from '@/shared/hooks/use-skill-queries'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { toast } from '@/shared/lib/toast'
 import { ApiError } from '@/api/client'
@@ -63,8 +62,10 @@ export function PublishPage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [namespaceSlug, setNamespaceSlug] = useState<string>('')
   const [visibility, setVisibility] = useState<string>('PUBLIC')
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
   const { data: namespaces, isLoading: isLoadingNamespaces } = useMyNamespaces()
+  const { data: visibleLabels } = useVisibleLabels()
   const publishMutation = usePublishSkill()
   const selectedNamespace = namespaces?.find((ns) => ns.slug === namespaceSlug)
   const namespaceOnlyLabel = selectedNamespace?.type === 'GLOBAL'
@@ -86,6 +87,7 @@ export function PublishPage() {
         namespace: namespaceSlug,
         file: selectedFile,
         visibility,
+        labels: selectedLabels.length > 0 ? selectedLabels : undefined,
       })
       const skillLabel = `${result.namespace}/${result.slug}@${result.version}`
       if (result.status === 'PUBLISHED') {
@@ -190,6 +192,38 @@ export function PublishPage() {
             </SelectContent>
           </Select>
         </div>
+
+        {visibleLabels && visibleLabels.length > 0 && (
+          <div className="space-y-3">
+            <Label className="text-sm font-semibold font-heading">{t('publish.labels')}</Label>
+            <p className="text-xs text-muted-foreground">{t('publish.labelsHint')}</p>
+            <div className="flex flex-wrap gap-2">
+              {visibleLabels.map((label) => {
+                const isSelected = selectedLabels.includes(label.slug)
+                return (
+                  <button
+                    key={label.slug}
+                    type="button"
+                    onClick={() => {
+                      setSelectedLabels((prev) =>
+                        isSelected
+                          ? prev.filter((s) => s !== label.slug)
+                          : [...prev, label.slug]
+                      )
+                    }}
+                    className={`inline-flex items-center rounded-full border px-3 py-1 text-sm transition-colors ${
+                      isSelected
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary/30 text-muted-foreground hover:border-primary/50'
+                    }`}
+                  >
+                    {label.displayName}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="space-y-3">
           <Label className="text-sm font-semibold font-heading">{t('publish.file')}</Label>
