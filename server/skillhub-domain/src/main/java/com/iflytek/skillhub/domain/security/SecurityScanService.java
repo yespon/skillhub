@@ -9,6 +9,7 @@ import com.iflytek.skillhub.domain.skill.validation.PackageEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +33,7 @@ public class SecurityScanService {
     private final SecurityAuditRepository auditRepository;
     private final SkillVersionRepository skillVersionRepository;
     private final ScanTaskProducer scanTaskProducer;
+    private final ApplicationEventPublisher eventPublisher;
     private final ObjectMapper objectMapper;
     private final String scanMode;
     private final boolean enabled;
@@ -39,12 +41,14 @@ public class SecurityScanService {
     public SecurityScanService(SecurityAuditRepository auditRepository,
                                SkillVersionRepository skillVersionRepository,
                                ScanTaskProducer scanTaskProducer,
+                               ApplicationEventPublisher eventPublisher,
                                ObjectMapper objectMapper,
                                @Value("${skillhub.security.scanner.mode:local}") String scanMode,
                                @Value("${skillhub.security.scanner.enabled:false}") boolean enabled) {
         this.auditRepository = auditRepository;
         this.skillVersionRepository = skillVersionRepository;
         this.scanTaskProducer = scanTaskProducer;
+        this.eventPublisher = eventPublisher;
         this.objectMapper = objectMapper;
         this.scanMode = scanMode;
         this.enabled = enabled;
@@ -107,6 +111,12 @@ public class SecurityScanService {
 
         version.setStatus(SkillVersionStatus.PENDING_REVIEW);
         skillVersionRepository.save(version);
+
+        eventPublisher.publishEvent(new ScanCompletedEvent(
+            versionId,
+            response.verdict(),
+            response.findingsCount()
+        ));
     }
 
     private Path saveTempDirectory(Long versionId, List<PackageEntry> entries) {

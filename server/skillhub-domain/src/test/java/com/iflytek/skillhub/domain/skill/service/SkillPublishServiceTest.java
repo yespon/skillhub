@@ -8,6 +8,7 @@ import com.iflytek.skillhub.domain.namespace.NamespaceMember;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.namespace.NamespaceStatus;
+import com.iflytek.skillhub.domain.security.SecurityScanService;
 import com.iflytek.skillhub.domain.review.ReviewTask;
 import com.iflytek.skillhub.domain.review.ReviewTaskRepository;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
@@ -73,6 +74,8 @@ class SkillPublishServiceTest {
     @Mock
     private ReviewTaskRepository reviewTaskRepository;
     @Mock
+    private SecurityScanService securityScanService;
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     private SkillPublishService service;
@@ -94,9 +97,11 @@ class SkillPublishServiceTest {
                 prePublishValidator,
                 objectMapper,
                 reviewTaskRepository,
+                securityScanService,
                 eventPublisher,
                 CLOCK
         );
+            lenient().when(securityScanService.isEnabled()).thenReturn(false);
         lenient().when(skillVersionRepository.findBySkillIdAndStatus(anyLong(), eq(SkillVersionStatus.PENDING_REVIEW)))
                 .thenReturn(List.of());
         lenient().when(reviewTaskRepository.save(any(ReviewTask.class))).thenAnswer(invocation -> invocation.getArgument(0));

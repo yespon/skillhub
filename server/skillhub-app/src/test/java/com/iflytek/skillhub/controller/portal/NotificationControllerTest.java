@@ -142,7 +142,6 @@ class NotificationControllerTest {
             assertThat(item.targetRoute()).isEqualTo("/dashboard/reports");
         });
     }
-
     private Notification notification(Long id,
                                       NotificationCategory category,
                                       String eventType,

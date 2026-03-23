@@ -3,6 +3,9 @@ import type { SkillSummary, SkillDetail, SkillVersion, SkillVersionDetail, Skill
 import { fetchJson, fetchText, getCsrfHeaders, labelApi, meApi, namespaceApi, promotionApi, skillLifecycleApi, skillTranslationApi, WEB_API_PREFIX } from '@/api/client'
 import { appendNamespaceMember, replaceNamespaceMemberRole } from '@/shared/lib/namespace-member-cache'
 import i18n from '@/i18n/config'
+import { clearDeletedSkillQueries } from '@/features/skill/skill-delete-flow'
+import { appendNamespaceMember, replaceNamespaceMemberRole } from '@/shared/lib/namespace-member-cache'
+import { shouldFallbackVisibleLabelsError } from './label-query'
 import { buildSkillSearchUrl, shouldEnableNamespaceMemberCandidates } from './skill-query-helpers'
 
 /**
@@ -47,7 +50,16 @@ async function getSkillDetail(namespace: string, slug: string): Promise<SkillDet
 }
 
 async function getVisibleLabels(): Promise<LabelItem[]> {
-  return labelApi.listVisible()
+  try {
+    return await labelApi.listVisible()
+  } catch (error) {
+    // Public label filters should never break page rendering. Fall back to an empty list when
+    // the backend denies or fails this optional metadata endpoint.
+    if (shouldFallbackVisibleLabelsError(error)) {
+      return []
+    }
+    throw error
+  }
 }
 
 async function getSkillLabels(namespace: string, slug: string): Promise<LabelItem[]> {
@@ -184,11 +196,12 @@ export function useSearchSkills(params: SearchParams) {
   })
 }
 
-export function useSkillDetail(namespace: string, slug: string) {
+export function useSkillDetail(namespace: string, slug: string, enabled = true) {
   return useQuery({
     queryKey: getSkillDetailQueryKey(namespace, slug),
     queryFn: () => getSkillDetail(namespace, slug),
-    enabled: !!namespace && !!slug,
+    enabled: enabled && !!namespace && !!slug,
+    refetchOnMount: 'always',
   })
 }
 
@@ -228,19 +241,19 @@ export function useAdminLabelDefinitions(enabled = true) {
   })
 }
 
-export function useSkillVersions(namespace: string, slug: string) {
+export function useSkillVersions(namespace: string, slug: string, enabled = true) {
   return useQuery({
     queryKey: ['skills', namespace, slug, 'versions'],
     queryFn: () => getSkillVersions(namespace, slug),
-    enabled: !!namespace && !!slug,
+    enabled: enabled && !!namespace && !!slug,
   })
 }
 
-export function useSkillFiles(namespace: string, slug: string, version?: string) {
+export function useSkillFiles(namespace: string, slug: string, version?: string, enabled = true) {
   return useQuery({
     queryKey: ['skills', namespace, slug, 'versions', version, 'files'],
     queryFn: () => getSkillFiles(namespace, slug, version!),
-    enabled: !!namespace && !!slug && !!version,
+    enabled: enabled && !!namespace && !!slug && !!version,
     retry: false,
     meta: {
       skipGlobalErrorHandler: true,
@@ -248,11 +261,11 @@ export function useSkillFiles(namespace: string, slug: string, version?: string)
   })
 }
 
-export function useSkillReadme(namespace: string, slug: string, version?: string, path?: string | null) {
+export function useSkillReadme(namespace: string, slug: string, version?: string, path?: string | null, enabled = true) {
   return useQuery({
     queryKey: ['skills', namespace, slug, 'versions', version, 'readme', path],
     queryFn: () => getSkillDocumentation(namespace, slug, version!, path!),
-    enabled: !!namespace && !!slug && !!version && !!path,
+    enabled: enabled && !!namespace && !!slug && !!version && !!path,
     retry: false,
     meta: {
       skipGlobalErrorHandler: true,
@@ -260,11 +273,11 @@ export function useSkillReadme(namespace: string, slug: string, version?: string
   })
 }
 
-export function useSkillVersionDetail(namespace: string, slug: string, version?: string) {
+export function useSkillVersionDetail(namespace: string, slug: string, version?: string, enabled = true) {
   return useQuery({
     queryKey: ['skills', namespace, slug, 'versions', version, 'detail'],
     queryFn: () => getSkillVersionDetail(namespace, slug, version!),
-    enabled: !!namespace && !!slug && !!version,
+    enabled: enabled && !!namespace && !!slug && !!version,
   })
 }
 
@@ -517,11 +530,8 @@ export function useDeleteSkill() {
   return useMutation({
     mutationFn: ({ namespace, slug }: { namespace: string; slug: string }) =>
       skillLifecycleApi.deleteSkill(namespace, slug),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['skills', 'my'] })
-      queryClient.invalidateQueries({ queryKey: ['skills', variables.namespace, variables.slug] })
-      queryClient.invalidateQueries({ queryKey: ['skills', variables.namespace, variables.slug, 'versions'] })
-      queryClient.invalidateQueries({ queryKey: ['skills'] })
+    onSuccess: (data, variables) => {
+      clearDeletedSkillQueries(queryClient, variables.namespace, variables.slug, data.skillId)
     },
   })
 }

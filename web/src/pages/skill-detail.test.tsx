@@ -7,6 +7,7 @@ const useSkillDetailMock = vi.fn()
 const useSkillLabelsMock = vi.fn()
 const useSkillTranslationsMock = vi.fn()
 const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
+const useSkillVersionsMock = vi.fn()
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -104,11 +105,11 @@ vi.mock('@/features/skill/install-command', () => ({
 }))
 
 vi.mock('@/features/social/rating-input', () => ({
-  RatingInput: () => <div>rating</div>,
+  RatingInput: () => <div>__RATING_WIDGET__</div>,
 }))
 
 vi.mock('@/features/social/star-button', () => ({
-  StarButton: () => <div>star</div>,
+  StarButton: () => <div>__STAR_WIDGET__</div>,
 }))
 
 vi.mock('@/shared/hooks/use-skill-queries', () => ({
@@ -124,20 +125,7 @@ vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useDetachSkillLabel: () => ({ mutate: vi.fn(), isPending: false }),
   useUpsertSkillTranslation: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useDeleteSkillTranslation: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useSkillVersions: () => ({
-    data: [
-      {
-        id: 10,
-        version: '1.0.0',
-        status: 'PUBLISHED',
-        changelog: '',
-        fileCount: 1,
-        totalSize: 12,
-        publishedAt: '2026-03-20T00:00:00Z',
-        downloadAvailable: true,
-      },
-    ],
-  }),
+  useSkillVersions: (...args: unknown[]) => useSkillVersionsMock(...args),
   useSkillVersionDetail: () => ({ data: undefined }),
   useSkillFiles: () => ({ data: [] }),
   useSkillReadme: () => ({ data: '# Demo', error: null }),
@@ -188,7 +176,22 @@ describe('SkillDetailPage', () => {
     useSkillDetailMock.mockReturnValue({
       data: createSkill(),
       isLoading: false,
+      isFetching: false,
       error: null,
+    })
+    useSkillVersionsMock.mockReturnValue({
+      data: [
+        {
+          id: 10,
+          version: '1.0.0',
+          status: 'PUBLISHED',
+          changelog: '',
+          fileCount: 1,
+          totalSize: 12,
+          publishedAt: '2026-03-20T00:00:00Z',
+          downloadAvailable: true,
+        },
+      ],
     })
     useSkillLabelsMock.mockReturnValue({
       data: undefined,
@@ -284,5 +287,20 @@ describe('SkillDetailPage', () => {
     const html = renderToStaticMarkup(<SkillDetailPage />)
 
     expect(html).not.toContain('skillDetail.labelsSectionTitle')
+  })
+
+  it('does not render dependent social controls while the detail query is still refetching', () => {
+    useSkillDetailMock.mockReturnValue({
+      data: createSkill(),
+      isLoading: false,
+      isFetching: true,
+      error: null,
+    })
+
+    const html = renderToStaticMarkup(<SkillDetailPage />)
+
+    expect(useSkillVersionsMock).toHaveBeenCalledWith('global', 'demo-skill', false)
+    expect(html).not.toContain('__STAR_WIDGET__')
+    expect(html).not.toContain('__RATING_WIDGET__')
   })
 })
