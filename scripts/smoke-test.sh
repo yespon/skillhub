@@ -31,12 +31,29 @@ check() {
   fi
 }
 
+check_with_header() {
+  local desc="$1"
+  local url="$2"
+  local expected="$3"
+  local header_name="$4"
+  local header_value="$5"
+  local status
+  status="$(curl --retry 3 --retry-delay 1 --max-time 10 -s -o /dev/null -w "%{http_code}" -H "$header_name: $header_value" "$url" || true)"
+  if [[ "$status" == "$expected" ]]; then
+    echo "PASS: $desc (HTTP $status)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: $desc (expected $expected, got $status)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
 echo "=== SkillHub Smoke Test ==="
 echo "Target: $BASE_URL"
 echo
 
 check "Health endpoint" "$BASE_URL/actuator/health" "200"
-check "Prometheus metrics" "$BASE_URL/actuator/prometheus" "200"
+check_with_header "Prometheus metrics" "$BASE_URL/actuator/prometheus" "200" "X-Mock-User-Id" "local-admin"
 check "Namespaces API" "$BASE_URL/api/v1/namespaces" "200"
 check "Auth required" "$BASE_URL/api/v1/auth/me" "401"
 

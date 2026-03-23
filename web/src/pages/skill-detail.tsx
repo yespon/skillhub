@@ -315,6 +315,20 @@ export function SkillDetailPage() {
     navigate({ to: '/search', search: getSkillSquareSearch() })
   }
 
+  const handleLabelNavigate = (labelSlug: string) => {
+    navigate({
+      to: '/search',
+      search: {
+        q: '',
+        labels: [labelSlug],
+        labelMode: 'any',
+        sort: 'relevance',
+        page: 0,
+        starredOnly: false,
+      },
+    })
+  }
+
   const resolveSkillStatusLabel = (status?: string) => {
     if (status === 'ARCHIVED') {
       return t('skillDetail.statusArchived')
@@ -615,8 +629,12 @@ export function SkillDetailPage() {
           {(skill.labels?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2">
               {skill.labels!.map((label) => (
-                <span
+                <Button
                   key={label.slug}
+                  variant="ghost"
+                  size="sm"
+                  aria-label={label.displayName}
+                  onClick={() => handleLabelNavigate(label.slug)}
                   className={cn(
                     'inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium',
                     label.type === 'PRIVILEGED'
@@ -625,7 +643,7 @@ export function SkillDetailPage() {
                   )}
                 >
                   {label.displayName}
-                </span>
+                </Button>
               ))}
             </div>
           )}

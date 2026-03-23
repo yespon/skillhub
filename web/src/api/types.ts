@@ -160,13 +160,14 @@ export type LabelTranslation = Omit<components['schemas']['LabelTranslationRespo
 
 export type LabelDefinition = Omit<
   components['schemas']['LabelDefinitionResponse'],
-  'slug' | 'type' | 'translations' | 'sortOrder' | 'visibleInFilter'
+  'slug' | 'type' | 'translations' | 'sortOrder' | 'visibleInFilter' | 'usageCount'
 > & {
   slug: string
   type: 'RECOMMENDED' | 'PRIVILEGED' | string
   visibleInFilter: boolean
   sortOrder: number
   translations: LabelTranslation[]
+  usageCount: number
 }
 
 export interface AdminLabelInput {
@@ -257,11 +258,41 @@ export interface SkillTag {
 export interface SearchParams {
   q?: string
   namespace?: string
-  label?: string
+  labels?: string[]
+  labelMode?: 'any' | 'all'
   sort?: string
   page?: number
   size?: number
   starredOnly?: boolean
+}
+
+export interface SearchLabelFacetItem {
+  slug: string
+  displayName: string
+  count: number
+  selected: boolean
+  type: string
+}
+
+export interface SearchLabelFacetGroup {
+  mode: 'any' | 'all' | string
+  items: SearchLabelFacetItem[]
+}
+
+export interface SearchFacetResponse {
+  labels: SearchLabelFacetGroup
+}
+
+export interface AppliedSearchFilters {
+  labels: string[]
+  labelMode: 'any' | 'all' | string
+  namespace?: string
+  sort?: string
+}
+
+export interface SearchResponse extends PagedResponse<SkillSummary> {
+  facets: SearchFacetResponse
+  appliedFilters: AppliedSearchFilters
 }
 
 export interface PagedResponse<T> {

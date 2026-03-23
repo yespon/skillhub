@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const navigateMock = vi.fn()
 const useSearchMock = vi.fn()
-const buttonRecords: Array<{ label: string; variant?: string | null; onClick?: (() => void) | undefined }> = []
 const paginationProps: Array<{ onPageChange: (page: number) => void }> = []
+const buttonRecords: Array<{ label: string; variant?: string | null; onClick?: (() => void) | undefined }> = []
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -61,14 +61,16 @@ vi.mock('@/shared/ui/button', () => ({
     children,
     onClick,
     variant,
+    'aria-label': ariaLabel,
   }: {
     children?: ReactNode
     onClick?: () => void
     variant?: string
+    'aria-label'?: string
   }) => {
-    const label = Array.isArray(children) ? children.join('') : String(children ?? '')
+    const label = ariaLabel ?? (Array.isArray(children) ? children.join('') : String(children ?? ''))
     buttonRecords.push({ label, variant, onClick })
-    return <button data-variant={variant}>{children}</button>
+    return <button data-variant={variant} onClick={onClick}>{children}</button>
   },
 }))
 
@@ -77,15 +79,11 @@ vi.mock('@/app/page-shell-style', () => ({
 }))
 
 const useSearchSkillsMock = vi.fn()
+const useVisibleLabelsMock = vi.fn()
 
 vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useSearchSkills: () => useSearchSkillsMock(),
-  useVisibleLabels: () => ({
-    data: [
-      { slug: 'code-generation', type: 'RECOMMENDED', displayName: 'Code Generation' },
-      { slug: 'official', type: 'RECOMMENDED', displayName: 'Official' },
-    ],
-  }),
+  useVisibleLabels: () => useVisibleLabelsMock(),
   useMyStars: () => ({
     data: [],
     isLoading: false,
@@ -106,14 +104,21 @@ function findButton(label: string) {
 describe('SearchPage', () => {
   beforeEach(() => {
     navigateMock.mockReset()
-    buttonRecords.length = 0
     paginationProps.length = 0
+    buttonRecords.length = 0
     useSearchMock.mockReturnValue({
       q: 'agent',
-      label: 'code-generation',
+      labels: ['code-generation'],
+      labelMode: 'all',
       sort: 'downloads',
       page: 1,
       starredOnly: false,
+    })
+    useVisibleLabelsMock.mockReturnValue({
+      data: [
+        { slug: 'code-generation', type: 'RECOMMENDED', displayName: 'Code Generation' },
+        { slug: 'official', type: 'RECOMMENDED', displayName: 'Official' },
+      ],
     })
     useSearchSkillsMock.mockReturnValue({
       data: {
@@ -121,6 +126,20 @@ describe('SearchPage', () => {
         total: 24,
         page: 1,
         size: 12,
+        facets: {
+          labels: {
+            mode: 'all',
+            items: [
+              { slug: 'code-generation', displayName: 'Code Generation', count: 12, selected: true, type: 'RECOMMENDED' },
+              { slug: 'official', displayName: 'Official', count: 7, selected: false, type: 'RECOMMENDED' },
+            ],
+          },
+        },
+        appliedFilters: {
+          labels: ['code-generation'],
+          labelMode: 'all',
+          sort: 'downloads',
+        },
       },
       isLoading: false,
       isFetching: false,
@@ -131,8 +150,8 @@ describe('SearchPage', () => {
     const html = renderToStaticMarkup(<SearchPage />)
 
     expect(html).toContain('Code Generation')
-    expect(findButton('Code Generation').variant).toBe('default')
-    expect(findButton('Official').variant).toBe('outline')
+    expect(findButton('search.facets.modeAll').variant).toBe('default')
+    expect(findButton('search.facets.modeAny').variant).toBe('outline')
   })
 
   it('toggles the selected label off and resets paging', () => {
@@ -144,7 +163,8 @@ describe('SearchPage', () => {
       to: '/search',
       search: {
         q: 'agent',
-        label: '',
+        labels: [],
+        labelMode: 'all',
         sort: 'downloads',
         page: 0,
         starredOnly: false,
@@ -161,7 +181,8 @@ describe('SearchPage', () => {
       to: '/search',
       search: {
         q: 'agent',
-        label: 'code-generation',
+        labels: ['code-generation'],
+        labelMode: 'all',
         sort: 'newest',
         page: 0,
         starredOnly: false,
@@ -179,7 +200,8 @@ describe('SearchPage', () => {
       to: '/search',
       search: {
         q: 'agent',
-        label: 'code-generation',
+        labels: ['code-generation'],
+        labelMode: 'all',
         sort: 'downloads',
         page: 2,
         starredOnly: false,
@@ -189,10 +211,47 @@ describe('SearchPage', () => {
       to: '/search',
       search: {
         q: 'agent',
-        label: 'code-generation',
+        labels: ['code-generation'],
+        labelMode: 'all',
         sort: 'downloads',
         page: 0,
         starredOnly: true,
+      },
+    })
+  })
+
+  it('adds a second label and preserves sorted normalized labels', () => {
+    renderToStaticMarkup(<SearchPage />)
+
+    findButton('Official').onClick?.()
+
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: '/search',
+      search: {
+        q: 'agent',
+        labels: ['code-generation', 'official'],
+        labelMode: 'all',
+        sort: 'downloads',
+        page: 0,
+        starredOnly: false,
+      },
+    })
+  })
+
+  it('switches label match mode without losing selected labels', () => {
+    renderToStaticMarkup(<SearchPage />)
+
+    findButton('search.facets.modeAny').onClick?.()
+
+    expect(navigateMock).toHaveBeenCalledWith({
+      to: '/search',
+      search: {
+        q: 'agent',
+        labels: ['code-generation'],
+        labelMode: 'any',
+        sort: 'downloads',
+        page: 0,
+        starredOnly: false,
       },
     })
   })

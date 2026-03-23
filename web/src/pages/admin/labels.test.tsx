@@ -33,7 +33,14 @@ vi.mock('@/features/admin/use-admin-labels', () => ({
   useUpdateAdminLabelSortOrder: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
-import { AdminLabelsPage, normalizeLabelFormState, validateLabelFormState } from './labels'
+import {
+  AdminLabelsPage,
+  filterLabelDefinitions,
+  getLabelDisplayDefinitions,
+  getTopUsedDefinitions,
+  normalizeLabelFormState,
+  validateLabelFormState,
+} from './labels'
 
 describe('AdminLabelsPage', () => {
   beforeEach(() => {
@@ -58,7 +65,17 @@ describe('AdminLabelsPage', () => {
           visibleInFilter: true,
           sortOrder: 0,
           translations: [{ locale: 'en', displayName: 'Official' }],
+          usageCount: 7,
           createdAt: '2026-03-20T00:00:00Z',
+        },
+        {
+          slug: 'code-generation',
+          type: 'RECOMMENDED',
+          visibleInFilter: true,
+          sortOrder: 1,
+          translations: [{ locale: 'en', displayName: 'Code Generation' }],
+          usageCount: 12,
+          createdAt: '2026-03-21T00:00:00Z',
         },
       ],
       isLoading: false,
@@ -68,8 +85,64 @@ describe('AdminLabelsPage', () => {
 
     expect(html).toContain('official')
     expect(html).toContain('Official')
+    expect(html).toContain('Code Generation')
+    expect(html).toContain('7')
+    expect(html).toContain('12')
+    expect(html).toContain('adminLabels.summaryUsageTitle')
+    expect(html).toContain('adminLabels.hotLabelsTitle')
+    expect(html).toContain('adminLabels.displayModeUsage')
     expect(html).toContain('adminLabels.editAction')
     expect(html).toContain('adminLabels.deleteAction')
+  })
+
+  it('sorts label definitions by usage when requested and returns top used labels', () => {
+    const definitions = [
+      {
+        slug: 'official',
+        type: 'RECOMMENDED',
+        visibleInFilter: true,
+        sortOrder: 2,
+        translations: [{ locale: 'en', displayName: 'Official' }],
+        usageCount: 7,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+      {
+        slug: 'code-generation',
+        type: 'RECOMMENDED',
+        visibleInFilter: true,
+        sortOrder: 0,
+        translations: [{ locale: 'en', displayName: 'Code Generation' }],
+        usageCount: 12,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+      {
+        slug: 'internal-only',
+        type: 'PRIVILEGED',
+        visibleInFilter: false,
+        sortOrder: 1,
+        translations: [{ locale: 'en', displayName: 'Internal Only' }],
+        usageCount: 0,
+        createdAt: '2026-03-20T00:00:00Z',
+      },
+    ]
+
+    expect(getLabelDisplayDefinitions(definitions, 'usage').map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+      'internal-only',
+    ])
+    expect(filterLabelDefinitions(definitions, 'PRIVILEGED').map((item) => item.slug)).toEqual([
+      'internal-only',
+    ])
+    expect(getTopUsedDefinitions(definitions).map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+    ])
+    expect(getTopUsedDefinitions(definitions, 3, 'RECOMMENDED').map((item) => item.slug)).toEqual([
+      'code-generation',
+      'official',
+    ])
+    expect(getTopUsedDefinitions(definitions, 3, 'PRIVILEGED')).toEqual([])
   })
 
   it('normalizes slugs and locales before submission', () => {

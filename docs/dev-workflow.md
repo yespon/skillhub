@@ -49,6 +49,10 @@ Two mock users are available in local mode (no password needed):
 | `local-user`  | Regular user | `X-Mock-User-Id: local-user`   |
 | `local-admin` | Super admin  | `X-Mock-User-Id: local-admin`  |
 
+Current local permissions are intentionally asymmetric:
+- `local-admin` can create team namespaces, review skills, approve promotions, and access `/actuator/prometheus`.
+- `local-user` can publish skills and submit promotions after being added to a team namespace, but cannot create namespaces directly.
+
 Local development also creates a password-based bootstrap admin by default.
 Use `BOOTSTRAP_ADMIN_USERNAME` / `BOOTSTRAP_ADMIN_PASSWORD` to log in through
 the normal local account form. The default local fallback credentials are
@@ -70,7 +74,24 @@ or the Compose environment.
 | `make dev-all-reset`             | Full reset (clears data volumes) |
 | `make dev-server-restart`        | Restart backend after Java changes |
 | `make namespace-smoke`           | Run namespace workflow smoke test |
+| `bash scripts/smoke-test.sh http://localhost:8080` | Run base auth and health smoke checks |
+| `bash scripts/promotion-smoke-test.sh http://localhost:8080` | Run team publish and promotion smoke checks |
 | `make db-reset`                  | Reset database only              |
+
+### Recommended local verification
+
+After `make dev-all` is ready, use the following order for quick regression checks:
+
+```bash
+bash scripts/smoke-test.sh http://localhost:8080
+bash scripts/namespace-smoke-test.sh http://localhost:8080
+bash scripts/promotion-smoke-test.sh http://localhost:8080
+```
+
+These scripts now match the current permission model:
+- Prometheus metrics are validated with `local-admin`.
+- Team namespace creation is validated with `local-admin`.
+- Team publish + promotion is validated by letting `local-admin` create the namespace and add `local-user` as a member before publish.
 
 ### Claude + Codex parallel workflow
 

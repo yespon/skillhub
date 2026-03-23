@@ -25,20 +25,21 @@ public interface SearchRebuildService {
 ```java
 public record SearchQuery(
     String keyword,
-    Long namespaceId,           // 可选，指定空间搜索
-    String namespaceSlug,       // 可选
-    SearchVisibilityScope scope, // ACL 投影，由应用服务层计算注入
-    SortField sortBy,           // RELEVANCE / DOWNLOADS / RATING / NEWEST
+    Long namespaceId,
+    SearchVisibilityScope visibilityScope,
+    String sortBy,
     int page,
-    int size
+    int size,
+    List<String> labelSlugs,
+    String labelMode,
+    boolean includeFacets
 ) {}
 
 // 搜索可见范围投影，由应用服务层根据当前用户计算
 public record SearchVisibilityScope(
-    boolean includeAllPublic,        // 是否包含所有 PUBLIC 技能
-    Set<Long> memberNamespaceIds,    // 用户是 MEMBER 的 namespace（可见 NAMESPACE_ONLY）
-    Set<Long> adminNamespaceIds,     // 用户是 ADMIN 的 namespace（可见 PRIVATE）
-    String userId                    // 当前用户 ID（可见自己的 PRIVATE skill），匿名为 null
+    String userId,
+    Set<Long> memberNamespaceIds,
+    Set<Long> adminNamespaceIds
 ) {}
 ```
 
@@ -52,6 +53,31 @@ WHERE (visibility = 'PUBLIC')
    OR (visibility = 'NAMESPACE_ONLY' AND namespace_id IN (:memberNamespaceIds))
    OR (visibility = 'PRIVATE' AND (namespace_id IN (:adminNamespaceIds) OR owner_id = :userId))
 ```
+
+### 2.1 Label 过滤与 facets
+
+Phase 1 已在搜索查询模型中增加结构化标签过滤能力：
+
+- `labelSlugs`：多值标签过滤
+- `labelMode`：`any` 或 `all`
+- `includeFacets`：是否返回标签聚合
+
+当前 HTTP 入口为：
+
+```http
+GET /api/web/skills?q=agent&label=rag&label=official&labelMode=all&includeFacets=true
+```
+
+语义说明：
+
+- `labelMode=any`：命中任一标签即可
+- `labelMode=all`：必须同时命中所有标签
+- `includeFacets=true`：返回当前结果集上的标签聚合
+- `label` 参数按后端规范化后的小写 slug 进行匹配
+
+一期 facets 采用 `narrow facets`：
+
+- 聚合统计基于当前全部过滤条件之后的结果集
 
 迁移到 ES 时，`SearchVisibilityScope` 可直接映射为 bool query 的 should/filter 子句。
 

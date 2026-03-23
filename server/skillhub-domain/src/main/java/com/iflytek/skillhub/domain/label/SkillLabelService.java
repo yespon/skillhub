@@ -5,6 +5,7 @@ import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.shared.exception.DomainForbiddenException;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +38,14 @@ public class SkillLabelService {
 
     public List<SkillLabel> listByLabelId(Long labelId) {
         return skillLabelRepository.findByLabelId(labelId);
+    }
+
+    public Map<Long, Long> countDistinctSkillsByLabelIds(List<Long> labelIds) {
+        if (labelIds == null || labelIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return skillLabelRepository.countDistinctSkillsByLabelIds(labelIds).stream()
+                .collect(java.util.stream.Collectors.toMap(LabelUsageCount::labelId, LabelUsageCount::usageCount));
     }
 
     @Transactional
