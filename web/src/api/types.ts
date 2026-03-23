@@ -339,6 +339,13 @@ export interface SkillDeleteResult {
   deleted?: boolean
 }
 
+export interface SkillDeleteResult {
+  skillId?: number
+  namespace?: string
+  slug?: string
+  deleted?: boolean
+}
+
 export interface ReviewTask {
   id: number
   skillVersionId: number

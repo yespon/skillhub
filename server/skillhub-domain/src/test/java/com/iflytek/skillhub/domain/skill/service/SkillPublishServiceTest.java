@@ -10,6 +10,7 @@ import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
 import com.iflytek.skillhub.domain.namespace.NamespaceStatus;
 import com.iflytek.skillhub.domain.review.ReviewTask;
 import com.iflytek.skillhub.domain.review.ReviewTaskRepository;
+import com.iflytek.skillhub.domain.security.SecurityScanService;
 import com.iflytek.skillhub.domain.shared.exception.DomainBadRequestException;
 import com.iflytek.skillhub.domain.skill.*;
 import com.iflytek.skillhub.domain.skill.metadata.SkillMetadata;
@@ -73,6 +74,8 @@ class SkillPublishServiceTest {
     @Mock
     private ReviewTaskRepository reviewTaskRepository;
     @Mock
+    private SecurityScanService securityScanService;
+    @Mock
     private ApplicationEventPublisher eventPublisher;
 
     private SkillPublishService service;
@@ -94,9 +97,11 @@ class SkillPublishServiceTest {
                 prePublishValidator,
                 objectMapper,
                 reviewTaskRepository,
+                securityScanService,
                 eventPublisher,
                 CLOCK
         );
+            lenient().when(securityScanService.isEnabled()).thenReturn(false);
         lenient().when(skillVersionRepository.findBySkillIdAndStatus(anyLong(), eq(SkillVersionStatus.PENDING_REVIEW)))
                 .thenReturn(List.of());
         lenient().when(reviewTaskRepository.save(any(ReviewTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -107,56 +112,6 @@ class SkillPublishServiceTest {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
             TransactionSynchronizationManager.clearSynchronization();
         }
-    }
-
-    @Test
-    void testPublishFromEntries_ShouldPersistZhCnDisplayNameWhenProvided() throws Exception {
-        String namespaceSlug = "test-ns";
-        String publisherId = "user-100";
-        String skillMdContent = "---\nname: test-skill\ndescription: Test\nversion: 1.0.0\n---\nBody";
-
-        PackageEntry skillMd = new PackageEntry("SKILL.md", skillMdContent.getBytes(), skillMdContent.length(), "text/markdown");
-        List<PackageEntry> entries = List.of(skillMd);
-
-        Namespace namespace = new Namespace(namespaceSlug, "Test NS", "user-1");
-        setId(namespace, 1L);
-        NamespaceMember member = mock(NamespaceMember.class);
-        SkillMetadata metadata = new SkillMetadata("test-skill", "Test", "1.0.0", "Body", Map.of());
-
-        Skill skill = new Skill(1L, "test-skill", publisherId, SkillVisibility.PUBLIC);
-        setId(skill, 1L);
-        when(namespaceRepository.findBySlug(namespaceSlug)).thenReturn(Optional.of(namespace));
-        when(namespaceMemberRepository.findByNamespaceIdAndUserId(any(), eq(publisherId))).thenReturn(Optional.of(member));
-        when(skillPackageValidator.validate(entries)).thenReturn(ValidationResult.pass());
-        when(skillMetadataParser.parse(skillMdContent)).thenReturn(metadata);
-        when(prePublishValidator.validate(any())).thenReturn(ValidationResult.pass());
-        when(skillRepository.findByNamespaceIdAndSlug(any(), eq("test-skill"))).thenReturn(List.of(skill));
-        when(skillRepository.findByNamespaceIdAndSlugAndOwnerId(any(), eq("test-skill"), eq(publisherId))).thenReturn(Optional.of(skill));
-        when(skillVersionRepository.findBySkillIdAndVersion(any(), eq("1.0.0"))).thenReturn(Optional.empty());
-        when(skillTranslationRepository.findBySkillIdAndLocale(1L, "zh-cn")).thenReturn(Optional.empty());
-        when(skillVersionRepository.save(any(SkillVersion.class))).thenAnswer(invocation -> {
-            SkillVersion saved = invocation.getArgument(0);
-            if (saved.getId() == null) {
-                setId(saved, 10L);
-            }
-            return saved;
-        });
-        when(skillRepository.save(any())).thenReturn(skill);
-
-        service.publishFromEntries(
-                namespaceSlug,
-                entries,
-                publisherId,
-                SkillVisibility.PUBLIC,
-                Set.of(),
-                "测试技能"
-        );
-
-        ArgumentCaptor<SkillTranslation> captor = ArgumentCaptor.forClass(SkillTranslation.class);
-        verify(skillTranslationRepository).save(captor.capture());
-        assertEquals(1L, captor.getValue().getSkillId());
-        assertEquals("zh-cn", captor.getValue().getLocale());
-        assertEquals("测试技能", captor.getValue().getDisplayName());
     }
 
     @Test

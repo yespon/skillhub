@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.lang.reflect.Field;
 import java.nio.file.Path;
@@ -34,6 +35,9 @@ class SecurityScanServiceTest {
     @Mock
     private ScanTaskProducer scanTaskProducer;
 
+        @Mock
+        private ApplicationEventPublisher eventPublisher;
+
     private SecurityScanService service;
 
     @BeforeEach
@@ -42,6 +46,7 @@ class SecurityScanServiceTest {
                 auditRepository,
                 skillVersionRepository,
                 scanTaskProducer,
+                eventPublisher,
                 new ObjectMapper(),
                 "local",
                 true
@@ -98,6 +103,7 @@ class SecurityScanServiceTest {
                 auditRepository,
                 skillVersionRepository,
                 scanTaskProducer,
+                eventPublisher,
                 new ObjectMapper(),
                 "upload",
                 true
@@ -148,6 +154,7 @@ class SecurityScanServiceTest {
                 auditRepository,
                 skillVersionRepository,
                 scanTaskProducer,
+                eventPublisher,
                 new ObjectMapper(),
                 "upload",
                 true
@@ -208,6 +215,7 @@ class SecurityScanServiceTest {
         assertThat(version.getStatus()).isEqualTo(SkillVersionStatus.PENDING_REVIEW);
         verify(auditRepository).save(audit);
         verify(skillVersionRepository).save(version);
+                verify(eventPublisher).publishEvent(new ScanCompletedEvent(42L, SecurityVerdict.DANGEROUS, 1));
     }
 
     private void setId(Object target, Long id) throws Exception {

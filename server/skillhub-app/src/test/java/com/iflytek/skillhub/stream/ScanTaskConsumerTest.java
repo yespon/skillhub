@@ -109,6 +109,9 @@ class ScanTaskConsumerTest {
                 null,
                 ScannerType.SKILL_SCANNER
         );
+        Files.createDirectories(SCAN_TEMP_DIR);
+        Path tempFile = Files.createTempFile(SCAN_TEMP_DIR, "scan-task-consumer-failure", ".zip");
+        ScanTaskConsumer.ScanTaskPayload payload = new ScanTaskConsumer.ScanTaskPayload("task-2", 42L, tempFile.toString(), null, ScannerType.SKILL_SCANNER);
 
         consumer.invokeMarkFailed(payload, "scan failed");
 
@@ -362,6 +365,7 @@ class ScanTaskConsumerTest {
 
         private StubSecurityScanService() {
             super(null, null, task -> {
+            }, event -> {
             }, new com.fasterxml.jackson.databind.ObjectMapper(), "local", true);
         }
 
