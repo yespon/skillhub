@@ -246,6 +246,7 @@ const namespaceRoute = createRoute({
       labelMode: normalizeSearchLabelMode(typeof search.labelMode === 'string' ? search.labelMode : undefined),
     }
   },
+  beforeLoad: requireAuth,
   component: NamespacePage,
 })
 
