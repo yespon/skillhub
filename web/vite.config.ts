@@ -11,17 +11,18 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    allowedHosts: ['skillhub.ruijie.com.cn'],
     watch: {
       usePolling: true,
       interval: 150,
     },
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
       },
       '/oauth2': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
       },
     },

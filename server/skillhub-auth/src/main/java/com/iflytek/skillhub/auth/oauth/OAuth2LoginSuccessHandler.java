@@ -5,6 +5,7 @@ import com.iflytek.skillhub.auth.session.PlatformSessionService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
@@ -35,7 +36,10 @@ public class OAuth2LoginSuccessHandler extends SavedRequestAwareAuthenticationSu
         if (authentication.getPrincipal() instanceof OAuth2User oAuth2User) {
             PlatformPrincipal principal = (PlatformPrincipal) oAuth2User.getAttributes().get("platformPrincipal");
             if (principal != null) {
-                platformSessionService.attachToAuthenticatedSession(principal, authentication, request, true);
+                var newAuth = new UsernamePasswordAuthenticationToken(
+                    principal, null, authentication.getAuthorities());
+                newAuth.setDetails(authentication.getDetails());
+                platformSessionService.attachToAuthenticatedSession(principal, newAuth, request, true);
             }
         }
         String returnTo = oauthLoginFlowService.consumeReturnTo(request.getSession(false));
