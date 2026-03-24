@@ -110,13 +110,6 @@ Conventional commit format: `type(scope): description`
 - **Never** add `Co-Authored-By` trailers unless explicitly requested
 - Git commit authors must not contain model/tool CLI names (Claude Code, Codex, Gemini)
 
-Examples:
-- `feat(auth): add local account login`
-- `fix(ops): align smoke test with csrf flow`
-- `docs(deploy): clarify runtime image usage`
-
-**IMPORTANT**: Never add `Co-Authored-By` trailers to commit messages unless explicitly requested by the user.
-
 ### Code Style
 
 - **Backend**: Java 4-space indent, `PascalCase` classes, packages under `com.iflytek.skillhub.*`
@@ -137,10 +130,6 @@ When backend API contracts change:
 - API types regenerated (if backend API changed)
 - PR description explains motivation, scope, and impact
 - Don't mix refactoring with behavior changes
-- Don't break module boundaries
-- Don't skip API contract regeneration
-- Don't make breaking changes without explicit approval
-- Don't open public issues for security vulnerabilities
 
 ## Security
 
