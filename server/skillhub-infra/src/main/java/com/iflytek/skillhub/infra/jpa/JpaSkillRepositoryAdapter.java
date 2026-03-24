@@ -91,4 +91,9 @@ public class JpaSkillRepositoryAdapter implements SkillRepository {
     public Optional<Skill> findByNamespaceSlugAndSlug(String namespaceSlug, String slug) {
         return delegate.findByNamespaceSlugAndSlug(namespaceSlug, slug);
     }
+
+    @Override
+    public void flush() {
+        jpaDelegate.flush();
+    }
 }

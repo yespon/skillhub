@@ -39,6 +39,16 @@ spring:
             user-name-attribute: id
 
 skillhub:
+  storage:
+    provider: s3
+    s3:
+      endpoint: http://localhost:9000
+      bucket: skillhub
+      access-key: minioadmin
+      secret-key: minioadmin
+      region: us-east-1
+      force-path-style: true
+      auto-create-bucket: true
   auth:
     mock:
       enabled: true

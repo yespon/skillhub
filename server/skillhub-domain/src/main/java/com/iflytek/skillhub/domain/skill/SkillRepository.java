@@ -23,4 +23,5 @@ public interface SkillRepository {
     void incrementDownloadCount(Long skillId);
     List<Skill> findBySlug(String slug);
     Optional<Skill> findByNamespaceSlugAndSlug(String namespaceSlug, String slug);
+    void flush();
 }
