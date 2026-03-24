@@ -132,6 +132,8 @@ export interface SkillSummary {
   id: number
   slug: string
   displayName: string
+  preferredDisplayName?: string
+  canonicalDisplayName?: string
   summary?: string
   status?: string
   downloadCount: number
@@ -155,6 +157,17 @@ export type LabelItem = Omit<components['schemas']['SkillLabelDto'], 'slug' | 't
 
 export type LabelTranslation = Omit<components['schemas']['LabelTranslationResponse'], 'locale' | 'displayName'> & {
   locale: string
+  displayName: string
+}
+
+export interface SkillTranslation {
+  locale: string
+  displayName: string
+  sourceType: 'USER' | 'MACHINE' | string
+  updatedAt: string
+}
+
+export interface SkillTranslationInput {
   displayName: string
 }
 
@@ -188,6 +201,8 @@ export interface SkillDetail {
   id: number
   slug: string
   displayName: string
+  preferredDisplayName?: string
+  canonicalDisplayName?: string
   ownerId?: string
   ownerDisplayName?: string
   summary?: string
@@ -311,6 +326,7 @@ export interface PublishResult {
   status: string
   fileCount: number
   totalSize: number
+  displayNameZhCn?: string
 }
 
 export interface ReviewTask {

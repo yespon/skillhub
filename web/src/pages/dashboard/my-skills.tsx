@@ -248,7 +248,7 @@ export function MySkillsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold font-heading text-lg mb-1 group-hover:text-primary transition-colors">
-                          {skill.displayName}
+                          {skill.preferredDisplayName ?? skill.displayName}
                         </h3>
                         {skill.summary && (
                           <p className="text-sm text-muted-foreground mb-3 leading-relaxed">{skill.summary}</p>
@@ -296,7 +296,7 @@ export function MySkillsPage() {
                               setWithdrawTarget({
                                 namespace: skill.namespace,
                                 slug: skill.slug,
-                                name: skill.displayName,
+                                name: skill.preferredDisplayName ?? skill.displayName,
                                 version: ownerPreviewVersion.version,
                               })
                             }}
@@ -312,7 +312,7 @@ export function MySkillsPage() {
                               setPromotionTarget({
                                 skillId: skill.id,
                                 versionId: publishedVersion.id,
-                                name: skill.displayName,
+                                name: skill.preferredDisplayName ?? skill.displayName,
                                 version: publishedVersion.version,
                               })
                             }}
@@ -328,7 +328,7 @@ export function MySkillsPage() {
                               setUnarchiveTarget({
                                 namespace: skill.namespace,
                                 slug: skill.slug,
-                                name: skill.displayName,
+                                name: skill.preferredDisplayName ?? skill.displayName,
                               })
                             }}
                           >
@@ -343,7 +343,7 @@ export function MySkillsPage() {
                               setArchiveTarget({
                                 namespace: skill.namespace,
                                 slug: skill.slug,
-                                name: skill.displayName,
+                                name: skill.preferredDisplayName ?? skill.displayName,
                               })
                             }}
                           >

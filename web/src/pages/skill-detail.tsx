@@ -42,11 +42,14 @@ import {
   useSkillFiles,
   useSkillReadme,
   useArchiveSkill,
+  useDeleteSkillTranslation,
   useDeleteSkill,
   useDeleteSkillVersion,
   useRereleaseSkillVersion,
+  useSkillTranslations,
   useSubmitPromotion,
   useUnarchiveSkill,
+  useUpsertSkillTranslation,
   useWithdrawSkillReview,
 } from '@/shared/hooks/use-skill-queries'
 
@@ -103,6 +106,8 @@ export function SkillDetailPage() {
   const [deleteSkillConfirmOpen, setDeleteSkillConfirmOpen] = useState(false)
   const [deleteSkillInputOpen, setDeleteSkillInputOpen] = useState(false)
   const [deleteSkillInput, setDeleteSkillInput] = useState('')
+  const [translationDialogOpen, setTranslationDialogOpen] = useState(false)
+  const [translationInput, setTranslationInput] = useState('')
   const [deleteVersionTarget, setDeleteVersionTarget] = useState<string | null>(null)
   const [withdrawVersionTarget, setWithdrawVersionTarget] = useState<string | null>(null)
   const [rereleaseTarget, setRereleaseTarget] = useState<string | null>(null)
@@ -118,6 +123,7 @@ export function SkillDetailPage() {
   const { user, hasRole } = useAuth()
 
   const { data: skill, isLoading: isLoadingSkill, error: skillError } = useSkillDetail(namespace, slug)
+  const { data: skillTranslations } = useSkillTranslations(namespace, slug, Boolean(skill?.canManageLifecycle))
   const { data: versions } = useSkillVersions(namespace, slug)
   const headlineVersion = skill ? getHeadlineVersion(skill) : null
   const publishedVersion = skill ? getPublishedVersion(skill) : null
@@ -234,7 +240,14 @@ export function SkillDetailPage() {
   const withdrawReviewMutation = useWithdrawSkillReview()
   const rereleaseVersionMutation = useRereleaseSkillVersion()
   const submitPromotionMutation = useSubmitPromotion()
+  const upsertSkillTranslationMutation = useUpsertSkillTranslation()
+  const deleteSkillTranslationMutation = useDeleteSkillTranslation()
   const reportMutation = useSubmitSkillReport(namespace, slug)
+  const zhCnTranslation = skillTranslations?.find((translation) => translation.locale.toLowerCase() === 'zh-cn')
+
+  useEffect(() => {
+    setTranslationInput(zhCnTranslation?.displayName ?? '')
+  }, [zhCnTranslation?.displayName, translationDialogOpen])
 
   const triggerBrowserDownload = (url: string) => {
     const link = document.createElement('a')
@@ -283,6 +296,48 @@ export function SkillDetailPage() {
       return
     }
     setReportDialogOpen(true)
+  }
+
+  const handleOpenTranslationDialog = () => {
+    setTranslationInput(zhCnTranslation?.displayName ?? '')
+    setTranslationDialogOpen(true)
+  }
+
+  const handleSaveTranslation = async () => {
+    if (!translationInput.trim()) {
+      toast.error(t('skillDetail.translationValidationTitle'), t('skillDetail.translationValidationDescription'))
+      return
+    }
+
+    try {
+      await upsertSkillTranslationMutation.mutateAsync({
+        namespace,
+        slug,
+        locale: 'zh-cn',
+        request: {
+          displayName: translationInput.trim(),
+        },
+      })
+      setTranslationDialogOpen(false)
+      toast.success(t('skillDetail.translationSaveSuccessTitle'), t('skillDetail.translationSaveSuccessDescription'))
+    } catch (error) {
+      toast.error(t('skillDetail.translationSaveErrorTitle'), error instanceof Error ? error.message : '')
+    }
+  }
+
+  const handleDeleteTranslation = async () => {
+    try {
+      await deleteSkillTranslationMutation.mutateAsync({
+        namespace,
+        slug,
+        locale: 'zh-cn',
+      })
+      setTranslationInput('')
+      setTranslationDialogOpen(false)
+      toast.success(t('skillDetail.translationDeleteSuccessTitle'), t('skillDetail.translationDeleteSuccessDescription'))
+    } catch (error) {
+      toast.error(t('skillDetail.translationDeleteErrorTitle'), error instanceof Error ? error.message : '')
+    }
   }
 
   const handleSubmitReport = async () => {
@@ -425,7 +480,7 @@ export function SkillDetailPage() {
       await deleteSkillMutation.mutateAsync({ namespace, slug })
       toast.success(
         t('skillDetail.deleteSkillSuccessTitle'),
-        t('skillDetail.deleteSkillSuccessDescription', { skill: skill.displayName }),
+        t('skillDetail.deleteSkillSuccessDescription', { skill: skill.preferredDisplayName ?? skill.displayName }),
       )
       setDeleteSkillInputOpen(false)
       navigate({ to: resolveDeletedSkillReturnTo(search.returnTo) })
@@ -520,7 +575,7 @@ export function SkillDetailPage() {
       })
       toast.success(
         t('skillDetail.promotionSuccessTitle'),
-        t('skillDetail.promotionSuccessDescription', { skill: skill.displayName, version: publishedVersion.version }),
+        t('skillDetail.promotionSuccessDescription', { skill: skill.preferredDisplayName ?? skill.displayName, version: publishedVersion.version }),
       )
       setPromotionConfirmOpen(false)
     } catch (error) {
@@ -612,7 +667,7 @@ export function SkillDetailPage() {
               </span>
             )}
           </div>
-          <h1 className="text-balance text-4xl font-bold font-heading text-foreground">{skill.displayName}</h1>
+          <h1 className="text-balance text-4xl font-bold font-heading text-foreground">{skill.preferredDisplayName ?? skill.displayName}</h1>
           {skill.ownerDisplayName && (
             <div className="flex min-w-0">
               <div className="inline-flex max-w-full items-center gap-2 rounded-full border border-border/60 bg-background/85 px-3 py-1.5 text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
@@ -987,6 +1042,24 @@ export function SkillDetailPage() {
                   {resolveSkillStatusLabel(skill.status)}
                 </div>
               </div>
+              <div className="rounded-xl border border-border/60 bg-secondary/20 p-3 space-y-3">
+                <div className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  {t('skillDetail.translationSectionTitle')}
+                </div>
+                <div className="space-y-1">
+                  <div className="text-sm font-semibold text-foreground">
+                    {zhCnTranslation?.displayName || t('skillDetail.translationEmptyValue')}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {zhCnTranslation
+                      ? t('skillDetail.translationSourceLabel', { source: zhCnTranslation.sourceType })
+                      : t('skillDetail.translationAutoHint')}
+                  </div>
+                </div>
+                <Button variant="outline" onClick={handleOpenTranslationDialog}>
+                  {t('skillDetail.translationEditAction')}
+                </Button>
+              </div>
             </div>
             {skill.status === 'ARCHIVED' ? (
               <Button variant="outline" onClick={() => setUnarchiveConfirmOpen(true)} disabled={unarchiveMutation.isPending}>
@@ -1077,12 +1150,59 @@ export function SkillDetailPage() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={translationDialogOpen} onOpenChange={setTranslationDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('skillDetail.translationDialogTitle')}</DialogTitle>
+            <DialogDescription>{t('skillDetail.translationDialogDescription')}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-foreground">{t('skillDetail.translationCanonicalLabel')}</div>
+              <div className="rounded-lg border border-border/60 bg-secondary/20 px-3 py-2 text-sm text-muted-foreground">
+                {skill.canonicalDisplayName ?? skill.displayName}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-foreground">{t('skillDetail.translationInputLabel')}</div>
+              <Input
+                value={translationInput}
+                onChange={(event) => setTranslationInput(event.target.value)}
+                placeholder={t('skillDetail.translationInputPlaceholder')}
+                maxLength={200}
+              />
+            </div>
+          </div>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-between">
+            <div>
+              {zhCnTranslation ? (
+                <Button
+                  variant="outline"
+                  onClick={handleDeleteTranslation}
+                  disabled={deleteSkillTranslationMutation.isPending || upsertSkillTranslationMutation.isPending}
+                >
+                  {deleteSkillTranslationMutation.isPending ? t('skillDetail.processing') : t('skillDetail.translationDeleteAction')}
+                </Button>
+              ) : null}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setTranslationDialogOpen(false)}>
+                {t('dialog.cancel')}
+              </Button>
+              <Button onClick={handleSaveTranslation} disabled={upsertSkillTranslationMutation.isPending || deleteSkillTranslationMutation.isPending}>
+                {upsertSkillTranslationMutation.isPending ? t('skillDetail.processing') : t('skillDetail.translationSaveAction')}
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmDialog
         open={promotionConfirmOpen}
         onOpenChange={setPromotionConfirmOpen}
         title={t('skillDetail.promotionConfirmTitle')}
         description={t('skillDetail.promotionConfirmDescription', {
-          skill: skill.displayName,
+          skill: skill.preferredDisplayName ?? skill.displayName,
           version: publishedVersion?.version ?? '',
         })}
         confirmText={t('skillDetail.promoteToGlobal')}
@@ -1093,7 +1213,7 @@ export function SkillDetailPage() {
         open={archiveConfirmOpen}
         onOpenChange={setArchiveConfirmOpen}
         title={t('skillDetail.archiveConfirmTitle')}
-        description={t('skillDetail.archiveConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.archiveConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.archiveSkill')}
         onConfirm={handleArchive}
       />
@@ -1102,7 +1222,7 @@ export function SkillDetailPage() {
         open={unarchiveConfirmOpen}
         onOpenChange={setUnarchiveConfirmOpen}
         title={t('skillDetail.unarchiveConfirmTitle')}
-        description={t('skillDetail.unarchiveConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.unarchiveConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.unarchiveSkill')}
         onConfirm={handleUnarchive}
       />
@@ -1111,7 +1231,7 @@ export function SkillDetailPage() {
         open={deleteSkillConfirmOpen}
         onOpenChange={setDeleteSkillConfirmOpen}
         title={t('skillDetail.deleteSkillConfirmTitle')}
-        description={t('skillDetail.deleteSkillConfirmDescription', { skill: skill.displayName })}
+        description={t('skillDetail.deleteSkillConfirmDescription', { skill: skill.preferredDisplayName ?? skill.displayName })}
         confirmText={t('skillDetail.deleteSkillContinue')}
         variant="destructive"
         onConfirm={handleOpenDeleteSkillInput}

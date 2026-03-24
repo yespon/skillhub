@@ -13,8 +13,10 @@ import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersionStatus;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillLifecycleProjectionService;
+import com.iflytek.skillhub.service.SkillDisplayNameLocalizationService;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +37,9 @@ class JpaMySkillQueryRepositoryTest {
     @Mock
     private SkillVersionRepository skillVersionRepository;
 
+    @Mock
+    private SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+
     private JpaMySkillQueryRepository repository;
 
     @BeforeEach
@@ -42,7 +47,8 @@ class JpaMySkillQueryRepositoryTest {
         repository = new JpaMySkillQueryRepository(
                 namespaceRepository,
                 promotionRequestRepository,
-                new SkillLifecycleProjectionService(skillVersionRepository)
+            new SkillLifecycleProjectionService(skillVersionRepository),
+            skillDisplayNameLocalizationService
         );
     }
 
@@ -68,6 +74,7 @@ class JpaMySkillQueryRepositoryTest {
         ReflectionTestUtils.setField(namespace, "id", 101L);
 
         given(namespaceRepository.findByIdIn(List.of(101L))).willReturn(List.of(namespace));
+        given(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(skill))).willReturn(Map.of(2L, "Team Skill"));
         given(skillVersionRepository.findBySkillIdAndStatus(2L, SkillVersionStatus.PUBLISHED)).willReturn(List.of(publishedVersion));
         given(skillVersionRepository.findBySkillId(2L)).willReturn(List.of(publishedVersion, rejectedVersion));
         given(promotionRequestRepository.findBySourceSkillIdAndStatus(2L, ReviewTaskStatus.PENDING)).willReturn(Optional.empty());
@@ -98,6 +105,7 @@ class JpaMySkillQueryRepositoryTest {
         ReflectionTestUtils.setField(namespace, "id", 101L);
 
         given(namespaceRepository.findByIdIn(List.of(101L))).willReturn(List.of(namespace));
+        given(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(skill))).willReturn(Map.of(3L, "Shared Skill"));
         given(skillVersionRepository.findBySkillIdAndStatus(3L, SkillVersionStatus.PUBLISHED)).willReturn(List.of(publishedVersion));
         given(promotionRequestRepository.findBySourceSkillIdAndStatus(3L, ReviewTaskStatus.PENDING)).willReturn(Optional.empty());
         given(promotionRequestRepository.findBySourceSkillIdAndStatus(3L, ReviewTaskStatus.APPROVED)).willReturn(Optional.empty());

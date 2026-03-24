@@ -55,6 +55,9 @@ class SkillSearchAppServiceTest {
         @Mock
         private LabelLocalizationService labelLocalizationService;
 
+        @Mock
+        private SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
+
     private SkillSearchAppService service;
 
     @BeforeEach
@@ -66,7 +69,8 @@ class SkillSearchAppServiceTest {
                 namespaceService,
                                 new SkillLifecycleProjectionService(skillVersionRepository),
                                 labelDefinitionService,
-                                labelLocalizationService
+                                                                labelLocalizationService,
+                                                                skillDisplayNameLocalizationService
         );
     }
 
@@ -95,6 +99,8 @@ class SkillSearchAppServiceTest {
         when(searchQueryService.search(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new SearchResult(List.of(11L), 1, 0, 20));
         when(skillRepository.findByIdIn(List.of(11L))).thenReturn(List.of(visibleSkill));
+        when(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(visibleSkill)))
+                .thenReturn(Map.of(11L, "visible-skill"));
         when(namespaceRepository.findByIdIn(List.of(2L))).thenReturn(List.of(activeNamespace));
         when(skillVersionRepository.findByIdIn(List.of(111L))).thenReturn(List.of());
         when(skillVersionRepository.findBySkillIdInAndStatus(List.of(11L), com.iflytek.skillhub.domain.skill.SkillVersionStatus.PUBLISHED))
@@ -144,6 +150,8 @@ class SkillSearchAppServiceTest {
         when(searchQueryService.search(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new SearchResult(List.of(10L), 1, 0, 20));
         when(skillRepository.findByIdIn(List.of(10L))).thenReturn(List.of(visibleSkill));
+        when(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(visibleSkill)))
+                .thenReturn(Map.of(10L, "visible-skill"));
         when(namespaceRepository.findByIdIn(List.of(1L))).thenReturn(List.of(namespace));
         when(skillVersionRepository.findByIdIn(List.of(101L))).thenReturn(List.of());
         when(skillVersionRepository.findBySkillIdInAndStatus(List.of(10L), com.iflytek.skillhub.domain.skill.SkillVersionStatus.PUBLISHED))
@@ -172,6 +180,8 @@ class SkillSearchAppServiceTest {
         when(searchQueryService.search(any()))
                 .thenReturn(new SearchResult(List.of(10L, 11L), 2, 0, 20));
         when(skillRepository.findByIdIn(List.of(10L, 11L))).thenReturn(List.of(first, second));
+        when(skillDisplayNameLocalizationService.resolveDisplayNames(List.of(first, second)))
+                .thenReturn(Map.of(10L, "skill-a", 11L, "skill-b"));
         when(namespaceRepository.findByIdIn(List.of(1L))).thenReturn(List.of(namespace));
         when(skillVersionRepository.findByIdIn(List.of(101L, 102L))).thenReturn(List.of());
         when(skillVersionRepository.findBySkillIdInAndStatus(List.of(10L, 11L), com.iflytek.skillhub.domain.skill.SkillVersionStatus.PUBLISHED))

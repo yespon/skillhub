@@ -7,6 +7,8 @@ public record SkillSummaryResponse(
         Long id,
         String slug,
         String displayName,
+        String preferredDisplayName,
+        String canonicalDisplayName,
         String summary,
         String status,
         Long downloadCount,

@@ -11,6 +11,7 @@ import com.iflytek.skillhub.domain.skill.SkillStatus;
 import com.iflytek.skillhub.domain.skill.service.SkillLifecycleProjectionService;
 import com.iflytek.skillhub.dto.SkillLifecycleVersionResponse;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
+import com.iflytek.skillhub.service.SkillDisplayNameLocalizationService;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -23,13 +24,16 @@ public class JpaMySkillQueryRepository implements MySkillQueryRepository {
     private final NamespaceRepository namespaceRepository;
     private final PromotionRequestRepository promotionRequestRepository;
     private final SkillLifecycleProjectionService skillLifecycleProjectionService;
+    private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
 
     public JpaMySkillQueryRepository(NamespaceRepository namespaceRepository,
                                      PromotionRequestRepository promotionRequestRepository,
-                                     SkillLifecycleProjectionService skillLifecycleProjectionService) {
+                                     SkillLifecycleProjectionService skillLifecycleProjectionService,
+                                     SkillDisplayNameLocalizationService skillDisplayNameLocalizationService) {
         this.namespaceRepository = namespaceRepository;
         this.promotionRequestRepository = promotionRequestRepository;
         this.skillLifecycleProjectionService = skillLifecycleProjectionService;
+        this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
     }
 
     @Override
@@ -41,14 +45,21 @@ public class JpaMySkillQueryRepository implements MySkillQueryRepository {
                         skills.stream().map(Skill::getNamespaceId).distinct().toList())
                 .stream()
                 .collect(Collectors.toMap(Namespace::getId, Function.identity()));
+        Map<Long, String> localizedDisplayNames = skillDisplayNameLocalizationService.resolveDisplayNames(skills);
         return skills.stream()
-                .map(skill -> toSummaryResponse(skill, currentUserId, namespacesById))
+                .map(skill -> toSummaryResponse(
+                        skill,
+                        currentUserId,
+                        namespacesById,
+                        localizedDisplayNames.getOrDefault(skill.getId(), skill.getDisplayName())
+                ))
                 .toList();
     }
 
     private SkillSummaryResponse toSummaryResponse(Skill skill,
                                                    String currentUserId,
-                                                   Map<Long, Namespace> namespacesById) {
+                                                   Map<Long, Namespace> namespacesById,
+                                                   String preferredDisplayName) {
         Namespace namespace = namespacesById.get(skill.getNamespaceId());
         SkillLifecycleProjectionService.Projection projection = skillLifecycleProjectionService.projectForViewer(
                 skill,
@@ -65,6 +76,8 @@ public class JpaMySkillQueryRepository implements MySkillQueryRepository {
         return new SkillSummaryResponse(
                 skill.getId(),
                 skill.getSlug(),
+                skill.getDisplayName(),
+                preferredDisplayName,
                 skill.getDisplayName(),
                 skill.getSummary(),
                 skill.getStatus().name(),

@@ -13,6 +13,7 @@ import {
 } from '@/shared/ui/select'
 import { Label } from '@/shared/ui/label'
 import { Card } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
 import { useMyNamespaces, usePublishSkill, useVisibleLabels } from '@/shared/hooks/use-skill-queries'
 import { DashboardPageHeader } from '@/shared/components/dashboard-page-header'
 import { toast } from '@/shared/lib/toast'
@@ -63,6 +64,7 @@ export function PublishPage() {
   const [namespaceSlug, setNamespaceSlug] = useState<string>('')
   const [visibility, setVisibility] = useState<string>('PUBLIC')
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
+  const [displayNameZhCn, setDisplayNameZhCn] = useState('')
 
   const { data: namespaces, isLoading: isLoadingNamespaces } = useMyNamespaces()
   const { data: visibleLabels } = useVisibleLabels()
@@ -88,6 +90,7 @@ export function PublishPage() {
         file: selectedFile,
         visibility,
         labels: selectedLabels.length > 0 ? selectedLabels : undefined,
+        displayNameZhCn: displayNameZhCn.trim() || undefined,
       })
       const skillLabel = `${result.namespace}/${result.slug}@${result.version}`
       if (result.status === 'PUBLISHED') {
@@ -191,6 +194,19 @@ export function PublishPage() {
               <SelectItem value="PRIVATE">{t('publish.visibilityOptions.private')}</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-3">
+          <Label htmlFor="display-name-zh-cn" className="text-sm font-semibold font-heading">{t('publish.displayNameZhCn')}</Label>
+          <Input
+            id="display-name-zh-cn"
+            value={displayNameZhCn}
+            maxLength={200}
+            placeholder={t('publish.displayNameZhCnPlaceholder')}
+            onChange={(event) => setDisplayNameZhCn(event.target.value)}
+            disabled={publishMutation.isPending}
+          />
+          <p className="text-xs text-muted-foreground">{t('publish.displayNameZhCnHint')}</p>
         </div>
 
         {visibleLabels && visibleLabels.length > 0 && (

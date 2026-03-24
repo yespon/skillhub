@@ -41,6 +41,7 @@ public class SkillSearchAppService {
     private final SkillLifecycleProjectionService skillLifecycleProjectionService;
     private final LabelDefinitionService labelDefinitionService;
     private final LabelLocalizationService labelLocalizationService;
+    private final SkillDisplayNameLocalizationService skillDisplayNameLocalizationService;
 
     public SkillSearchAppService(
             SearchQueryService searchQueryService,
@@ -49,7 +50,8 @@ public class SkillSearchAppService {
             NamespaceService namespaceService,
             SkillLifecycleProjectionService skillLifecycleProjectionService,
             LabelDefinitionService labelDefinitionService,
-            LabelLocalizationService labelLocalizationService) {
+            LabelLocalizationService labelLocalizationService,
+            SkillDisplayNameLocalizationService skillDisplayNameLocalizationService) {
         this.searchQueryService = searchQueryService;
         this.skillRepository = skillRepository;
         this.namespaceRepository = namespaceRepository;
@@ -57,6 +59,7 @@ public class SkillSearchAppService {
         this.skillLifecycleProjectionService = skillLifecycleProjectionService;
         this.labelDefinitionService = labelDefinitionService;
         this.labelLocalizationService = labelLocalizationService;
+        this.skillDisplayNameLocalizationService = skillDisplayNameLocalizationService;
     }
 
     public record SearchResponse(
@@ -257,6 +260,7 @@ public class SkillSearchAppService {
         List<Skill> matchedSkills = skillRepository.findByIdIn(skillIds);
         Map<Long, Skill> skillsById = matchedSkills.stream()
                 .collect(Collectors.toMap(Skill::getId, Function.identity()));
+        Map<Long, String> localizedDisplayNames = skillDisplayNameLocalizationService.resolveDisplayNames(matchedSkills);
 
         List<Long> namespaceIds = matchedSkills.stream()
                 .map(Skill::getNamespaceId)
@@ -274,19 +278,27 @@ public class SkillSearchAppService {
         return skillIds.stream()
                 .map(skillsById::get)
                 .filter(java.util.Objects::nonNull)
-                .map(skill -> toSummaryResponse(skill, namespaceSlugsById, projectionsBySkillId.get(skill.getId())))
+                .map(skill -> toSummaryResponse(
+                        skill,
+                        namespaceSlugsById,
+                        projectionsBySkillId.get(skill.getId()),
+                        localizedDisplayNames.getOrDefault(skill.getId(), skill.getDisplayName())
+                ))
                 .toList();
     }
 
     private SkillSummaryResponse toSummaryResponse(
             Skill skill,
             Map<Long, String> namespaceSlugsById,
-            SkillLifecycleProjectionService.Projection projection) {
+            SkillLifecycleProjectionService.Projection projection,
+            String preferredDisplayName) {
         String namespaceSlug = namespaceSlugsById.get(skill.getNamespaceId());
 
         return new SkillSummaryResponse(
                 skill.getId(),
                 skill.getSlug(),
+                skill.getDisplayName(),
+                preferredDisplayName,
                 skill.getDisplayName(),
                 skill.getSummary(),
                 skill.getStatus().name(),
