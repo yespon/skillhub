@@ -52,6 +52,15 @@ cp secret.yaml.example secret.yaml
 # 编辑 secret.yaml，修改敏感配置
 ```
 
+如果你使用本地 `02-secret.yml` 布局，请把真实文件放到 `.dev/` 下，避免提交到 Git：
+
+```bash
+cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
+kubectl apply -f .dev/02-secret.yml
+```
+
+不要把真实凭据写入 `deploy/k8s/02-secret.yml`。
+
 **Secret 配置项**：
 
 | 键 | 说明 | 必填 |
@@ -163,6 +172,16 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 
 ## 配置说明
 
+部署前请检查以下文件：
+
+- `configmap.yaml`
+- `secret.yaml`
+- `secret.yaml.example`
+- `02-secret.example.yml`
+- `ingress.yaml`
+- `backend-deployment.yaml`
+- `frontend-deployment.yaml`
+
 ### ConfigMap 配置项
 
 | 键 | 默认值 | 说明 |
@@ -264,9 +283,22 @@ kubectl get pvc -n skillhub
 kubectl describe node <node-name>
 ```
 
+<<<<<<< HEAD
 ### 镜像拉取失败
 
 如果镜像私有，需要创建拉取凭证：
+=======
+If you are using the `02-secret.yml` layout for local deployment, keep the real file under `.dev/` so it stays ignored by Git:
+
+```bash
+cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
+kubectl apply -f .dev/02-secret.yml
+```
+
+Do not place real credentials in `deploy/k8s/02-secret.yml`.
+
+Preferred secret rendering flow:
+>>>>>>> 2ef914c (docs(deploy): add local secret template)
 
 ```bash
 kubectl create secret docker-registry ghcr-secret \
