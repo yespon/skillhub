@@ -72,6 +72,9 @@ __pycache__/
 # Git worktrees
 .worktrees/
 
+# Local dev runtime
+deploy/k8s/02-secret.yml
+
 # Superpowers (AI planning artifacts)
 .superpowers/
 docs/prds/
