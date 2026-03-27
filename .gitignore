@@ -69,6 +69,7 @@ __pycache__/
 
 # Local dev runtime
 .dev/
+deploy/k8s/02-secret.yml
 
 # Superpowers (AI planning artifacts)
 docs/superpowers/
