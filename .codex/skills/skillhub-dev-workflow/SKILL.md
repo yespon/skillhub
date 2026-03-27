@@ -265,7 +265,11 @@ git diff --name-only HEAD -- web/src/api/generated/schema.d.ts
 6. 测试覆盖（新功能有对应测试）
 7. 提交规范（Conventional Commits，作者不含 AI 工具名）
 
+<<<<<<< HEAD
 ## 阶段八 — 提交 Pull Request
+=======
+## 阶段七 — 提交 Pull Request
+>>>>>>> 5e4ad12f (chore(workflow): enhance dev workflow with PR template and Playwright MCP)
 
 代码审查通过后，使用 gh 创建 PR，PR 描述必须包含以下结构化内容：
 
