@@ -42,6 +42,7 @@ Review and update these files before deployment:
 - `configmap.yaml`
 - `secret.yaml`
 - `secret.yaml.example`
+- `02-secret.example.yml`
 - `ingress.yaml`
 - `backend-deployment.yaml`
 - `frontend-deployment.yaml`
@@ -59,6 +60,15 @@ Create a real secret file from the example, or preferably render it from environ
 ```bash
 cp deploy/k8s/secret.yaml.example deploy/k8s/secret.yaml
 ```
+
+If you are using the `02-secret.yml` layout for local deployment, keep the real file under `.dev/` so it stays ignored by Git:
+
+```bash
+cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
+kubectl apply -f .dev/02-secret.yml
+```
+
+Do not place real credentials in `deploy/k8s/02-secret.yml`.
 
 Preferred secret rendering flow:
 
