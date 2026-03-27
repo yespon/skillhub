@@ -42,6 +42,16 @@ services:
       BOOTSTRAP_ADMIN_EMAIL: admin@skillhub.local
       OAUTH2_GITHUB_CLIENT_ID: local-placeholder
       OAUTH2_GITHUB_CLIENT_SECRET: local-placeholder
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID: skillhub
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET: 6N5PrPUkNDhK_yiMJln_OcK_GwM4bK5nSKTCtkhWgMcQT3GTng7-zB6tu18MAtMO
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER: sourceid
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE: authorization_code
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI: https://skillhub.ruijie.com.cn/login/oauth2/code/sourceid
+      SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME: 锐捷SSO
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI: https://sid.ruijie.com.cn/oauth2.0/authorize
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI: https://sid.ruijie.com.cn/oauth2.0/accessToken
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI: https://sid.ruijie.com.cn/oauth2.0/profile
+      SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE: id
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,7 +67,7 @@ services:
   web:
     image: nginx:alpine
     ports:
-      - "80:80"
+      - "1080:80"
     volumes:
       - ./web/dist:/usr/share/nginx/html:ro
       - ./web/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro

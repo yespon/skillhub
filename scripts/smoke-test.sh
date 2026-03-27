@@ -5,13 +5,17 @@ BASE_URL="${1:-http://localhost:8080}"
 PASS=0
 FAIL=0
 COOKIE_JAR="$(mktemp)"
+ADMIN_COOKIE_JAR="$(mktemp)"
 USERNAME="smoketest_$(date +%s)"
 EMAIL="${USERNAME}@example.com"
 PASSWORD="Smoke@2026"
 NEW_PASSWORD="Smoke@2027"
+ADMIN_USERNAME="${SMOKE_ADMIN_USERNAME:-${BOOTSTRAP_ADMIN_USERNAME:-admin}}"
+ADMIN_PASSWORD="${SMOKE_ADMIN_PASSWORD:-${BOOTSTRAP_ADMIN_PASSWORD:-Admin@staging2026}}"
 
 cleanup() {
   rm -f "$COOKIE_JAR"
+  rm -f "$ADMIN_COOKIE_JAR"
 }
 
 trap cleanup EXIT
@@ -48,17 +52,56 @@ check_with_header() {
   fi
 }
 
+check_with_cookie() {
+  local desc="$1"
+  local url="$2"
+  local expected="$3"
+  local cookie_jar="$4"
+  local status
+
+  status="$(curl --retry 3 --retry-delay 1 --max-time 10 -s -o /dev/null -w "%{http_code}" -b "$cookie_jar" "$url" || true)"
+  if [[ "$status" == "$expected" ]]; then
+    echo "PASS: $desc (HTTP $status)"
+    PASS=$((PASS + 1))
+  else
+    echo "FAIL: $desc (expected $expected, got $status)"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+fetch_csrf_token() {
+  local cookie_jar="$1"
+
+  curl -s -c "$cookie_jar" "$BASE_URL/api/v1/auth/me" >/dev/null
+  awk '$6 == "XSRF-TOKEN" { print $7 }' "$cookie_jar" | tail -n 1
+}
+
 echo "=== SkillHub Smoke Test ==="
 echo "Target: $BASE_URL"
 echo
 
 check "Health endpoint" "$BASE_URL/actuator/health" "200"
-check_with_header "Prometheus metrics" "$BASE_URL/actuator/prometheus" "200" "X-Mock-User-Id" "local-admin"
+
+ADMIN_CSRF_TOKEN="$(fetch_csrf_token "$ADMIN_COOKIE_JAR")"
+ADMIN_LOGIN_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
+  -X POST "$BASE_URL/api/v1/auth/local/login" \
+  -b "$ADMIN_COOKIE_JAR" \
+  -c "$ADMIN_COOKIE_JAR" \
+  -H "X-XSRF-TOKEN: $ADMIN_CSRF_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"}" || true)"
+
+if [[ "$ADMIN_LOGIN_STATUS" == "200" ]]; then
+  check_with_cookie "Prometheus metrics" "$BASE_URL/actuator/prometheus" "200" "$ADMIN_COOKIE_JAR"
+else
+  echo "FAIL: Prometheus metrics (admin login failed, got $ADMIN_LOGIN_STATUS)"
+  FAIL=$((FAIL + 1))
+fi
+
 check "Namespaces API" "$BASE_URL/api/v1/namespaces" "200"
 check "Auth required" "$BASE_URL/api/v1/auth/me" "401"
 
-curl -s -c "$COOKIE_JAR" "$BASE_URL/api/v1/auth/me" >/dev/null
-CSRF_TOKEN="$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$COOKIE_JAR" | tail -n 1)"
+CSRF_TOKEN="$(fetch_csrf_token "$COOKIE_JAR")"
 
 REGISTER_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
   -X POST "$BASE_URL/api/v1/auth/local/register" \

@@ -44,7 +44,7 @@ skillhub:
       enabled: true
   bootstrap:
     admin:
-      enabled: true
+      enabled: ${BOOTSTRAP_ADMIN_ENABLED:true}
       user-id: local-admin
       username: admin
       password: Admin@2026

@@ -2,18 +2,20 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: skillhub-config
+  namespace: skillhub
 data:
-  redis-host: redis
-  redis-port: "6379"
+  redis-host: k8s-bj-pro-nodeports.ruijie.com.cn
+  redis-port: "32209"
+  skillhub-public-base-url: https://skillhub.ruijie.com.cn
+  device-auth-verification-uri: https://skillhub.ruijie.com.cn/cli/auth
+  skillhub-storage-provider: s3
   storage-base-path: /var/lib/skillhub/storage
----
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: skillhub-storage-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
+  skillhub-storage-s3-force-path-style: "false"
+  skillhub-storage-s3-auto-create-bucket: "false"
+  skillhub-api-upstream: http://skillhub-server:8080
+  skillhub-web-api-base-url: ""
+  skillhub-web-auth-direct-enabled: "false"
+  skillhub-web-auth-direct-provider: ""
+  skillhub-web-auth-session-bootstrap-enabled: "false"
+  skillhub-web-auth-session-bootstrap-provider: ""
+  skillhub-web-auth-session-bootstrap-auto: "false"

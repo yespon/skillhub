@@ -103,8 +103,8 @@ validate_no_trailing_slash SKILLHUB_PUBLIC_BASE_URL
 
 reject_values POSTGRES_PASSWORD "change-this-postgres-password" "skillhub_demo" "skillhub_dev"
 reject_values BOOTSTRAP_ADMIN_PASSWORD "replace-this-admin-password" "ChangeMe!2026" "Admin@2026"
-reject_values SKILLHUB_STORAGE_S3_ACCESS_KEY "replace-me"
-reject_values SKILLHUB_STORAGE_S3_SECRET_KEY "replace-me"
+reject_values SKILLHUB_STORAGE_S3_ACCESS_KEY "replace-me" "ak-replace-me"
+reject_values SKILLHUB_STORAGE_S3_SECRET_KEY "replace-me" "sk-replace-me"
 
 validate_boolean SESSION_COOKIE_SECURE
 validate_boolean BOOTSTRAP_ADMIN_ENABLED

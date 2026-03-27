@@ -40,10 +40,10 @@ export function RegisterPage() {
           <CardDescription>{t('register.subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="local" className="space-y-6">
+          <Tabs defaultValue="oauth" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="local">{t('register.tabLocal')}</TabsTrigger>
               <TabsTrigger value="oauth">{t('register.tabOAuth')}</TabsTrigger>
+              <TabsTrigger value="local">{t('register.tabLocal')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="local">
