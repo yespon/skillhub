@@ -1121,7 +1121,11 @@
   },
   "loginButton": {
     "loading": "Loading...",
-    "loginWith": "Login with {{name}}"
+    "loginWith": "Login with {{name}}",
+    "providers": {
+      "github": "GitHub",
+      "sourceid": "Ruijie SSO"
+    }
   },
   "ratingInput": {
     "yourRating": "Your rating: {{score}} stars"

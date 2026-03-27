@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: skillhub-web
+  namespace: skillhub
   labels:
     app.kubernetes.io/name: skillhub-web
 spec:
@@ -14,9 +15,11 @@ spec:
       labels:
         app.kubernetes.io/name: skillhub-web
     spec:
+      imagePullSecrets:
+        - name: harbor-regcred
       containers:
         - name: web
-          image: ghcr.io/iflytek/skillhub-web:edge
+          image: harbor.ruijie.com.cn/skillhub/skillhub-web:release-r0.1.0
           imagePullPolicy: IfNotPresent
           env:
             - name: SKILLHUB_API_UPSTREAM
@@ -32,6 +35,47 @@ spec:
           ports:
             - containerPort: 80
               name: http
+          env:
+            - name: SKILLHUB_API_UPSTREAM
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-api-upstream
+            - name: SKILLHUB_WEB_API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-api-base-url
+            - name: SKILLHUB_PUBLIC_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-public-base-url
+            - name: SKILLHUB_WEB_AUTH_DIRECT_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-auth-direct-enabled
+            - name: SKILLHUB_WEB_AUTH_DIRECT_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-auth-direct-provider
+            - name: SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-auth-session-bootstrap-enabled
+            - name: SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-auth-session-bootstrap-provider
+            - name: SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-web-auth-session-bootstrap-auto
           readinessProbe:
             httpGet:
               path: /nginx-health

@@ -1,0 +1,71 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: skillhub-ingress
+  namespace: skillhub
+  annotations:
+    # 根据集群实际使用的 Ingress Controller 调整 annotations
+    # nginx-ingress 示例：
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # 若使用 HTTPS，取消以下注释并配置 cert-manager
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # 基于 IP 限流示例，调整参数以满足实际需求
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/limit-burst-multiplier: "3"
+    nginx.ingress.kubernetes.io/limit-connections: "20"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      location ~ ^/(oauth2/authorization|login/oauth2/code|api/v1/auth|api/v1/search|api/v1/skills/.*/download|api/v1/namespaces) {
+        limit_req zone=default burst=30 nodelay;
+      }
+spec:
+  # 根据集群实际 IngressClass 修改，如 nginx / traefik / istio 等
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - skillhub.ruijie.com.cn
+      secretName: skillhub-tls
+  rules:
+    # 修改为实际域名或 IP
+    - host: skillhub.ruijie.com.cn
+      http:
+        paths:
+          # API 直连后端 Service
+          # OAuth 登录和回调也直连后端，避免前端 nginx 反向代理超时
+          - path: /oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: skillhub-server
+                port:
+                  number: 8080
+          - path: /login/oauth2
+            pathType: Prefix
+            backend:
+              service:
+                name: skillhub-server
+                port:
+                  number: 8080
+          - path: /.well-known
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: skillhub-server
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: skillhub-web
+                port:
+                  number: 80
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: skillhub-server
+                port:
+                  number: 8080
