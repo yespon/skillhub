@@ -2,12 +2,19 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: skillhub
+  namespace: skillhub
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: 100m
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - skillhub.ruijie.com.cn
+      secretName: skillhub-tls
   rules:
-    - host: skills.example.com
+    - host: skillhub.ruijie.com.cn
       http:
         paths:
           - path: /api

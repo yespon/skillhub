@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skillhub-config
+  namespace: skillhub
+data:
+  # ========== 基础配置 ==========
+  # 修改为实际对外访问的域名或 IP（不加末尾斜杠）
+  SKILLHUB_PUBLIC_BASE_URL: "https://skillhub.ruijie.com.cn"
+
+  # Spring Boot 运行 profile，私有集群 k8s 部署使用 docker
+  SPRING_PROFILES_ACTIVE: "docker"
+
+  # ========== 数据库配置（非敏感） ==========
+  # 使用集群外部 PostgreSQL，填写实际连接地址
+  POSTGRES_HOST: "k8s-bj-pro-nodeports.ruijie.com.cn"
+  POSTGRES_PORT: "32642"
+  POSTGRES_DB: "skillhub"
+  POSTGRES_USER: "skillhub"
+
+  # ========== Redis 配置（非敏感） ==========
+  # 使用集群外部 Redis，填写实际连接地址
+  REDIS_HOST: "k8s-bj-pro-nodeports.ruijie.com.cn"
+  REDIS_PORT: "32209"
+
+  # ========== 对象存储配置（非敏感） ==========
+  SKILLHUB_STORAGE_PROVIDER: "s3"
+  # 填写实际 S3 endpoint，例如：https://s3.amazonaws.com 或私有 MinIO 地址
+  SKILLHUB_STORAGE_S3_ENDPOINT: "https://tos-s3-cn-beijing.volces.com"
+  SKILLHUB_STORAGE_S3_BUCKET: "ruijie-skillhub"
+  # AWS region，私有 S3 兼容存储可填 us-east-1
+  SKILLHUB_STORAGE_S3_REGION: "cn-beijing"
+  # 私有 S3 / MinIO 需要设置为 true；AWS S3 设为 false
+  SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE: "false"
+  # 首次部署时自动创建 bucket（若 bucket 已存在可改为 false）
+  SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET: "false"
+  # 预签名 URL 有效期（ISO-8601 Duration）
+  SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY: "PT10M"
+
+  # ========== 会话安全 ==========
+  # HTTPS 部署时改为 true
+  SESSION_COOKIE_SECURE: "true"
+
+  # ========== Bootstrap 管理员 ==========
+  BOOTSTRAP_ADMIN_ENABLED: "true"
+  BOOTSTRAP_ADMIN_USER_ID: "admin"
+  BOOTSTRAP_ADMIN_USERNAME: "liuyanpeng"
+  BOOTSTRAP_ADMIN_DISPLAY_NAME: "Platform Admin"
+  BOOTSTRAP_ADMIN_EMAIL: "liuyanpeng@ruijie.com.cn"
+
+  # ========== OAuth2 ==========
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER: "sourceid"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE: "authorization_code"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI: "https://skillhub.ruijie.com.cn/login/oauth2/code/sourceid"
+  SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME: "锐捷SSO"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI: "https://sid.ruijie.com.cn/oauth2.0/authorize"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI: "https://sid.ruijie.com.cn/oauth2.0/accessToken"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI: "https://sid.ruijie.com.cn/oauth2.0/profile"
+  SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE: id
+  
+  # ========== 前端代理上游 ==========
+  # 集群内 server Service 名称
+  SKILLHUB_API_UPSTREAM: "http://skillhub-server:8080"

@@ -1,0 +1,280 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skillhub-server
+  namespace: skillhub
+  labels:
+    app.kubernetes.io/name: skillhub-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: skillhub-server
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: skillhub-server
+    spec:
+      containers:
+        - name: server
+          # 替换为实际镜像仓库地址（内网需提前同步镜像）
+          image: harbor.ruijie.com.cn/skillhub/skillhub-server:release-r0.1.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          # 无 PVC：不挂载 local storage，使用 S3
+          # 注意：移除了原始 compose 中的 skillhub_storage volume mount
+          env:
+            # ---- 从 ConfigMap 读取 ----
+            - name: SPRING_PROFILES_ACTIVE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_PROFILES_ACTIVE
+            - name: SKILLHUB_PUBLIC_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_PUBLIC_BASE_URL
+
+            # ---- 数据库 ----
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: POSTGRES_HOST
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: POSTGRES_PORT
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: POSTGRES_DB
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: POSTGRES_PASSWORD
+
+            # ---- Redis ----
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: REDIS_HOST
+            - name: REDIS_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: REDIS_PORT
+            # 若 Redis 无密码，删除以下两行
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: REDIS_PASSWORD
+
+            # ---- S3 存储 ----
+            - name: SKILLHUB_STORAGE_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_PROVIDER
+            - name: SKILLHUB_STORAGE_S3_ENDPOINT
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_ENDPOINT
+            - name: SKILLHUB_STORAGE_S3_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_BUCKET
+            - name: SKILLHUB_STORAGE_S3_REGION
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_REGION
+            - name: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
+            - name: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+            - name: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
+            - name: SKILLHUB_STORAGE_S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SKILLHUB_STORAGE_S3_ACCESS_KEY
+            - name: SKILLHUB_STORAGE_S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SKILLHUB_STORAGE_S3_SECRET_KEY
+
+            # ---- 会话安全 ----
+            - name: SESSION_COOKIE_SECURE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SESSION_COOKIE_SECURE
+
+            # ---- Bootstrap 管理员 ----
+            - name: BOOTSTRAP_ADMIN_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: BOOTSTRAP_ADMIN_ENABLED
+            - name: BOOTSTRAP_ADMIN_USER_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: BOOTSTRAP_ADMIN_USER_ID
+            - name: BOOTSTRAP_ADMIN_USERNAME
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: BOOTSTRAP_ADMIN_USERNAME
+            - name: BOOTSTRAP_ADMIN_DISPLAY_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: BOOTSTRAP_ADMIN_DISPLAY_NAME
+            - name: BOOTSTRAP_ADMIN_EMAIL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: BOOTSTRAP_ADMIN_EMAIL
+            - name: BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: BOOTSTRAP_ADMIN_PASSWORD
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+          
+          # 启动期间 Flyway 数据库迁移需要时间，给足 startupProbe 时间
+          startupProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 4
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+      # 若镜像仓库需要鉴权（内网 Harbor 等），取消注释并创建对应 imagePullSecret
+      # imagePullSecrets:
+      #   - name: registry-credentials
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: skillhub-server
+  namespace: skillhub
+  labels:
+    app.kubernetes.io/name: skillhub-server
+spec:
+  selector:
+    app.kubernetes.io/name: skillhub-server
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  type: ClusterIP

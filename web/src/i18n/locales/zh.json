@@ -1110,7 +1110,11 @@
   },
   "loginButton": {
     "loading": "加载中...",
-    "loginWith": "使用 {{name}} 登录"
+    "loginWith": "使用 {{name}} 登录",
+    "providers": {
+      "github": "GitHub",
+      "sourceid": "锐捷SSO"
+    }
   },
   "ratingInput": {
     "yourRating": "你的评分: {{score}} 星"
