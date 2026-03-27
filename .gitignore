@@ -2,12 +2,21 @@
 .DS_Store
 Thumbs.db
 
+<<<<<<< HEAD
 # Editors / IDEs / local tooling
 .claude/
 .codex/
 .idea/
 .omc
 .vscode/
+=======
+# Editors / IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+>>>>>>> 5e4ad12f (chore(workflow): enhance dev workflow with PR template and Playwright MCP)
 .classpath
 .project
 .settings/
@@ -84,3 +93,6 @@ docs/superpowers/
 
 # Local feature notes
 feature_auth.md
+
+# local
+*.local.json
