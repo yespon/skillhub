@@ -15,6 +15,9 @@
 - [06-api-design.md](/Users/xudongsun/github/skillhub/docs/06-api-design.md)
 - [08-frontend-architecture.md](/Users/xudongsun/github/skillhub/docs/08-frontend-architecture.md)
 - [11-auth-extensibility-and-private-sso.md](/Users/xudongsun/github/skillhub/docs/11-auth-extensibility-and-private-sso.md)
+- [docs/2026-03-29-sourceid-namespace-sync-design.md](docs/2026-03-29-sourceid-namespace-sync-design.md)
+- [docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md](docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md)
+- [docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md](docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md)
 
 ## 2. 当前上下文与已确认约束
 

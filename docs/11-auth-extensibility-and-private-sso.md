@@ -146,3 +146,9 @@ public interface DirectAuthProvider {
 更详细的私有 SSO 接入步骤、最佳实践、测试矩阵和给后续 coding agent 的执行约束，见：
 
 - [12-private-sso-integration-playbook.md](/Users/xudongsun/github/skillhub/docs/12-private-sso-integration-playbook.md)
+
+与 SourceID 登录后 namespace 自动补齐相关的补充设计与实施计划，见：
+
+1. [docs/2026-03-29-sourceid-namespace-sync-design.md](docs/2026-03-29-sourceid-namespace-sync-design.md)
+2. [docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md](docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md)
+3. [docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md](docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md)
