@@ -18,6 +18,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class OAuth2LoginHandlersTest {
 
@@ -43,7 +44,7 @@ class OAuth2LoginHandlersTest {
                 List.of()
         );
 
-        org.mockito.Mockito.when(oauthLoginFlowService.consumeReturnTo(org.mockito.ArgumentMatchers.any()))
+        when(oauthLoginFlowService.consumeReturnTo(org.mockito.ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
                     HttpSession currentSession = invocation.getArgument(0);
                     Object value = currentSession.getAttribute(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE);
@@ -80,14 +81,14 @@ class OAuth2LoginHandlersTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         HttpSession session = request.getSession(true);
         session.setAttribute(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE, "/settings/accounts");
-        org.mockito.Mockito.when(oauthLoginFlowService.consumeReturnTo(org.mockito.ArgumentMatchers.any()))
+        when(oauthLoginFlowService.consumeReturnTo(org.mockito.ArgumentMatchers.any()))
                 .thenAnswer(invocation -> {
                     HttpSession currentSession = invocation.getArgument(0);
                     Object value = currentSession.getAttribute(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE);
                     currentSession.removeAttribute(OAuthLoginRedirectSupport.SESSION_RETURN_TO_ATTRIBUTE);
                     return value;
                 });
-        org.mockito.Mockito.when(oauthLoginFlowService.resolveFailureRedirect(
+        when(oauthLoginFlowService.resolveFailureRedirect(
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.eq("/settings/accounts")))
                 .thenReturn("/login?returnTo=%2Fsettings%2Faccounts");

@@ -158,7 +158,6 @@ public class SourceIdNamespaceMembershipSyncService {
     private Optional<Map<String, Object>> loadOrganizationAttributes(String userId) {
         return organizationClient.loadAttributesByUserId(userId);
     }
-
     private List<String> normalizedAttributeValues(SourceIdNamespaceSyncProperties.Mapping mapping) {
         return mapping.getAttributeValues().stream()
                 .filter(StringUtils::hasText)
