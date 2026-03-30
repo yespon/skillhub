@@ -58,6 +58,30 @@
    - SourceID profile 暴露组织字段，或
    - 接入 SourceID 组织 / 三元组接口补足组织关系
 
+### 2.3 OSDS 组织关系接口补充
+
+结合 OSDS 接口文档，当前已经确认 OSDS 可以提供足够的组织关系数据来支撑真实 team 映射，至少包括：
+
+1. 根据 `userId` 获取员工信息
+2. 员工信息中直接返回：
+   - `departmentCode`
+   - `departmentName`
+   - `oneDepartmentCode` 到 `tenDepartmentCode`
+   - `postCode`
+   - `postName`
+   - `organizationTypeCode`
+   - `staffStatus`
+3. 获取部门详情
+4. 获取子级部门
+5. 获取部门下员工
+6. 获取部门及其子部门下全部员工
+
+这意味着：
+
+1. 登录后单用户自动补齐可以直接按 `claims.subject -> OSDS userId` 查询实现
+2. 按部门树映射 namespace 不一定需要登录时遍历部门树，只需利用 `oneDepartmentCode` 到 `tenDepartmentCode` 做匹配
+3. 若后续要做批量初始化或定时对账，OSDS 也已提供部门下员工与子树员工接口支撑
+
 ## 3. 设计目标
 
 ### 3.1 本阶段目标
@@ -92,8 +116,10 @@
 2. 系统完成 access policy 判定
 3. 系统完成 `bindOrCreate`
 4. 进入 SourceID namespace 自动补齐服务
-5. 读取 profile 字段并按配置匹配
-6. 对命中的 namespace 做增量补齐
+5. 可选调用 OSDS，根据 `claims.subject` 加载用户组织属性
+6. 合并 SourceID profile 与 OSDS 组织属性
+7. 按配置匹配 namespace
+8. 对命中的 namespace 做增量补齐
 
 当前落地入口位于：
 
@@ -108,6 +134,7 @@
 3. 嵌套属性根键，默认 `attributes`
 4. 在任状态字段与可接受状态值列表
 5. 多条 mappings
+6. 可选的 OSDS 组织关系增强配置
 
 每条 mapping 支持：
 
@@ -128,12 +155,13 @@
 
 当前版本采用“只增不删”的写入策略：
 
-1. namespace 不存在则跳过
-2. namespace 非 ACTIVE 则跳过
-3. 用户已存在成员关系则跳过
-4. 仅在不存在成员关系时新增 `NamespaceMember`
-5. 不覆盖已有角色
-6. 不做降权
+1. OSDS 查询失败时默认 fail-open，跳过组织增强但不影响登录主链路
+2. namespace 不存在则跳过
+3. namespace 非 ACTIVE 则跳过
+4. 用户已存在成员关系则跳过
+5. 仅在不存在成员关系时新增 `NamespaceMember`
+6. 不覆盖已有角色
+7. 不做降权
 
 这是当前最稳妥的上线方式，因为它避免了：
 
@@ -155,16 +183,21 @@
 8. 新增单元测试覆盖主要匹配场景
 9. 更新 K8s ConfigMap 示例
 10. 根据真实样本将在任字段示例调整为根字段 `active`
+11. 增加可选的 OSDS 组织关系 client 与配置模型
+12. 支持登录后使用 `claims.subject` 调用 OSDS 用户接口
+13. 支持把 OSDS 的 `departmentCode` / 部门链 / 岗位 / 状态字段并入现有映射上下文
+14. 默认以 fail-open 方式处理 OSDS 查询失败
 
 ## 6. 当前限制与风险
 
 ### 6.1 组织字段不足
 
-当前真实 profile 样本未包含稳定的团队 / 部门编码，因此：
+当前真实 SourceID profile 样本未包含稳定的团队 / 部门编码，但 OSDS 已可提供组织字段，因此：
 
-1. 现在的自动补齐更适合用于明确且稳定的属性映射
+1. 现在更推荐优先使用 OSDS 的 `departmentCode` 与部门链字段做映射
 2. 暂不建议把 `WORKINGLOCATION`、`POSITION` 直接当作企业 team 使用
-3. 若业务必须按团队同步，应优先补齐真实组织字段来源
+3. 需要确认 SourceID `claims.subject` 与 OSDS `userId` 的稳定对应关系
+4. 需要确认 OSDS 的 `sysid` 与 `sign-server-auth` 调用约束
 
 ### 6.2 只增不删
 
@@ -192,20 +225,20 @@
 
 推荐分三个阶段推进：
 
-1. Phase 1：登录时按 profile 字段做 namespace 自动补齐
-2. Phase 2：接入 SourceID 组织 / 三元组接口，支持按真实 team / dept 关系补齐
+1. Phase 1：登录时按 profile 字段或少量稳定字段做 namespace 自动补齐
+2. Phase 2：登录时接入 OSDS 用户组织信息，支持按真实 team / dept 关系补齐
 3. Phase 3：增加可观测性、治理能力与后台配置界面
 
 ### 7.1 Phase 2 重点
 
 若后续进入 Phase 2，建议增加：
 
-1. SourceID 组织关系客户端
+1. OSDS 组织关系客户端
 2. 用户组织关系查询与解析服务
 3. team / dept 到 namespace 的稳定映射模型
 4. 可选的缓存与对账机制
 
-但这些能力不应回灌到当前 Phase 1 的最小实现中。
+与此前相比，Phase 2 现在已具备接口前提，不再只是探索项，而是可以进入具体实现设计的下一阶段。
 
 ## 8. 相关文档
 

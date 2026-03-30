@@ -55,8 +55,11 @@ data:
   skillhub-auth-sourceid-namespace-sync-enabled: "false"
   skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
   skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
+  # 默认示例仍使用 SourceID profile 根字段 active=true 做在任判定；
+  # 若启用 OSDS，也可以改为 isEnable=true 或 staffStatus=1。
   skillhub-auth-sourceid-namespace-sync-active-status-key: active
   skillhub-auth-sourceid-namespace-sync-active-status-values-0: "true"
+  # 推荐优先启用 OSDS 组织关系查询，再基于 OSDS 的 departmentCode / oneDepartmentCode 等字段做映射。
   # 下面示例演示一条最小 mapping：当来源属性命中时，把用户补齐到指定 namespace。
   skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: ""
   skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: ""

@@ -18,6 +18,8 @@ Phase 1 聚焦当前已经落地的登录后自动补齐能力，不进入组织
 ## 2. 配置准备 Checklist
 
 - [ ] 确认 `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED` 在目标环境可配置
+- [ ] 确认是否启用 `SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED`
+- [ ] 若启用 OSDS，确认 `SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL`、`SYSID`、`SIGN_SERVER_AUTH` 已准备完成
 - [ ] 确认 `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY` 使用 `active`
 - [ ] 确认 `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0` 使用 `true`
 - [ ] 确认待映射的 `namespaceSlug` 已存在且状态为 ACTIVE
@@ -31,12 +33,14 @@ Phase 1 聚焦当前已经落地的登录后自动补齐能力，不进入组织
 - [ ] 准备一个 SourceID 测试账号
 - [ ] 准备一个测试 namespace
 - [ ] 配置一条明确可命中的 mapping 规则
+- [ ] 若启用 OSDS，验证 `claims.subject -> OSDS userId` 查询成功
 - [ ] 用户首次登录后成功加入目标 namespace
 - [ ] 用户再次登录时不会重复创建成员记录
 
 ### 3.2 失败 / 边界路径
 
 - [ ] 配置不命中时，用户不会被加入 namespace
+- [ ] OSDS 查询失败时，不会影响 SourceID 登录主链路
 - [ ] namespace 不存在时，系统不会中断登录主链路
 - [ ] namespace 非 ACTIVE 时，系统不会写入成员关系
 - [ ] 用户已是成员时，不会覆盖已有角色
@@ -52,8 +56,7 @@ Phase 1 聚焦当前已经落地的登录后自动补齐能力，不进入组织
 ## 4. 生产字段确认 Checklist
 
 - [ ] 与 SourceID 对接方确认 profile 是否可返回稳定团队 / 部门字段
-- [ ] 若可返回，记录字段名、字段含义、样本和值域
-- [ ] 若不可返回，确认是否需要改走组织 / 三元组接口
+- [ ] 与 OSDS 对接方确认 `departmentCode`、部门链、`postCode`、`staffStatus`、`isEnable` 的业务语义
 - [ ] 明确 `WORKINGLOCATION`、`POSITION` 是否仅可用于临时验证，不能直接作为团队字段上线
 
 ## 5. 生产上线准备 Checklist

@@ -13,6 +13,7 @@
 1. 登录时自动补齐
 2. 配置驱动的字段映射
 3. 只增不删的成员写入策略
+4. 可选的 OSDS 组织属性增强
 
 当前阶段不覆盖：
 
@@ -35,6 +36,10 @@
 - [x] 更新 `deploy/k8s/01-configmap.yml` 配置示例
 - [x] 根据真实 SourceID profile 样本调整在任判定示例为 `active=true`
 - [x] 创建 feature 分支并完成首轮提交、推送远端
+- [x] 增加 OSDS 配置模型与组织关系查询 client
+- [x] 支持登录后基于 `claims.subject` 查询 OSDS 用户组织属性
+- [x] 支持把 OSDS 的 `departmentCode` / 部门链 / `postCode` / `staffStatus` / `isEnable` 并入映射上下文
+- [x] 默认以 fail-open 方式处理 OSDS 查询失败
 
 ## 3. 当前待落地能力
 
@@ -53,14 +58,15 @@
 
 ### 3.2 Phase 1.2：真实映射字段确认
 
-- [ ] 与 SourceID 对接方确认 profile 是否可返回稳定部门 / 团队字段
-- [ ] 若可以，明确字段名、字段含义和返回样本
-- [ ] 若不可以，评估是否只能使用组织 / 三元组接口补足组织关系
+- [ ] 验证 SourceID `claims.subject` 是否稳定对应 OSDS `userId`
+- [ ] 与 OSDS / 网关对接方确认 `sysid` 与 `sign-server-auth` 的调用约束
+- [ ] 确认 `staffStatus` 与 `isEnable` 的业务语义
+- [ ] 确认是否存在多部门 / 多岗位归属场景
 
 交付标准：
 
-1. 明确生产映射字段来源
-2. 明确是否允许基于 profile 直接上线 team 映射
+1. 明确 SourceID 到 OSDS 的标识映射关系
+2. 明确生产映射字段优先使用 `departmentCode` / 部门链 / `postCode`
 
 ### 3.3 Phase 1.3：生产配置收敛
 
@@ -76,19 +82,20 @@
 
 ## 4. 后续待实现能力
 
-### 4.1 Phase 2：基于真实组织关系的 team 同步
+### 4.1 Phase 2：基于 OSDS 真实组织关系的 team 同步
 
-- [ ] 封装 SourceID 组织 / 三元组接口客户端
-- [ ] 设计用户组织关系解析服务
-- [ ] 定义 team / dept 到 namespace 的映射模型
+- [ ] 扩展 OSDS 组织关系解析服务
+- [ ] 定义 `departmentCode` / 部门链 到 namespace 的映射模型
 - [ ] 支持根据真实组织关系补齐 namespace 成员
 - [ ] 评估是否需要缓存组织关系查询结果
+- [ ] 评估是否需要部门树初始化导入能力
 
 建议原则：
 
 1. 仍尽量复用现有登录切点
 2. 新增能力优先封装在 provider / sourceid 层
 3. 不直接把外部组织模型渗透到通用 domain 层
+4. 登录链路中的 OSDS 查询默认保持 fail-open
 
 ### 4.2 Phase 3：治理与可观测性增强
 
@@ -116,9 +123,9 @@
 ## 6. 推荐执行顺序
 
 1. 先完成测试环境链路验证
-2. 再确认真实团队字段来源
-3. 再决定生产是否直接用 profile 字段上线
-4. 若 profile 无法提供稳定字段，再进入组织 / 三元组接口方案
+2. 再确认 SourceID 到 OSDS 的标识映射关系
+3. 再基于 OSDS 的 `departmentCode` / 部门链收敛生产 mappings
+4. 若 OSDS 语义确认完备，再评估部门树初始化与定时对账
 
 ## 7. 相关文档
 
