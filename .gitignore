@@ -59,9 +59,9 @@ node_modules/
 package-lock.json
 
 # Playwright
-**/.playwright/
 **/playwright-report/
 **/test-results/
+**/.playwright/
 
 # Python / temporary files
 *.py[cod]

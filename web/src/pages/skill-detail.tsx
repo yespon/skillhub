@@ -6,8 +6,9 @@ import { ArrowLeft, ChevronDown, ChevronUp, User } from 'lucide-react'
 import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { FileTree } from '@/features/skill/file-tree'
 import { InstallCommand } from '@/features/skill/install-command'
-import { SkillLabelPanel } from '@/features/skill/skill-label-panel'
 import { ShareButton } from '@/features/skill/share-button'
+import { SecurityAuditSummary } from '@/features/security-audit/security-audit-summary'
+import { SkillLabelPanel } from '@/features/skill/skill-label-panel'
 import {
   getOverviewCollapseMaxHeight,
   OVERVIEW_COLLAPSE_DESKTOP_MAX_HEIGHT,
@@ -169,29 +170,9 @@ export function SkillDetailPage() {
     }
 
     const updateOverviewState = () => {
-      if (!overviewContentRef.current) {
-        return
-      }
-
-      const nextMaxHeight = getOverviewCollapseMaxHeight(window.innerWidth, window.innerHeight)
-      const nextCollapsible = shouldCollapseOverview(
-        overviewContentRef.current.scrollHeight,
-        window.innerWidth,
-        window.innerHeight,
-      )
-
-      setOverviewMaxHeight(nextMaxHeight)
-      setIsOverviewCollapsible(nextCollapsible)
-
-      if (!nextCollapsible) {
-        setIsOverviewExpanded(false)
-      }
-    }
 
     updateOverviewState()
 
-    window.addEventListener('resize', updateOverviewState)
-    const resizeObserver = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver(() => updateOverviewState())
       : null
 
@@ -1038,6 +1019,19 @@ export function SkillDetailPage() {
           {t('skillDetail.download')}
         </Button>
 
+<<<<<<< HEAD
+=======
+        <ShareButton
+          namespace={namespace}
+          slug={slug}
+          description={skill.summary}
+        />
+
+        {skill.canManageLifecycle && selectedVersionEntry && (
+          <SecurityAuditSummary skillId={skill.id} versionId={selectedVersionEntry.id} versionStatus={selectedVersionEntry.status} />
+        )}
+
+>>>>>>> c4fc92e2 (feat(web): add skill share button with e2e tests (#181))
         <SkillLabelPanel
           namespace={namespace}
           slug={slug}
