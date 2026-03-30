@@ -135,3 +135,4 @@
 4. [docs/12-private-sso-integration-playbook.md](docs/12-private-sso-integration-playbook.md)
 5. [docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md](docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md)
 6. [docs/2026-03-30-sourceid-namespace-sync-handoff.md](docs/2026-03-30-sourceid-namespace-sync-handoff.md)
+7. [docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md](docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md)

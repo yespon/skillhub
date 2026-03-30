@@ -158,3 +158,4 @@ Phase 1 可以视为完成，当且仅当以下条件同时满足：
 2. [docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md](docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md)
 3. [docs/11-auth-extensibility-and-private-sso.md](docs/11-auth-extensibility-and-private-sso.md)
 4. [docs/2026-03-30-sourceid-namespace-sync-handoff.md](docs/2026-03-30-sourceid-namespace-sync-handoff.md)
+5. [docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md](docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md)

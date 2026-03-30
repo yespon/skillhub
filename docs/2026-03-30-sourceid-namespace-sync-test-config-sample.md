@@ -15,6 +15,7 @@
 
 ## 2. 推荐样例：SourceID + OSDS
 
+这是当前最推荐的测试环境最小样例。
 适用前提：
 
 1. SourceID 登录已可用
@@ -99,6 +100,11 @@ SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH=
 SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN=true
 ```
 
+典型用途：
+
+1. 快速回归 namespace sync 主链路
+2. OSDS 尚未联通，但需要先验证配置与写库行为
+
 风险说明：
 
 1. `WORKINGLOCATION`、`POSITION` 更适合临时联调，不建议直接作为生产团队字段上线
@@ -117,3 +123,7 @@ SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN=true
 2. `deploy/k8s/overlays/external-sourceid-only/configmap-sourceid-patch.yaml`
 3. `deploy/k8s/overlays/external-s3-sourceid-only/configmap-sourceid-patch.yaml`
 4. `docs/09-deployment.md`
+
+## 5. 一次只验证一条规则
+
+测试环境首次联调，建议只保留一条 mapping，避免多个来源值或多个 namespace 同时干扰判断。

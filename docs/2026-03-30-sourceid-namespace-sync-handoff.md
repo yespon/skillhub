@@ -62,6 +62,7 @@ git --no-pager status --short
 1. 方案设计：[docs/2026-03-29-sourceid-namespace-sync-design.md](docs/2026-03-29-sourceid-namespace-sync-design.md)
 2. 实施计划：[docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md](docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md)
 3. Phase 1 清单：[docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md](docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md)
+4. 测试环境样例：[docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md](docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md)
 
 这三份文档已经覆盖：
 
@@ -69,6 +70,7 @@ git --no-pager status --short
 2. 已完成能力
 3. 当前待验证事项
 4. 下一阶段实现方向
+5. 测试环境最小配置样例
 
 ## 4. 当前代码状态
 
@@ -136,3 +138,4 @@ cd server && JDK_JAVA_OPTIONS="-XX:+EnableDynamicAgentLoading" ./mvnw -pl skillh
 1. [docs/2026-03-29-sourceid-namespace-sync-design.md](docs/2026-03-29-sourceid-namespace-sync-design.md)
 2. [docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md](docs/2026-03-29-sourceid-namespace-sync-implementation-plan.md)
 3. [docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md](docs/2026-03-29-sourceid-namespace-sync-phase1-checklist.md)
+4. [docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md](docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md)
