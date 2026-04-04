@@ -1,4 +1,4 @@
-.PHONY: help dev dev-all dev-down dev-all-down dev-all-reset dev-logs dev-status build test check clean web-deps web-install web-install-ci dev-server dev-server-restart dev-web build-backend test-backend build-frontend test-frontend build-web test-web typecheck-web lint-web generate-api db-reset namespace-smoke validate-release-config staging staging-down staging-logs pr parallel-init parallel-sync parallel-up parallel-down
+.PHONY: help dev dev-all dev-down dev-all-down dev-all-reset dev-logs dev-status build test check clean web-deps web-install web-install-ci dev-server dev-server-restart dev-web build-backend test-backend build-frontend test-frontend build-web test-web typecheck-web lint-web generate-api db-reset namespace-smoke validate-release-config staging staging-down staging-logs pr parallel-init parallel-sync parallel-up parallel-down rebase-upstream rebase-upstream-dry drift-check
 
 DEV_DIR := .dev
 DEV_SERVER_PID := $(DEV_DIR)/server.pid
@@ -341,3 +341,14 @@ parallel-up: ## 在 integration worktree 合并并启动联调环境（自动识
 
 parallel-down: ## 在 integration worktree 停止联调环境
 	./scripts/parallel-down.sh
+
+# ── 二开分支管理 ──────────────────────────────────────────────────
+
+rebase-upstream: ## 将 main-r rebase 到 upstream/main 最新
+	bash ./scripts/rebase-upstream.sh
+
+rebase-upstream-dry: ## 预演 rebase (不实际执行)
+	bash ./scripts/rebase-upstream.sh --dry-run
+
+drift-check: ## 检查二开与上游的漂移状况
+	bash ./scripts/check-customization-drift.sh
