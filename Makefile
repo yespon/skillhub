@@ -1,4 +1,4 @@
-.PHONY: help dev dev-all dev-down dev-all-down dev-all-reset dev-logs dev-status build test check clean web-deps web-install web-install-ci dev-server dev-server-restart dev-web build-backend test-backend build-frontend test-frontend test-e2e-frontend test-e2e-smoke-frontend build-web test-web typecheck-web lint-web generate-api db-reset namespace-smoke validate-release-config staging staging-down staging-logs pr parallel-init parallel-sync parallel-up parallel-down docs-dev docs-build docs-preview
+.PHONY: help dev dev-all dev-down dev-all-down dev-all-reset dev-logs dev-status build test check clean web-deps web-install web-install-ci dev-server dev-server-restart dev-web build-backend test-backend build-frontend test-frontend test-e2e-frontend test-e2e-smoke-frontend build-web test-web typecheck-web lint-web generate-api db-reset namespace-smoke validate-release-config staging staging-down staging-logs pr parallel-init parallel-sync parallel-up parallel-down docs-dev docs-build docs-preview rebase-upstream rebase-upstream-dry drift-check
 
 DEV_DIR := .dev
 DEV_SERVER_PID := $(DEV_DIR)/server.pid
@@ -367,3 +367,14 @@ docs-build: ## 构建文档站点
 
 docs-preview: ## 预览构建后的文档站点
 	cd docs/skillhub && npm run preview
+
+# ── 二开分支管理 ──────────────────────────────────────────────────
+
+rebase-upstream: ## 将 dev rebase 到 upstream/main 最新
+	bash ./scripts/rebase-upstream.sh
+
+rebase-upstream-dry: ## 预演 rebase (不实际执行)
+	bash ./scripts/rebase-upstream.sh --dry-run
+
+drift-check: ## 检查二开与上游的漂移状况
+	bash ./scripts/check-customization-drift.sh
