@@ -344,7 +344,7 @@ parallel-down: ## 在 integration worktree 停止联调环境
 
 # ── 二开分支管理 ──────────────────────────────────────────────────
 
-rebase-upstream: ## 将 main-r rebase 到 upstream/main 最新
+rebase-upstream: ## 将 dev rebase 到 upstream/main 最新
 	bash ./scripts/rebase-upstream.sh
 
 rebase-upstream-dry: ## 预演 rebase (不实际执行)

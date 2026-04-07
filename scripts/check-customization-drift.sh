@@ -17,7 +17,7 @@
 # -------------------------------------------------------------------
 set -euo pipefail
 
-CUSTOM_BRANCH="${CUSTOM_BRANCH:-main-r}"
+CUSTOM_BRANCH="${CUSTOM_BRANCH:-dev}"
 UPSTREAM_REMOTE="${UPSTREAM_REMOTE:-upstream}"
 UPSTREAM_REF="${UPSTREAM_REF:-main}"
 MIGRATION_DIR="server/skillhub-app/src/main/resources/db/migration"

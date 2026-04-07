@@ -8,7 +8,7 @@
 # 前提:
 #   1. 已添加 upstream remote:  git remote add upstream <URL>
 #   2. 工作区干净 (无未提交变更)
-#   3. 当前分支为 main-r 或通过 CUSTOM_BRANCH 环境变量指定
+#   3. 当前分支为 dev 或通过 CUSTOM_BRANCH 环境变量指定
 #
 # 行为:
 #   1. fetch upstream
@@ -20,7 +20,7 @@
 set -euo pipefail
 
 # ── 配置 ──────────────────────────────────────────────────────────
-CUSTOM_BRANCH="${CUSTOM_BRANCH:-main-r}"
+CUSTOM_BRANCH="${CUSTOM_BRANCH:-dev}"
 UPSTREAM_REMOTE="${UPSTREAM_REMOTE:-upstream}"
 UPSTREAM_REF="${UPSTREAM_REF:-main}"
 MIGRATION_DIR="server/skillhub-app/src/main/resources/db/migration"

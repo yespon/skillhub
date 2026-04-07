@@ -9,10 +9,10 @@ upstream/main  ◀── 上游只读镜像 (git remote: upstream)
       │
       │  定期 rebase
       ▼
-    main-r  ────────── 二开主分支 (所有二开提交叠在上游之上)
+    dev  ────────── 二开主线，集成所有 feature (rebase 上游)
       │
-      ├── feature/*    二开功能分支
-      ├── fix/*        二开修复分支
+      ├── feature/*    单个二开功能
+      ├── hotfix/*     紧急修复 (从 dev 拉出，合回 dev)
       └── release-r*   二开发布分支
 ```
 
@@ -21,8 +21,8 @@ upstream/main  ◀── 上游只读镜像 (git remote: upstream)
 | # | 原则 | 说明 |
 |---|------|------|
 | 1 | **上游只读** | `upstream` remote 只 fetch，永远不 push |
-| 2 | **二开在上** | main-r 的二开提交永远 rebase 在 upstream/main 之上 |
-| 3 | **单一真相** | `git log upstream/main..main-r` = 完整的二开差异 |
+| 2 | **二开在上** | dev 的二开提交永远 rebase 在 upstream/main 之上 |
+| 3 | **单一真相** | `git log upstream/main..dev` = 完整的二开差异 |
 | 4 | **版本号隔离** | 二开 migration 版本号从 V1000+ 开始，避免与上游冲突 |
 
 ## 2 初始配置 (一次性)
@@ -41,17 +41,17 @@ git fetch upstream
 ### 3.1 开发新功能
 
 ```bash
-# 从 main-r 拉 feature 分支
-git checkout main-r
-git pull origin main-r
+# 从 dev 拉 feature 分支
+git checkout dev
+git pull origin dev
 git checkout -b feature/<name>
 
 # ... 开发 ...
 
-# 完成后合回 main-r
-git checkout main-r
+# 完成后合回 dev
+git checkout dev
 git merge --no-ff feature/<name>
-git push origin main-r
+git push origin dev
 git branch -d feature/<name>
 ```
 
@@ -66,9 +66,9 @@ git branch -d feature/<name>
 
 # 方式二: 手动操作
 git fetch upstream
-git checkout main-r
-MERGE_BASE=$(git merge-base main-r upstream/main)
-git rebase --onto upstream/main $MERGE_BASE main-r
+git checkout dev
+MERGE_BASE=$(git merge-base dev upstream/main)
+git rebase --onto upstream/main $MERGE_BASE dev
 ```
 
 **Rebase 后**:
@@ -78,13 +78,13 @@ git rebase --onto upstream/main $MERGE_BASE main-r
 make test
 
 # 2. force push (必须用 --force-with-lease)
-git push origin main-r --force-with-lease
+git push origin dev --force-with-lease
 
 # 3. 通知团队 rebase 各自的 feature 分支
 #    团队成员执行:
 git checkout feature/<my-branch>
 git fetch origin
-git rebase origin/main-r
+git rebase origin/dev
 ```
 
 ### 3.3 处理 Rebase 冲突
@@ -173,13 +173,13 @@ UPDATE flyway_schema_history SET version = '1004' WHERE version = '42';
 ## 6 发布流程
 
 ```
-main-r ──→ release-r<version> ──→ tag ──→ 部署
+dev ──→ release-r<version> ──→ tag ──→ 部署
 ```
 
-1. 从 main-r 切出 `release-r<version>` 分支
+1. 从 dev 切出 `release-r<version>` 分支
 2. 在 release 分支上只做 bugfix，不加新功能
 3. 打 tag 后部署
-4. release 分支的 fix 合回 main-r
+4. release 分支的 fix 合回 dev
 
 ## 7 紧急操作
 
@@ -188,9 +188,9 @@ main-r ──→ release-r<version> ──→ tag ──→ 部署
 不需要做完整 rebase，可以直接 cherry-pick:
 
 ```bash
-git checkout main-r
+git checkout dev
 git cherry-pick -x <upstream-commit-hash>
-git push origin main-r
+git push origin dev
 ```
 
 `-x` 参数会在 commit message 中记录来源。
@@ -200,16 +200,16 @@ git push origin main-r
 ```bash
 # rebase-upstream.sh 自动创建了备份分支
 git reflog                              # 找到 rebase 前的 HEAD
-git reset --hard backup/main-r-before-rebase-<timestamp>
-git push origin main-r --force-with-lease
+git reset --hard backup/dev-before-rebase-<timestamp>
+git push origin dev --force-with-lease
 ```
 
 ## 8 团队协作约定
 
 | 约定 | 内容 |
 |------|------|
-| **Rebase 通知** | rebase main-r 前在群里通知，给 10 分钟窗口让大家 push 未完成的工作 |
-| **Feature 分支生命周期** | 不超过 2 周；超时需先 rebase main-r |
+| **Rebase 通知** | rebase dev 前在群里通知，给 10 分钟窗口让大家 push 未完成的工作 |
+| **Feature 分支生命周期** | 不超过 2 周；超时需先 rebase dev |
 | **Commit message** | 二开提交按现有规范；从上游 cherry-pick 的保留原始 message |
-| **Code review** | 所有合入 main-r 的 PR 需要至少 1 人 review |
-| **Force push** | 只允许 main-r 在 rebase 后 force push，其他分支禁止 |
+| **Code review** | 所有合入 dev 的 PR 需要至少 1 人 review |
+| **Force push** | 只允许 dev 在 rebase 后 force push，其他分支禁止 |
