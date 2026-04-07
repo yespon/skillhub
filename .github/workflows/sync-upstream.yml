@@ -1,0 +1,39 @@
+name: Sync Upstream
+
+# 每天 UTC 02:00 自动同步，也支持手动触发
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream "${UPSTREAM_URL}"
+          git fetch upstream main --no-tags
+        env:
+          UPSTREAM_URL: https://github.com/UPSTREAM_OWNER/UPSTREAM_REPO.git  # TODO: 替换为实际上游地址
+
+      - name: Fast-forward main to upstream/main
+        run: |
+          # 只做 fast-forward，如果有分叉则失败（不自动 merge）
+          if git merge-base --is-ancestor HEAD upstream/main; then
+            git merge --ff-only upstream/main
+            git push origin main
+            echo "✅ main synced to $(git rev-parse --short upstream/main)"
+          else
+            echo "❌ main and upstream/main have diverged — manual intervention required"
+            exit 1
+          fi
