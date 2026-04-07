@@ -6,34 +6,87 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch:
 
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
 permissions:
   contents: write
+
+env:
+  MAIN_BRANCH: main
+  UPSTREAM_BRANCH: main
+  UPSTREAM_URL: https://github.com/iflytek/skillhub.git
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ env.MAIN_BRANCH }}
           fetch-depth: 0
+          token: ${{ secrets.MIRROR_SYNC_TOKEN || github.token }}
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Add upstream and fetch
         run: |
-          git remote add upstream "${UPSTREAM_URL}"
-          git fetch upstream main --no-tags
-        env:
-          UPSTREAM_URL: https://github.com/UPSTREAM_OWNER/UPSTREAM_REPO.git  # TODO: 替换为实际上游地址
-
-      - name: Fast-forward main to upstream/main
-        run: |
-          # 只做 fast-forward，如果有分叉则失败（不自动 merge）
-          if git merge-base --is-ancestor HEAD upstream/main; then
-            git merge --ff-only upstream/main
-            git push origin main
-            echo "✅ main synced to $(git rev-parse --short upstream/main)"
+          if git remote get-url upstream >/dev/null 2>&1; then
+            git remote set-url upstream "${UPSTREAM_URL}"
           else
-            echo "❌ main and upstream/main have diverged — manual intervention required"
+            git remote add upstream "${UPSTREAM_URL}"
+          fi
+
+          git fetch origin "${MAIN_BRANCH}" --no-tags
+          git fetch upstream "${UPSTREAM_BRANCH}" --no-tags
+
+      - name: Verify fast-forward path
+        run: |
+          current_sha="$(git rev-parse "origin/${MAIN_BRANCH}")"
+          target_sha="$(git rev-parse "upstream/${UPSTREAM_BRANCH}")"
+
+          echo "Current origin/${MAIN_BRANCH}: ${current_sha}"
+          echo "Target  upstream/${UPSTREAM_BRANCH}: ${target_sha}"
+
+          if [[ "${current_sha}" == "${target_sha}" ]]; then
+            echo "SYNC_RESULT=no_changes" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          if ! git merge-base --is-ancestor "origin/${MAIN_BRANCH}" "upstream/${UPSTREAM_BRANCH}"; then
+            echo "origin/${MAIN_BRANCH} and upstream/${UPSTREAM_BRANCH} have diverged" >&2
             exit 1
           fi
+
+          echo "SYNC_RESULT=needs_push" >> "$GITHUB_ENV"
+
+      - name: Fast-forward main to upstream/main
+        if: env.SYNC_RESULT == 'needs_push'
+        run: |
+          git checkout "${MAIN_BRANCH}"
+          git merge --ff-only "upstream/${UPSTREAM_BRANCH}"
+          git push origin "HEAD:${MAIN_BRANCH}"
+
+      - name: Write workflow summary
+        if: always()
+        run: |
+          {
+            echo "## Sync Upstream"
+            echo
+            echo "- source: upstream/${UPSTREAM_BRANCH} @ $(git rev-parse --short "upstream/${UPSTREAM_BRANCH}")"
+
+            if [[ "${SYNC_RESULT:-}" == "no_changes" ]]; then
+              echo "- result: no changes"
+            elif [[ "${SYNC_RESULT:-}" == "needs_push" ]]; then
+              echo "- result: main fast-forwarded successfully"
+            else
+              echo "- result: failed before push"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
