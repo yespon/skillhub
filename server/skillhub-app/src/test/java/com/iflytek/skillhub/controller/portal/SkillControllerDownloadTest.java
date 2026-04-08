@@ -5,6 +5,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.iflytek.skillhub.TestRedisConfig;
@@ -121,33 +122,21 @@ class SkillControllerDownloadTest {
     }
 
     @Test
-    void downloadVersion_allowsAnonymousForGlobalSkill() throws Exception {
-        given(rateLimiter.tryAcquire(anyString(), anyInt(), anyInt())).willReturn(true);
-        given(skillDownloadService.downloadVersion("global", "demo-skill", "1.0.0", null, java.util.Map.of()))
-            .willReturn(new SkillDownloadService.DownloadResult(
-                () -> new ByteArrayInputStream("zip".getBytes()),
-                "demo-skill-1.0.0.zip",
-                3L,
-                "application/zip",
-                null,
-                false
-            ));
-
-        mockMvc.perform(get("/api/v1/skills/global/demo-skill/versions/1.0.0/download")
-                .with(user("anonymous-test"))
-                .with(csrf()))
-            .andExpect(status().isOk())
-            .andExpect(header().string("Content-Disposition", "attachment; filename=\"demo-skill-1.0.0.zip\""));
+    void downloadVersion_unauthenticated_returns401() throws Exception {
+        mockMvc.perform(get("/api/v1/skills/global/demo-skill/versions/1.0.0/download"))
+            .andExpect(status().isUnauthorized())
+            .andExpect(jsonPath("$.code").value(401));
     }
 
     @Test
-    void downloadVersion_forbidsAnonymousWhenServiceRejectsSkill() throws Exception {
+    void downloadVersion_forbidsAuthenticatedUserWhenServiceRejectsSkill() throws Exception {
         given(rateLimiter.tryAcquire(anyString(), anyInt(), anyInt())).willReturn(true);
-        given(skillDownloadService.downloadVersion("team-ai", "demo-skill", "1.0.0", null, java.util.Map.of()))
+        given(skillDownloadService.downloadVersion("team-ai", "demo-skill", "1.0.0", "test-user", java.util.Map.of()))
             .willThrow(new DomainForbiddenException("error.skill.access.denied", "demo-skill"));
 
         mockMvc.perform(get("/api/v1/skills/team-ai/demo-skill/versions/1.0.0/download")
-                .with(user("anonymous-test"))
+                .with(user("test-user"))
+                .requestAttr("userId", "test-user")
                 .with(csrf()))
             .andExpect(status().isForbidden());
     }
