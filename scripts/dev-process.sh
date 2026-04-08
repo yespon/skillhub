@@ -153,8 +153,18 @@ case "$cmd" in
         nohup "$@" >>"$log_file" 2>&1 < /dev/null &
       fi
       child_pid=$!
-      disown "$child_pid" 2>/dev/null || true
+
+      # Fail fast if the child exits immediately so callers do not keep a stale pid file
+      # and incorrectly assume the dev process started successfully.
+      sleep 0.2
+      if ! kill -0 "$child_pid" 2>/dev/null; then
+        wait "$child_pid" || exit_code=$?
+        rm -f "$pid_file"
+        exit "${exit_code:-1}"
+      fi
+
       echo "$child_pid" >"$pid_file"
+      disown "$child_pid" 2>/dev/null || true
     )
     ;;
 esac
