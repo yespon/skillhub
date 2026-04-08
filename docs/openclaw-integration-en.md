@@ -23,12 +23,12 @@ Set the SkillHub registry address in your OpenClaw configuration:
 export CLAWHUB_REGISTRY=https://skillhub.your-company.com
 ```
 
-### 2. Authentication (Optional)
+### 2. Authentication
 
-For **global namespace (@global) PUBLIC skills**, no login is required to download. Authentication is required for:
+Authentication is required for:
 
-- Team namespace skills (regardless of visibility)
-- NAMESPACE_ONLY or PRIVATE skills
+- Downloading any skill package
+- Viewing non-public skills
 - Write operations like publishing, starring, etc.
 
 ```bash
@@ -150,8 +150,7 @@ SkillHub supports three visibility levels with the following download permission
 
 ### PUBLIC
 - ✅ Anyone can search and view
-- ✅ **Global namespace (@global)**: No login required to download
-- 🔒 **Team namespaces**: Authentication required to download
+- 🔒 Authentication required to download
 - 📍 Suitable for organization-wide, publicly shareable skills
 
 ### NAMESPACE_ONLY
@@ -165,8 +164,8 @@ SkillHub supports three visibility levels with the following download permission
 - 📍 Suitable for skills under personal development
 
 **Important Notes**:
-- Global namespace (`@global`) PUBLIC skills support anonymous downloads for wide distribution within the organization
-- All team namespace skills (including PUBLIC) require authentication to ensure team boundary security
+- Skill package downloads require authentication even for PUBLIC skills
+- Non-public skills additionally require the appropriate namespace or owner access
 
 ## Canonical Slug Mapping
 
