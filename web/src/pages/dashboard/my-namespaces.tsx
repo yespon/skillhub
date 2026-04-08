@@ -156,7 +156,6 @@ export function MyNamespacesPage() {
       throw error
     }
   }
-  }
 
   if (isLoading) {
     return (
