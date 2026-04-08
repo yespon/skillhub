@@ -20,6 +20,7 @@ import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillPublishService;
 import com.iflytek.skillhub.domain.skill.service.SkillQueryService;
 import com.iflytek.skillhub.domain.social.SkillStarService;
+import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
 import com.iflytek.skillhub.service.SkillSearchAppService;
 import java.io.IOException;
@@ -46,6 +47,7 @@ public class ClawHubCompatAppService {
     private final AuditLogService auditLogService;
     private final CompatSkillLookupService compatSkillLookupService;
     private final SkillStarService skillStarService;
+    private final UserAccountRepository userAccountRepository;
 
     public ClawHubCompatAppService(CanonicalSlugMapper mapper,
                                    SkillSearchAppService skillSearchAppService,
@@ -55,7 +57,8 @@ public class ClawHubCompatAppService {
                                    MultipartPackageExtractor multipartPackageExtractor,
                                    AuditLogService auditLogService,
                                    CompatSkillLookupService compatSkillLookupService,
-                                   SkillStarService skillStarService) {
+                                   SkillStarService skillStarService,
+                                   UserAccountRepository userAccountRepository) {
         this.mapper = mapper;
         this.skillSearchAppService = skillSearchAppService;
         this.skillQueryService = skillQueryService;
@@ -65,6 +68,7 @@ public class ClawHubCompatAppService {
         this.auditLogService = auditLogService;
         this.compatSkillLookupService = compatSkillLookupService;
         this.skillStarService = skillStarService;
+        this.userAccountRepository = userAccountRepository;
     }
 
     public ClawHubSearchResponse search(String q,
@@ -198,7 +202,7 @@ public class ClawHubCompatAppService {
             long updatedAt = context.skill().getUpdatedAt() != null ? context.skill().getUpdatedAt().toEpochMilli() : 0;
             skillInfo = new ClawHubSkillResponse.SkillInfo(
                     mapper.toCanonical(coord.namespace(), coord.slug()),
-                    context.skill().getDisplayName(),
+                    normalizeDisplayName(context.skill().getDisplayName(), mapper.toCanonical(coord.namespace(), coord.slug())),
                     context.skill().getSummary(),
                     Map.of(),
                     Map.of(),
@@ -219,10 +223,12 @@ public class ClawHubCompatAppService {
             }
         }
 
+        ClawHubSkillResponse.OwnerInfo ownerInfo = buildOwner(context.skill().getOwnerId());
+
         return new ClawHubSkillResponse(
                 skillInfo,
                 versionInfo,
-                null,
+                ownerInfo,
                 new ClawHubSkillResponse.ModerationInfo(false, false, "clean", new String[0], null, null, null)
         );
     }
@@ -321,6 +327,23 @@ public class ClawHubCompatAppService {
         int starScore = item.starCount() != null ? item.starCount() * 10 : 0;
         long downloadScore = item.downloadCount() != null ? item.downloadCount() : 0;
         return (starScore + downloadScore) / 100.0;
+    }
+
+    private ClawHubSkillResponse.OwnerInfo buildOwner(String ownerId) {
+        if (ownerId == null || ownerId.isBlank()) {
+            return null;
+        }
+
+        return userAccountRepository.findById(ownerId)
+                .map(user -> new ClawHubSkillResponse.OwnerInfo(null, user.getDisplayName(), user.getAvatarUrl()))
+                .orElse(null);
+    }
+
+    private String normalizeDisplayName(String displayName, String fallback) {
+        if (displayName == null || displayName.isBlank()) {
+            return fallback;
+        }
+        return displayName;
     }
 
     private ClawHubResolveResponse toResolveResponse(SkillQueryService.ResolvedVersionDTO resolved) {

@@ -3,7 +3,12 @@ package com.iflytek.skillhub.compat;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.auth.device.DeviceAuthService;
+import com.iflytek.skillhub.domain.skill.Skill;
+import com.iflytek.skillhub.domain.skill.SkillVersion;
+import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillQueryService;
+import com.iflytek.skillhub.domain.user.UserAccount;
+import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.dto.SkillLifecycleVersionResponse;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
 import com.iflytek.skillhub.service.SkillSearchAppService;
@@ -18,10 +23,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -48,6 +55,12 @@ class ClawHubCompatControllerTest {
 
     @MockBean
     private SkillQueryService skillQueryService;
+
+        @MockBean
+        private CompatSkillLookupService compatSkillLookupService;
+
+        @MockBean
+        private UserAccountRepository userAccountRepository;
 
     @Test
     void search_returns_mapped_results() throws Exception {
@@ -168,6 +181,39 @@ class ClawHubCompatControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.match.version").value("1.0.0"))
                 .andExpect(jsonPath("$.latestVersion.version").value("1.0.0"));
+    }
+
+    @Test
+    void getSkill_returns_owner_info_when_available() throws Exception {
+        Skill skill = new Skill(10L, "my-skill", "owner-1", SkillVisibility.PUBLIC);
+        skill.setDisplayName("My Skill");
+        skill.setSummary("test summary");
+
+        SkillVersion skillVersion = new SkillVersion(1L, "1.2.0", "owner-1");
+        skillVersion.setPublishedAt(Instant.parse("2026-03-13T09:00:00Z"));
+        skillVersion.setChangelog("release notes");
+
+        when(compatSkillLookupService.resolveVisible("global", "my-skill", null))
+                .thenReturn(new CompatSkillLookupService.CompatSkillContext(
+                        mock(com.iflytek.skillhub.domain.namespace.Namespace.class),
+                        skill,
+                        Optional.of(skillVersion)
+                ));
+        when(userAccountRepository.findById("owner-1"))
+                .thenReturn(Optional.of(new UserAccount(
+                        "owner-1",
+                        "Owner Name",
+                        "owner@example.com",
+                        "https://example.com/avatar.png"
+                )));
+
+        mockMvc.perform(get("/api/v1/skills/my-skill"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.skill.slug").value("my-skill"))
+                .andExpect(jsonPath("$.skill.displayName").value("My Skill"))
+                .andExpect(jsonPath("$.owner.displayName").value("Owner Name"))
+                .andExpect(jsonPath("$.owner.image").value("https://example.com/avatar.png"))
+                .andExpect(jsonPath("$.latestVersion.version").value("1.2.0"));
     }
 
     @Test
