@@ -7,6 +7,7 @@ import { MarkdownRenderer } from '@/features/skill/markdown-renderer'
 import { FileTree } from '@/features/skill/file-tree'
 import { InstallCommand } from '@/features/skill/install-command'
 import { SkillLabelPanel } from '@/features/skill/skill-label-panel'
+import { ShareButton } from '@/features/skill/share-button'
 import {
   getOverviewCollapseMaxHeight,
   OVERVIEW_COLLAPSE_DESKTOP_MAX_HEIGHT,
@@ -943,6 +944,11 @@ export function SkillDetailPage() {
               namespace={namespace}
               slug={slug}
               version={publishedVersion.version}
+            />
+            <ShareButton
+              namespace={namespace}
+              slug={slug}
+              description={skill.summary}
             />
           </Card>
         )}
