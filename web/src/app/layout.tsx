@@ -22,10 +22,10 @@ export function Layout() {
       resolvedPathname: s.resolvedLocation?.pathname,
     }),
   })
-  const { user, isLoading } = useAuth()
   const [isHeaderElevated, setIsHeaderElevated] = useState(false)
   const contentLayoutPathname = resolveAppMainContentPathname(pathname, resolvedPathname)
   const isLanding = contentLayoutPathname === '/'
+  const { user, isLoading } = useAuth(!isLanding)
   const mainContentLayout = getAppMainContentLayout(contentLayoutPathname)
 
   useEffect(() => {
