@@ -188,16 +188,32 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 |---|---|---|
 | redis-host | redis | Redis 主机地址 |
 | redis-port | 6379 | Redis 端口 |
+| skillhub-public-base-url | 空 | 对外访问 URL，用于 OAuth 回调和前端运行时配置 |
 | storage-base-path | /var/lib/skillhub/storage | 技能存储路径 |
 | skillhub-storage-provider | local | 存储类型（local/s3） |
+| skillhub-storage-s3-endpoint | 空 | S3/OSS Endpoint |
+| skillhub-storage-s3-bucket | skillhub | S3/OSS Bucket |
+| skillhub-storage-s3-region | us-east-1 | S3/OSS Region |
+| skillhub-storage-s3-force-path-style | false | MinIO 等兼容存储设为 true |
+| skillhub-storage-s3-auto-create-bucket | false | 是否自动创建 Bucket |
+| skillhub-storage-s3-presign-expiry | PT10M | 预签名下载链接有效期 |
 | skill-scanner-enabled | true | 是否启用扫描器 |
 | skill-scanner-url | http://skillhub-scanner:8000 | 扫描器地址 |
 | skill-scanner-mode | upload | 扫描模式 |
+| oauth2-sourceid-provider | sourceid | SourceID 提供方标识 |
+| oauth2-sourceid-authorization-grant-type | authorization_code | SourceID 授权模式 |
+| oauth2-sourceid-redirect-uri | 空 | SourceID OAuth 回调地址 |
+| oauth2-sourceid-client-name | SourceID | SourceID 登录按钮名称 |
+| oauth2-sourceid-authorization-uri | 空 | SourceID 授权地址 |
+| oauth2-sourceid-token-uri | 空 | SourceID Token 地址 |
+| oauth2-sourceid-user-info-uri | 空 | SourceID 用户信息地址 |
+| oauth2-sourceid-user-name-attribute | id | SourceID 用户唯一标识字段 |
 | bootstrap-admin-enabled | true | 是否创建默认管理员 |
 | bootstrap-admin-user-id | docker-admin | 管理员用户 ID |
 | bootstrap-admin-username | admin | 管理员用户名 |
 | bootstrap-admin-display-name | Platform Admin | 管理员显示名称 |
 | bootstrap-admin-email | admin@example.com | 管理员邮箱 |
+| skillhub-api-upstream | http://skillhub-server:8080 | 前端代理到后端的集群内地址 |
 | session-cookie-secure | false | HTTPS 环境设为 true |
 
 ### Secret 配置项
@@ -210,6 +226,10 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 | bootstrap-admin-password | 管理员密码 | 是 |
 | oauth2-github-client-id | GitHub OAuth ID | 否 |
 | oauth2-github-client-secret | GitHub OAuth 密钥 | 否 |
+| SKILLHUB_STORAGE_S3_ACCESS_KEY | S3/OSS Access Key | 否 |
+| SKILLHUB_STORAGE_S3_SECRET_KEY | S3/OSS Secret Key | 否 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID | SourceID Client ID | 否 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET | SourceID Client Secret | 否 |
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
 | skill-scanner-llm-model | LLM 模型名称 | 否 |
 

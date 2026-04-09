@@ -3,6 +3,9 @@ kind: ConfigMap
 metadata:
   name: skillhub-config
 data:
+  # 对外访问地址（用于 OAuth 回调、前端运行时配置等）
+  skillhub-public-base-url: ""
+
   # Redis 配置
   # 使用外部 Redis：修改为外部主机地址
   # 使用内置 Redis（overlays/with-infra）：保持 redis
@@ -15,11 +18,27 @@ data:
   # 存储配置
   # local: 本地存储（默认）, s3: S3/OSS 对象存储
   skillhub-storage-provider: local
+  skillhub-storage-s3-endpoint: ""
+  skillhub-storage-s3-bucket: skillhub
+  skillhub-storage-s3-region: us-east-1
+  skillhub-storage-s3-force-path-style: "false"
+  skillhub-storage-s3-auto-create-bucket: "false"
+  skillhub-storage-s3-presign-expiry: PT10M
 
   # 技能扫描器配置
   skill-scanner-enabled: "true"
   skill-scanner-url: http://skillhub-scanner:8000
   skill-scanner-mode: upload
+
+  # SourceID / 私有 SSO（可选）
+  oauth2-sourceid-provider: sourceid
+  oauth2-sourceid-authorization-grant-type: authorization_code
+  oauth2-sourceid-redirect-uri: ""
+  oauth2-sourceid-client-name: SourceID
+  oauth2-sourceid-authorization-uri: ""
+  oauth2-sourceid-token-uri: ""
+  oauth2-sourceid-user-info-uri: ""
+  oauth2-sourceid-user-name-attribute: id
 
   # Bootstrap 管理员配置（非敏感）
   bootstrap-admin-enabled: "true"
@@ -27,6 +46,9 @@ data:
   bootstrap-admin-username: admin
   bootstrap-admin-display-name: Platform Admin
   bootstrap-admin-email: admin@example.com
+
+  # 前端代理上游
+  skillhub-api-upstream: http://skillhub-server:8080
 
   # Session 配置
   # HTTP 环境设为 false，HTTPS 环境设为 true

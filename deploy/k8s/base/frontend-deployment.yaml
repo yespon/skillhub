@@ -20,7 +20,15 @@ spec:
           imagePullPolicy: IfNotPresent
           env:
             - name: SKILLHUB_API_UPSTREAM
-              value: http://skillhub-server:8080
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-api-upstream
+            - name: SKILLHUB_PUBLIC_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-public-base-url
           ports:
             - containerPort: 80
               name: http
