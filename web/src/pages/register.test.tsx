@@ -45,7 +45,9 @@ vi.mock('@/shared/ui/input', () => ({
 }))
 
 vi.mock('@/shared/ui/tabs', () => ({
-  Tabs: ({ children }: { children: unknown }) => children,
+  Tabs: ({ children, defaultValue }: { children: unknown; defaultValue?: string }) => (
+    <div data-default-value={defaultValue}>{children}</div>
+  ),
   TabsContent: ({ children }: { children: unknown }) => children,
   TabsList: ({ children }: { children: unknown }) => children,
   TabsTrigger: ({ children }: { children: unknown }) => children,
@@ -65,5 +67,12 @@ describe('RegisterPage', () => {
     expect(html).toContain('register.title')
     expect(html).toContain('register.subtitle')
     expect(html).toContain('register.submit')
+  })
+
+  it('defaults to oauth and renders oauth tab before local', () => {
+    const html = renderToStaticMarkup(<RegisterPage />)
+
+    expect(html).toContain('data-default-value="oauth"')
+    expect(html.indexOf('register.tabOAuth')).toBeLessThan(html.indexOf('register.tabLocal'))
   })
 })
