@@ -1,3 +1,4 @@
+import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@tanstack/react-router', () => ({
@@ -55,13 +56,14 @@ vi.mock('@/shared/ui/input', () => ({
 }))
 
 vi.mock('@/shared/ui/tabs', () => ({
-  Tabs: ({ children }: { children: unknown }) => children,
+  Tabs: ({ children, defaultValue }: { children: unknown; defaultValue?: string }) => (
+    <div data-default-value={defaultValue}>{children}</div>
+  ),
   TabsContent: ({ children }: { children: unknown }) => children,
   TabsList: ({ children }: { children: unknown }) => children,
   TabsTrigger: ({ children }: { children: unknown }) => children,
 }))
 
-import { renderToStaticMarkup } from 'react-dom/server'
 import { LoginPage } from './login'
 
 describe('LoginPage', () => {
@@ -75,5 +77,12 @@ describe('LoginPage', () => {
     expect(html).toContain('login.title')
     expect(html).toContain('login.subtitle')
     expect(html).toContain('login.submit')
+  })
+
+  it('defaults to oauth and renders oauth tab before password', () => {
+    const html = renderToStaticMarkup(<LoginPage />)
+
+    expect(html).toContain('data-default-value="oauth"')
+    expect(html.indexOf('login.tabOAuth')).toBeLessThan(html.indexOf('login.tabPassword'))
   })
 })
