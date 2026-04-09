@@ -106,6 +106,12 @@ REDIS_PASSWORD: your-redis-password
 kubectl apply -k overlays/external/
 ```
 
+4. 可选：部署前运行外部依赖预检：
+```bash
+./scripts/validate-k8s-external-deps.sh
+CHECK_NETWORK=true ./scripts/validate-k8s-external-deps.sh
+```
+
 ### 4. 验证部署
 
 ```bash
