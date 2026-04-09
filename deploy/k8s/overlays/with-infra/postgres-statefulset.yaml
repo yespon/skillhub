@@ -23,34 +23,37 @@ spec:
               name: postgres
           env:
             - name: POSTGRES_DB
-              value: skillhub
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-db
             - name: POSTGRES_USER
               valueFrom:
-                secretKeyRef:
-                  name: skillhub-secret
-                  key: spring-datasource-username
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-user
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
-                  key: spring-datasource-password
+                  key: POSTGRES_PASSWORD
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - skillhub
+                - sh
+                - -ec
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
             initialDelaySeconds: 10
             periodSeconds: 10
           livenessProbe:
             exec:
               command:
-                - pg_isready
-                - -U
-                - skillhub
+                - sh
+                - -ec
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
             initialDelaySeconds: 30
             periodSeconds: 15
           resources:

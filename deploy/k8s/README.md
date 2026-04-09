@@ -13,10 +13,10 @@
 
 ```
 deploy/k8s/
+├── 02-secret.example.yml           # Secret 模板（复制到 .dev/02-secret.yml 使用）
 ├── base/                          # 基础配置（所有场景共用）
 │   ├── kustomization.yaml
 │   ├── configmap.yaml
-│   ├── secret.yaml.example
 │   ├── services.yaml
 │   ├── backend-deployment.yaml
 │   ├── frontend-deployment.yaml
@@ -44,18 +44,12 @@ kubectl create namespace skillhub
 ### 2. 配置 Secret
 
 ```bash
-cd deploy/k8s/base
-
-# 复制示例文件
-cp secret.yaml.example secret.yaml
-
-# 编辑 secret.yaml，修改敏感配置
-```
-
-如果你使用本地 `02-secret.yml` 布局，请把真实文件放到 `.dev/` 下，避免提交到 Git：
-
-```bash
 cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
+
+# 编辑 .dev/02-secret.yml，修改敏感配置
+${EDITOR:-vi} .dev/02-secret.yml
+
+# 应用 Secret
 kubectl apply -f .dev/02-secret.yml
 ```
 
@@ -65,13 +59,17 @@ kubectl apply -f .dev/02-secret.yml
 
 | 键 | 说明 | 必填 |
 |---|---|---|
-| spring-datasource-url | PostgreSQL 连接 URL | 是 |
-| spring-datasource-username | 数据库用户名 | 是 |
-| spring-datasource-password | 数据库密码 | 是 |
-| bootstrap-admin-password | 管理员密码 | 是 |
+| POSTGRES_PASSWORD | PostgreSQL 密码 | 是 |
+| REDIS_PASSWORD | Redis 密码（with-infra 默认启用） | 是 |
+| BOOTSTRAP_ADMIN_PASSWORD | 管理员密码 | 是 |
 | oauth2-github-client-id | GitHub OAuth ID | 否 |
 | oauth2-github-client-secret | GitHub OAuth 密钥 | 否 |
+| SKILLHUB_STORAGE_S3_ACCESS_KEY | S3/OSS Access Key | 否 |
+| SKILLHUB_STORAGE_S3_SECRET_KEY | S3/OSS Secret Key | 否 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID | SourceID Client ID | 否 |
+| SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET | SourceID Client Secret | 否 |
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
+| skill-scanner-llm-model | LLM 模型名称 | 否 |
 
 ### 3. 选择部署方式
 
@@ -87,15 +85,20 @@ kubectl apply -k overlays/with-infra/
 
 适合已有 PostgreSQL 和 Redis 的环境：
 
-1. 修改 `base/configmap.yaml` 中的 Redis 配置：
+1. 修改 `base/configmap.yaml` 中的数据库和 Redis 配置：
 ```yaml
+postgres-host: your-postgres-host
+postgres-port: "5432"
+postgres-db: skillhub
+postgres-user: skillhub
 redis-host: your-redis-host
 redis-port: "6379"
 ```
 
-2. 修改 `base/secret.yaml` 中的数据库连接：
+2. 在 `.dev/02-secret.yml` 中填入数据库和 Redis 密码：
 ```yaml
-spring-datasource-url: jdbc:postgresql://your-postgres-host:5432/skillhub
+POSTGRES_PASSWORD: your-postgres-password
+REDIS_PASSWORD: your-redis-password
 ```
 
 3. 部署：
@@ -175,8 +178,6 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 部署前请检查以下文件：
 
 - `configmap.yaml`
-- `secret.yaml`
-- `secret.yaml.example`
 - `02-secret.example.yml`
 - `ingress.yaml`
 - `backend-deployment.yaml`
@@ -186,6 +187,10 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 
 | 键 | 默认值 | 说明 |
 |---|---|---|
+| postgres-host | postgres | PostgreSQL 主机地址 |
+| postgres-port | 5432 | PostgreSQL 端口 |
+| postgres-db | skillhub | PostgreSQL 数据库名 |
+| postgres-user | skillhub | PostgreSQL 用户名 |
 | redis-host | redis | Redis 主机地址 |
 | redis-port | 6379 | Redis 端口 |
 | skillhub-public-base-url | 空 | 对外访问 URL，用于 OAuth 回调和前端运行时配置 |
@@ -220,10 +225,9 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 
 | 键 | 说明 | 必填 |
 |---|---|---|
-| spring-datasource-url | PostgreSQL 连接 URL | 是 |
-| spring-datasource-username | 数据库用户名 | 是 |
-| spring-datasource-password | 数据库密码 | 是 |
-| bootstrap-admin-password | 管理员密码 | 是 |
+| POSTGRES_PASSWORD | PostgreSQL 密码 | 是 |
+| REDIS_PASSWORD | Redis 密码（with-infra 默认启用） | 是 |
+| BOOTSTRAP_ADMIN_PASSWORD | 管理员密码 | 是 |
 | oauth2-github-client-id | GitHub OAuth ID | 否 |
 | oauth2-github-client-secret | GitHub OAuth 密钥 | 否 |
 | SKILLHUB_STORAGE_S3_ACCESS_KEY | S3/OSS Access Key | 否 |
@@ -250,19 +254,11 @@ skillhub-storage-provider: s3
 
 2. 在 Secret 中添加：
 ```yaml
-skillhub-storage-s3-access-key: your-access-key
-skillhub-storage-s3-secret-key: your-secret-key
+SKILLHUB_STORAGE_S3_ACCESS_KEY: your-access-key
+SKILLHUB_STORAGE_S3_SECRET_KEY: your-secret-key
 ```
 
-3. 在 backend-deployment.yaml 中添加环境变量：
-```yaml
-- name: SKILLHUB_STORAGE_S3_ENDPOINT
-  value: https://oss-cn-shanghai.aliyuncs.com
-- name: SKILLHUB_STORAGE_S3_BUCKET
-  value: skillhub-prod
-- name: SKILLHUB_STORAGE_S3_REGION
-  value: cn-shanghai
-```
+3. `base/backend-deployment.yaml` 已经读取这些键，无需额外修改 Deployment。
 
 ### 持久化存储
 
@@ -287,7 +283,7 @@ skillhub-storage-s3-secret-key: your-secret-key
 首次启动时，如果 `bootstrap-admin-enabled` 为 `true`，系统会自动创建管理员账户：
 
 - 用户名：`admin`
-- 密码：在 `secret.yaml` 的 `bootstrap-admin-password` 中配置
+- 密码：在 Secret 的 `BOOTSTRAP_ADMIN_PASSWORD` 中配置
 
 **安全建议**：首次登录后，请立即修改默认密码。
 
@@ -303,22 +299,9 @@ kubectl get pvc -n skillhub
 kubectl describe node <node-name>
 ```
 
-<<<<<<< HEAD
 ### 镜像拉取失败
 
 如果镜像私有，需要创建拉取凭证：
-=======
-If you are using the `02-secret.yml` layout for local deployment, keep the real file under `.dev/` so it stays ignored by Git:
-
-```bash
-cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
-kubectl apply -f .dev/02-secret.yml
-```
-
-Do not place real credentials in `deploy/k8s/02-secret.yml`.
-
-Preferred secret rendering flow:
->>>>>>> 2ef914c (docs(deploy): add local secret template)
 
 ```bash
 kubectl create secret docker-registry ghcr-secret \

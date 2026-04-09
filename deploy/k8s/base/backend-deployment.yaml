@@ -32,21 +32,43 @@ spec:
                   key: skillhub-public-base-url
 
             # Database
-            - name: SPRING_DATASOURCE_URL
+            - name: POSTGRES_HOST
               valueFrom:
-                secretKeyRef:
-                  name: skillhub-secret
-                  key: spring-datasource-url
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-host
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-port
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-db
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-user
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
-                  key: spring-datasource-username
+                  key: POSTGRES_PASSWORD
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
-                  key: spring-datasource-password
+                  key: POSTGRES_PASSWORD
 
             # Redis
             - name: SPRING_DATA_REDIS_HOST
@@ -59,6 +81,11 @@ spec:
                 configMapKeyRef:
                   name: skillhub-config
                   key: redis-port
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: REDIS_PASSWORD
 
             # Storage
             - name: STORAGE_BASE_PATH
@@ -170,7 +197,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
-                  key: bootstrap-admin-password
+                  key: BOOTSTRAP_ADMIN_PASSWORD
                   optional: true
 
             # OAuth2 GitHub (optional)
