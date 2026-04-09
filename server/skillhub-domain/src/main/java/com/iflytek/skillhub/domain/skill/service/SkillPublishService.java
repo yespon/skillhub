@@ -55,7 +55,6 @@ import java.util.zip.ZipOutputStream;
 public class SkillPublishService {
 
     private static final String ZH_CN_LOCALE = "zh-cn";
-    private static final int MAX_SKILL_SUMMARY_LENGTH = 512;
 
     private static final DateTimeFormatter AUTO_VERSION_FORMATTER =
             DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneOffset.UTC);
@@ -219,12 +218,6 @@ public class SkillPublishService {
         if (metadata.version() == null || metadata.version().isBlank()) {
             String autoVersion = AUTO_VERSION_FORMATTER.format(currentTime());
             metadata = new SkillMetadata(metadata.name(), metadata.description(), autoVersion, metadata.body(), metadata.frontmatter());
-        }
-        if (metadata.description() != null && metadata.description().length() > MAX_SKILL_SUMMARY_LENGTH) {
-            throw new DomainBadRequestException(
-                    "error.skill.publish.summary.tooLong",
-                    MAX_SKILL_SUMMARY_LENGTH
-            );
         }
         String skillSlug = SlugValidator.slugify(metadata.name());
 
