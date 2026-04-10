@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: skillhub-server
+spec:
+  template:
+    spec:
+      containers:
+        - name: server
+          volumeMounts:
+            - name: skillhub-storage
+              $patch: delete
+      volumes:
+        - name: skillhub-storage
+          $patch: delete

@@ -7,7 +7,7 @@
 - Kubernetes 集群 (v1.24+)
 - kubectl 已配置并连接到集群
 - nginx ingress controller 已安装（可选，用于域名访问）
-- 默认 StorageClass 已配置（用于 PVC）
+- 默认 StorageClass 已配置（`overlays/with-infra` 和默认 `overlays/external` 需要 PVC）
 
 ## 目录结构
 
@@ -29,8 +29,14 @@ deploy/k8s/
     │   ├── postgres-statefulset.yaml
     │   └── redis-statefulset.yaml
     │
-    └── external/                  # 外部数据库
-        └── kustomization.yaml
+    ├── external/                  # 外部 PostgreSQL/Redis，保留本地存储 PVC
+    │   └── kustomization.yaml
+    │
+    └── external-s3/               # 外部 PostgreSQL/Redis + S3，无需本地存储 PVC
+        ├── kustomization.yaml
+        ├── configmap-s3-patch.yaml
+        ├── backend-storage-patch.yaml
+        └── delete-storage-pvc.yaml
 ```
 
 ## 快速开始
@@ -81,7 +87,7 @@ kubectl apply -f .dev/02-secret.yml
 kubectl apply -k overlays/with-infra/
 ```
 
-**方式二：使用外部数据库**
+**方式二：使用外部 PostgreSQL / Redis，保留本地存储 PVC**
 
 适合已有 PostgreSQL 和 Redis 的环境：
 
@@ -111,6 +117,45 @@ kubectl apply -k overlays/external/
 ./scripts/validate-k8s-external-deps.sh
 CHECK_NETWORK=true ./scripts/validate-k8s-external-deps.sh
 ```
+
+**方式三：使用外部 PostgreSQL / Redis + S3（无 PVC）**
+
+适合已有 PostgreSQL、Redis 和对象存储，且不希望依赖集群默认 StorageClass 的环境。
+
+1. 修改 `base/configmap.yaml` 中的数据库、Redis 和 S3 配置：
+```yaml
+postgres-host: your-postgres-host
+postgres-port: "5432"
+postgres-db: skillhub
+postgres-user: skillhub
+redis-host: your-redis-host
+redis-port: "6379"
+skillhub-storage-provider: s3
+skillhub-storage-s3-endpoint: https://your-s3-endpoint
+skillhub-storage-s3-bucket: your-bucket
+skillhub-storage-s3-region: your-region
+```
+
+2. 在 `.dev/02-secret.yml` 中填入数据库、Redis 和 S3 凭据：
+```yaml
+POSTGRES_PASSWORD: your-postgres-password
+REDIS_PASSWORD: your-redis-password
+SKILLHUB_STORAGE_S3_ACCESS_KEY: your-access-key
+SKILLHUB_STORAGE_S3_SECRET_KEY: your-secret-key
+```
+
+3. 可选：部署前运行外部依赖预检：
+```bash
+./scripts/validate-k8s-external-deps.sh
+CHECK_NETWORK=true ./scripts/validate-k8s-external-deps.sh
+```
+
+4. 部署：
+```bash
+kubectl apply -k overlays/external-s3/
+```
+
+该 overlay 会强制 `skillhub-storage-provider=s3`，并移除后端本地存储挂载与 `skillhub-storage-pvc`，因此不再要求默认 StorageClass。
 
 ### 4. 验证部署
 
@@ -146,7 +191,7 @@ spec:
 ```
 
 ```bash
-kubectl apply -k overlays/with-infra/  # 或 overlays/external/
+kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/external-s3/
 ```
 
 ## 部署架构
@@ -172,7 +217,7 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/
 │                                                              │
 │  ┌─────────────────────────────────────────────────────────┐ │
 │  │              PersistentVolumeClaims                      │ │
-│  │  - skillhub-storage-pvc (10Gi)                          │ │
+│  │  - skillhub-storage-pvc (10Gi, external-s3 不创建)      │ │
 │  │  - postgres-data-0 (10Gi) - with-infra only             │ │
 │  │  - redis-data-0 (5Gi) - with-infra only                 │ │
 │  └─────────────────────────────────────────────────────────┘ │
