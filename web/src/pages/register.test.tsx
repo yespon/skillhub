@@ -1,7 +1,8 @@
+import type { ReactNode } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children }: { children: unknown }) => children,
+  Link: ({ children }: { children: ReactNode }) => children,
   useNavigate: () => vi.fn(),
   useSearch: () => ({ returnTo: '' }),
 }))
@@ -29,15 +30,15 @@ vi.mock('@/features/auth/use-local-auth', () => ({
 }))
 
 vi.mock('@/shared/ui/button', () => ({
-  Button: ({ children }: { children: unknown }) => children,
+  Button: ({ children }: { children: ReactNode }) => children,
 }))
 
 vi.mock('@/shared/ui/card', () => ({
-  Card: ({ children }: { children: unknown }) => children,
-  CardContent: ({ children }: { children: unknown }) => children,
-  CardDescription: ({ children }: { children: unknown }) => children,
-  CardHeader: ({ children }: { children: unknown }) => children,
-  CardTitle: ({ children }: { children: unknown }) => children,
+  Card: ({ children }: { children: ReactNode }) => children,
+  CardContent: ({ children }: { children: ReactNode }) => children,
+  CardDescription: ({ children }: { children: ReactNode }) => children,
+  CardHeader: ({ children }: { children: ReactNode }) => children,
+  CardTitle: ({ children }: { children: ReactNode }) => children,
 }))
 
 vi.mock('@/shared/ui/input', () => ({
@@ -45,12 +46,12 @@ vi.mock('@/shared/ui/input', () => ({
 }))
 
 vi.mock('@/shared/ui/tabs', () => ({
-  Tabs: ({ children, defaultValue }: { children: unknown; defaultValue?: string }) => (
+  Tabs: ({ children, defaultValue }: { children: ReactNode; defaultValue?: string }) => (
     <div data-default-value={defaultValue}>{children}</div>
   ),
-  TabsContent: ({ children }: { children: unknown }) => children,
-  TabsList: ({ children }: { children: unknown }) => children,
-  TabsTrigger: ({ children }: { children: unknown }) => children,
+  TabsContent: ({ children }: { children: ReactNode }) => children,
+  TabsList: ({ children }: { children: ReactNode }) => children,
+  TabsTrigger: ({ children }: { children: ReactNode }) => children,
 }))
 
 import { renderToStaticMarkup } from 'react-dom/server'

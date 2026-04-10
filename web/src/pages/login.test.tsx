@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@tanstack/react-router', () => ({
-  Link: ({ children }: { children: unknown }) => children,
+  Link: ({ children }: { children: ReactNode }) => children,
   useNavigate: () => vi.fn(),
   useSearch: () => ({ returnTo: '' }),
 }))
@@ -48,7 +49,7 @@ vi.mock('@/features/auth/use-password-login', () => ({
 }))
 
 vi.mock('@/shared/ui/button', () => ({
-  Button: ({ children }: { children: unknown }) => children,
+  Button: ({ children }: { children: ReactNode }) => children,
 }))
 
 vi.mock('@/shared/ui/input', () => ({
@@ -56,12 +57,12 @@ vi.mock('@/shared/ui/input', () => ({
 }))
 
 vi.mock('@/shared/ui/tabs', () => ({
-  Tabs: ({ children, defaultValue }: { children: unknown; defaultValue?: string }) => (
+  Tabs: ({ children, defaultValue }: { children: ReactNode; defaultValue?: string }) => (
     <div data-default-value={defaultValue}>{children}</div>
   ),
-  TabsContent: ({ children }: { children: unknown }) => children,
-  TabsList: ({ children }: { children: unknown }) => children,
-  TabsTrigger: ({ children }: { children: unknown }) => children,
+  TabsContent: ({ children }: { children: ReactNode }) => children,
+  TabsList: ({ children }: { children: ReactNode }) => children,
+  TabsTrigger: ({ children }: { children: ReactNode }) => children,
 }))
 
 import { LoginPage } from './login'
