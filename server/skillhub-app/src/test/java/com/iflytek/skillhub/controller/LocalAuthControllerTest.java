@@ -114,7 +114,7 @@ class LocalAuthControllerTest {
                     {"username":"bob","password":"Abcd123!","email":"not-an-email"}
                     """))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.code").value(400));
+            .andExpect(jsonPath("$.code").value(400))
             .andExpect(jsonPath("$.msg").value("邮箱格式不正确"));
 
         verify(localAuthService).register("bob", "Abcd123!", "not-an-email");
