@@ -9,6 +9,25 @@ data:
   oauth2-sourceid-token-uri: "https://sourceid.example.com/oauth2.0/accessToken"
   oauth2-sourceid-user-info-uri: "https://sourceid.example.com/oauth2.0/profile"
 
+  # Optional: enable login-time namespace sync after SourceID login.
+  skillhub-auth-sourceid-namespace-sync-enabled: "false"
+  skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
+  skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
+  skillhub-auth-sourceid-namespace-sync-active-status-key: active
+  skillhub-auth-sourceid-namespace-sync-active-status-values-0: "true"
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
+
+  # Optional: enrich SourceID login context with OSDS attributes.
+  skillhub-auth-sourceid-osds-enabled: "false"
+  skillhub-auth-sourceid-osds-base-url: ""
+  skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
+  skillhub-auth-sourceid-osds-sysid: ""
+  skillhub-auth-sourceid-osds-sign-server-auth: ""
+  skillhub-auth-sourceid-osds-fail-open: "true"
+
   skillhub-auth-local-show-entry: "false"
   skillhub-access-policy-mode: PROVIDER_ALLOWLIST
   skillhub-access-policy-allowed-providers: sourceid

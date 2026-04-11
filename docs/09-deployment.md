@@ -199,6 +199,49 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 - 如果要启用 SourceID，再补充 `OAUTH2_SOURCEID_CLIENT_ID` / `OAUTH2_SOURCEID_CLIENT_SECRET` / `OAUTH2_SOURCEID_REDIRECT_URI` / `OAUTH2_SOURCEID_AUTHORIZATION_URI` / `OAUTH2_SOURCEID_TOKEN_URI` / `OAUTH2_SOURCEID_USER_INFO_URI`
 - 如果只允许并只展示锐捷 SSO，可设置 `SKILLHUB_ACCESS_POLICY_MODE=PROVIDER_ALLOWLIST` 与 `SKILLHUB_ACCESS_POLICY_ALLOWED_PROVIDERS=sourceid`
 
+### 7.1 SourceID namespace 自动补齐
+
+如果需要在 SourceID 登录成功后，按组织属性自动把用户补齐到指定 namespace，可开启以下运行时变量：
+
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED=true`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_PROVIDER_CODE=sourceid`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ATTRIBUTE_ROOT_KEY=attributes`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY=active`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0=true`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY=departmentCode`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE=000023002`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG=team-network`
+- `SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE=MEMBER`
+
+行为边界：
+
+- 该能力只增不删，不会移除或降级已有 namespace 成员关系
+- 只有在目标 namespace 已存在且状态为 `ACTIVE` 时才会创建成员关系
+- 首次联调建议只保留一条 mapping，先验证成功路径，再验证失败路径
+
+如果组织字段不在 SourceID profile 里，而是在外部 OSDS 系统里，可继续补充：
+
+- `SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED=true`
+- `SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL=https://osds.example.com`
+- `SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH=/staff/user-id/{userId}/data`
+- `SKILLHUB_AUTH_SOURCEID_OSDS_SYSID=your-sysid`
+- `SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH=your-sign`
+- `SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN=true`
+
+说明：
+
+- 登录链路会使用 `claims.subject` 作为 `userId` 查询 OSDS
+- `FAIL_OPEN=true` 时，OSDS 不可用不会阻断登录，只是不执行自动补齐
+- Compose 交付场景可直接在 `.env.release` 填写这些变量
+- Kubernetes 场景可在 `deploy/k8s/01-configmap.yml` 或 SourceID-only overlays 中填写同名 kebab-case 键
+
+推荐参考：
+
+- `deploy/k8s/01-configmap.yml`
+- `deploy/k8s/overlays/external-sourceid-only/configmap-sourceid-patch.yaml`
+- `deploy/k8s/overlays/external-s3-sourceid-only/configmap-sourceid-patch.yaml`
+- `docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md`
+
 ## 8 裸金属上线清单
 
 推荐顺序：

@@ -50,6 +50,36 @@ data:
   oauth2-sourceid-user-info-uri: "https://sourceid.example.com/oauth2.0/profile"
   oauth2-sourceid-user-name-attribute: id
 
+  # SourceID 登录后 namespace 自动补齐（可选）
+  # 默认关闭；开启后会在 SourceID 登录成功后按映射规则只增不删地补齐 namespace 成员。
+  skillhub-auth-sourceid-namespace-sync-enabled: "false"
+  skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
+  skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
+  skillhub-auth-sourceid-namespace-sync-active-status-key: active
+  skillhub-auth-sourceid-namespace-sync-active-status-values-0: "true"
+  # 下面示例演示一条最小 mapping：当来源属性命中时，把用户补齐到指定 namespace。
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-1: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-2: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
+  # 如果同一个来源值还要同步到第二个 namespace，可继续填写 mappings-1。
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-role: MEMBER
+
+  # SourceID OSDS 组织关系增强（可选）
+  # 开启后会用 claims.subject 作为 userId 调 OSDS，把 departmentCode 等字段并入映射上下文。
+  skillhub-auth-sourceid-osds-enabled: "false"
+  skillhub-auth-sourceid-osds-base-url: ""
+  skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
+  skillhub-auth-sourceid-osds-sysid: ""
+  skillhub-auth-sourceid-osds-sign-server-auth: ""
+  skillhub-auth-sourceid-osds-fail-open: "true"
+
   # Bootstrap 管理员配置（非敏感）
   bootstrap-admin-enabled: "true"
   bootstrap-admin-user-id: docker-admin
