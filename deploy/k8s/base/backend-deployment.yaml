@@ -216,13 +216,13 @@ spec:
                   optional: true
 
             # OAuth2 GitHub (optional)
-            - name: OAUTH2_GITHUB_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
                   key: oauth2-github-client-id
                   optional: true
-            - name: OAUTH2_GITHUB_CLIENT_SECRET
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
