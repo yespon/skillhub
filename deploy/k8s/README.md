@@ -13,6 +13,7 @@
 
 ```
 deploy/k8s/
+├── 01-configmap.yml               # ConfigMap 模板（复制到 .dev/01-configmap.yml 使用）
 ├── 02-secret.example.yml           # Secret 模板（复制到 .dev/02-secret.yml 使用）
 ├── base/                          # 基础配置（所有场景共用）
 │   ├── kustomization.yaml
@@ -47,7 +48,25 @@ deploy/k8s/
 kubectl create namespace skillhub
 ```
 
-### 2. 配置 Secret
+### 2. 配置 ConfigMap
+
+```bash
+cp deploy/k8s/01-configmap.yml .dev/01-configmap.yml
+
+# 编辑 .dev/01-configmap.yml，修改非敏感配置
+${EDITOR:-vi} .dev/01-configmap.yml
+
+# 应用 ConfigMap
+kubectl apply -f .dev/01-configmap.yml
+```
+
+这份模板已经包含“仅显示 SourceID，并隐藏本地用户名密码入口”的示例配置：
+
+- `skillhub-auth-local-show-entry: "false"`
+- `skillhub-access-policy-mode: PROVIDER_ALLOWLIST`
+- `skillhub-access-policy-allowed-providers: sourceid`
+
+### 3. 配置 Secret
 
 ```bash
 cp deploy/k8s/02-secret.example.yml .dev/02-secret.yml
@@ -77,7 +96,7 @@ kubectl apply -f .dev/02-secret.yml
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
 | skill-scanner-llm-model | LLM 模型名称 | 否 |
 
-### 3. 选择部署方式
+### 4. 选择部署方式
 
 **方式一：完整部署（包含 PostgreSQL + Redis）**
 
