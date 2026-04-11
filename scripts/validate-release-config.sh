@@ -175,6 +175,27 @@ if [ -n "$oauth_secret" ] && [ -z "$oauth_id" ]; then
   error "OAUTH2_GITHUB_CLIENT_ID is required when OAUTH2_GITHUB_CLIENT_SECRET is set"
 fi
 
+sourceid_id="${OAUTH2_SOURCEID_CLIENT_ID:-}"
+sourceid_secret="${OAUTH2_SOURCEID_CLIENT_SECRET:-}"
+sourceid_redirect="${OAUTH2_SOURCEID_REDIRECT_URI:-}"
+sourceid_auth_uri="${OAUTH2_SOURCEID_AUTHORIZATION_URI:-}"
+sourceid_token_uri="${OAUTH2_SOURCEID_TOKEN_URI:-}"
+sourceid_user_info_uri="${OAUTH2_SOURCEID_USER_INFO_URI:-}"
+
+if [ -n "$sourceid_id$sourceid_secret$sourceid_redirect$sourceid_auth_uri$sourceid_token_uri$sourceid_user_info_uri" ]; then
+  require_non_empty OAUTH2_SOURCEID_CLIENT_ID
+  require_non_empty OAUTH2_SOURCEID_CLIENT_SECRET
+  require_non_empty OAUTH2_SOURCEID_REDIRECT_URI
+  require_non_empty OAUTH2_SOURCEID_AUTHORIZATION_URI
+  require_non_empty OAUTH2_SOURCEID_TOKEN_URI
+  require_non_empty OAUTH2_SOURCEID_USER_INFO_URI
+
+  validate_url OAUTH2_SOURCEID_REDIRECT_URI
+  validate_url OAUTH2_SOURCEID_AUTHORIZATION_URI
+  validate_url OAUTH2_SOURCEID_TOKEN_URI
+  validate_url OAUTH2_SOURCEID_USER_INFO_URI
+fi
+
 if [ "$errors" -gt 0 ]; then
   echo "Release config validation failed: $errors error(s), $warnings warning(s)." >&2
   exit 1
