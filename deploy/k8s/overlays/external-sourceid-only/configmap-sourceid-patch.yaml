@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skillhub-config
+data:
+  skillhub-public-base-url: "https://skillhub.example.com"
+  oauth2-sourceid-redirect-uri: "https://skillhub.example.com/login/oauth2/code/sourceid"
+  oauth2-sourceid-authorization-uri: "https://sourceid.example.com/oauth2.0/authorize"
+  oauth2-sourceid-token-uri: "https://sourceid.example.com/oauth2.0/accessToken"
+  oauth2-sourceid-user-info-uri: "https://sourceid.example.com/oauth2.0/profile"
+
+  skillhub-auth-local-show-entry: "false"
+  skillhub-access-policy-mode: PROVIDER_ALLOWLIST
+  skillhub-access-policy-allowed-providers: sourceid
+  session-cookie-secure: "true"

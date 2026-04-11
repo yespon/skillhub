@@ -7,7 +7,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host: skills.example.com
+    - host: skillhub.example.com
       http:
         paths:
           - path: /api

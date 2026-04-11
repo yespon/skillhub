@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: skillhub-config
+data:
+  postgres-host: postgres.example.internal
+  postgres-port: "5432"
+  postgres-db: skillhub
+  postgres-user: skillhub
+
+  redis-host: redis.example.internal
+  redis-port: "6379"
+
+  skillhub-storage-provider: s3
+  skillhub-storage-s3-endpoint: "https://s3.example.com"
+  skillhub-storage-s3-bucket: skillhub
+  skillhub-storage-s3-region: us-east-1
+  skillhub-storage-s3-force-path-style: "false"
+  skillhub-storage-s3-auto-create-bucket: "false"
+  skillhub-storage-s3-presign-expiry: PT10M

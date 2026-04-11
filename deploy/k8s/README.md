@@ -33,11 +33,23 @@ deploy/k8s/
     ├── external/                  # 外部 PostgreSQL/Redis，保留本地存储 PVC
     │   └── kustomization.yaml
     │
-    └── external-s3/               # 外部 PostgreSQL/Redis + S3，无需本地存储 PVC
-        ├── kustomization.yaml
-        ├── configmap-s3-patch.yaml
-        ├── backend-storage-patch.yaml
-        └── delete-storage-pvc.yaml
+    ├── external-sourceid-only/    # external + 仅显示 SourceID
+    │   ├── kustomization.yaml
+    │   ├── configmap-external-patch.yaml
+    │   ├── configmap-sourceid-patch.yaml
+    │   └── ingress-host-patch.yaml
+    │
+    ├── external-s3/               # 外部 PostgreSQL/Redis + S3，无需本地存储 PVC
+    │   ├── kustomization.yaml
+    │   ├── configmap-s3-patch.yaml
+    │   ├── backend-storage-patch.yaml
+    │   └── delete-storage-pvc.yaml
+    │
+    └── external-s3-sourceid-only/ # external-s3 + 仅显示 SourceID
+      ├── kustomization.yaml
+      ├── configmap-external-patch.yaml
+      ├── configmap-sourceid-patch.yaml
+      └── ingress-host-patch.yaml
 ```
 
 ## 快速开始
@@ -190,7 +202,98 @@ kubectl apply -k overlays/external-s3/
 
 该 overlay 会强制 `skillhub-storage-provider=s3`，并移除后端本地存储挂载与 `skillhub-storage-pvc`，因此不再要求默认 StorageClass。
 
-### 4. 验证部署
+**方式四：使用外部 PostgreSQL / Redis，并仅显示 SourceID**
+
+适合企业 SSO 场景，需要隐藏本地用户名密码入口，并只允许锐捷 SSO，同时继续使用本地存储 PVC。
+
+1. 修改 `overlays/external-sourceid-only/configmap-external-patch.yaml`：
+```yaml
+postgres-host: your-postgres-host
+postgres-port: "5432"
+redis-host: your-redis-host
+redis-port: "6379"
+```
+
+2. 修改 `overlays/external-sourceid-only/configmap-sourceid-patch.yaml`：
+```yaml
+skillhub-public-base-url: "https://your-domain.com"
+oauth2-sourceid-redirect-uri: "https://your-domain.com/login/oauth2/code/sourceid"
+oauth2-sourceid-authorization-uri: "https://your-sourceid-domain/oauth2.0/authorize"
+oauth2-sourceid-token-uri: "https://your-sourceid-domain/oauth2.0/accessToken"
+oauth2-sourceid-user-info-uri: "https://your-sourceid-domain/oauth2.0/profile"
+```
+
+3. 修改 `overlays/external-sourceid-only/ingress-host-patch.yaml`，确保 host 与 `skillhub-public-base-url` 使用同一域名。
+
+4. 在 `.dev/02-secret.yml` 中填入：
+```yaml
+POSTGRES_PASSWORD: your-postgres-password
+REDIS_PASSWORD: your-redis-password
+BOOTSTRAP_ADMIN_PASSWORD: your-admin-password
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID: your-sourceid-client-id
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET: your-sourceid-client-secret
+```
+
+5. 部署：
+```bash
+kubectl apply -k overlays/external-sourceid-only/
+```
+
+这个 overlay 在 `external` 基础上额外做三件事：
+
+- 隐藏本地用户名密码入口
+- 将 OAuth 准入策略限制为 `sourceid`
+- 提供与 `skillhub-public-base-url` 对齐的 ingress host patch
+
+**方式五：使用外部 PostgreSQL / Redis + S3，并仅显示 SourceID**
+
+适合企业 SSO 场景，需要隐藏本地用户名密码入口，并只允许锐捷 SSO。
+
+1. 修改 `overlays/external-s3-sourceid-only/configmap-external-patch.yaml`：
+```yaml
+postgres-host: your-postgres-host
+postgres-port: "5432"
+redis-host: your-redis-host
+redis-port: "6379"
+skillhub-storage-s3-endpoint: https://your-s3-endpoint
+skillhub-storage-s3-bucket: your-bucket
+skillhub-storage-s3-region: your-region
+```
+
+2. 修改 `overlays/external-s3-sourceid-only/configmap-sourceid-patch.yaml`：
+```yaml
+skillhub-public-base-url: "https://your-domain.com"
+oauth2-sourceid-redirect-uri: "https://your-domain.com/login/oauth2/code/sourceid"
+oauth2-sourceid-authorization-uri: "https://your-sourceid-domain/oauth2.0/authorize"
+oauth2-sourceid-token-uri: "https://your-sourceid-domain/oauth2.0/accessToken"
+oauth2-sourceid-user-info-uri: "https://your-sourceid-domain/oauth2.0/profile"
+```
+
+3. 修改 `overlays/external-s3-sourceid-only/ingress-host-patch.yaml`，确保 host 与 `skillhub-public-base-url` 使用同一域名。
+
+4. 在 `.dev/02-secret.yml` 中填入：
+```yaml
+POSTGRES_PASSWORD: your-postgres-password
+REDIS_PASSWORD: your-redis-password
+SKILLHUB_STORAGE_S3_ACCESS_KEY: your-access-key
+SKILLHUB_STORAGE_S3_SECRET_KEY: your-secret-key
+BOOTSTRAP_ADMIN_PASSWORD: your-admin-password
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID: your-sourceid-client-id
+SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET: your-sourceid-client-secret
+```
+
+5. 部署：
+```bash
+kubectl apply -k overlays/external-s3-sourceid-only/
+```
+
+这个 overlay 在 `external-s3` 基础上额外做三件事：
+
+- 隐藏本地用户名密码入口
+- 将 OAuth 准入策略限制为 `sourceid`
+- 提供与 `skillhub-public-base-url` 对齐的 ingress host patch
+
+### 5. 验证部署
 
 ```bash
 # 检查 Pod 状态
@@ -200,7 +303,7 @@ kubectl get pods -n skillhub
 kubectl wait --for=condition=ready pod --all -n skillhub --timeout=300s
 ```
 
-### 5. 访问服务
+### 6. 访问服务
 
 **方式一：端口转发（推荐本地测试）**
 
@@ -216,7 +319,7 @@ kubectl port-forward svc/skillhub-server -n skillhub 8081:8080
 
 **方式二：Ingress 域名访问**
 
-修改 `base/ingress.yaml` 中的域名：
+修改 `base/ingress.yaml` 或对应 overlay 中的 ingress patch：
 ```yaml
 spec:
   rules:
@@ -224,7 +327,7 @@ spec:
 ```
 
 ```bash
-kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/external-s3/
+kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/external-sourceid-only/、overlays/external-s3/、overlays/external-s3-sourceid-only/
 ```
 
 ## 部署架构
