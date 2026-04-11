@@ -78,6 +78,11 @@ ${EDITOR:-vi} .dev/02-secret.yml
 kubectl apply -f .dev/02-secret.yml
 ```
 
+如果你沿用 `01-configmap.yml` 里的 SourceID-only 示例：
+
+- 必填的 OAuth Secret 只有 `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID` 和 `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET`
+- 不需要补 GitHub OAuth Secret，保持未配置即可
+
 不要把真实凭据写入 `deploy/k8s/02-secret.yml`。
 
 **Secret 配置项**：
@@ -95,6 +100,15 @@ kubectl apply -f .dev/02-secret.yml
 | SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET | SourceID Client Secret | 否 |
 | skill-scanner-llm-api-key | LLM API 密钥 | 否 |
 | skill-scanner-llm-model | LLM 模型名称 | 否 |
+
+SourceID-only 推荐最小 Secret：
+
+- `POSTGRES_PASSWORD`
+- `REDIS_PASSWORD`
+- `BOOTSTRAP_ADMIN_PASSWORD`
+- `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID`
+- `SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET`
+- 若使用 S3，再补 `SKILLHUB_STORAGE_S3_ACCESS_KEY` 与 `SKILLHUB_STORAGE_S3_SECRET_KEY`
 
 ### 4. 选择部署方式
 
