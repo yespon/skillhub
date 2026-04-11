@@ -1,27 +1,30 @@
 package com.iflytek.skillhub.service;
 
-import com.iflytek.skillhub.domain.namespace.Namespace;
-import com.iflytek.skillhub.domain.namespace.NamespaceRole;
-import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
-import com.iflytek.skillhub.domain.namespace.NamespaceStatus;
-import com.iflytek.skillhub.domain.namespace.NamespaceService;
+import com.iflytek.skillhub.auth.rbac.RbacService;
 import com.iflytek.skillhub.domain.label.LabelDefinitionService;
+import com.iflytek.skillhub.domain.namespace.Namespace;
+import com.iflytek.skillhub.domain.namespace.NamespaceRepository;
+import com.iflytek.skillhub.domain.namespace.NamespaceRole;
+import com.iflytek.skillhub.domain.namespace.NamespaceService;
+import com.iflytek.skillhub.domain.namespace.NamespaceStatus;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillRepository;
 import com.iflytek.skillhub.domain.skill.SkillVersionRepository;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.service.SkillLifecycleProjectionService;
+import com.iflytek.skillhub.search.SearchQuery;
 import com.iflytek.skillhub.search.SearchQueryService;
 import com.iflytek.skillhub.search.SearchResult;
-import org.mockito.ArgumentCaptor;
+import com.iflytek.skillhub.search.SearchVisibilityScope;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -49,6 +52,9 @@ class SkillSearchAppServiceTest {
     @Mock
     private NamespaceService namespaceService;
 
+    @Mock
+    private RbacService rbacService;
+
         @Mock
         private LabelDefinitionService labelDefinitionService;
 
@@ -67,10 +73,11 @@ class SkillSearchAppServiceTest {
                 skillRepository,
                 namespaceRepository,
                 namespaceService,
-                                new SkillLifecycleProjectionService(skillVersionRepository),
+                new SkillLifecycleProjectionService(skillVersionRepository),
                                 labelDefinitionService,
-                                                                labelLocalizationService,
-                                                                skillDisplayNameLocalizationService
+                                labelLocalizationService,
+                                skillDisplayNameLocalizationService,
+                rbacService
         );
     }
 
@@ -243,6 +250,40 @@ class SkillSearchAppServiceTest {
         assertEquals("all", response.facets().labels().mode());
         assertEquals(1, response.facets().labels().items().size());
         assertEquals("official", response.facets().labels().items().getFirst().slug());
+    }
+
+    @Test
+    void search_shouldIncludeMemberNamespacesInVisibilityScope() {
+        when(searchQueryService.search(any()))
+                .thenReturn(new SearchResult(List.of(), 0, 0, 20));
+        when(rbacService.getUserRoleCodes("user-9")).thenReturn(Set.of("USER"));
+
+        service.search("skill", null, "newest", 0, 20, "user-9", Map.of(7L, NamespaceRole.MEMBER));
+
+        ArgumentCaptor<SearchQuery> captor = ArgumentCaptor.forClass(SearchQuery.class);
+        verify(searchQueryService).search(captor.capture());
+
+        SearchVisibilityScope scope = captor.getValue().visibilityScope();
+        assertEquals("user-9", scope.userId());
+        assertEquals(Set.of(7L), scope.memberNamespaceIds());
+        assertEquals(Set.of(), scope.adminNamespaceIds());
+        assertEquals(false, scope.platformWideAccess());
+    }
+
+    @Test
+    void search_shouldGrantPlatformWideAccessToSuperAdmin() {
+        when(searchQueryService.search(any()))
+                .thenReturn(new SearchResult(List.of(), 0, 0, 20));
+        when(rbacService.getUserRoleCodes("admin-1")).thenReturn(Set.of("SUPER_ADMIN", "USER"));
+
+        service.search("skill", null, "newest", 0, 20, "admin-1", Map.of());
+
+        ArgumentCaptor<SearchQuery> captor = ArgumentCaptor.forClass(SearchQuery.class);
+        verify(searchQueryService).search(captor.capture());
+
+        SearchVisibilityScope scope = captor.getValue().visibilityScope();
+        assertEquals("admin-1", scope.userId());
+        assertEquals(true, scope.platformWideAccess());
     }
 
     private void setField(Object target, String fieldName, Object value) {

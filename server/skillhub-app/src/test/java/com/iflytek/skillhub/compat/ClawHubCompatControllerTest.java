@@ -1,8 +1,9 @@
 package com.iflytek.skillhub.compat;
 
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
-import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.auth.device.DeviceAuthService;
+import com.iflytek.skillhub.domain.namespace.Namespace;
+import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
 import com.iflytek.skillhub.domain.skill.Skill;
 import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
@@ -12,6 +13,8 @@ import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.dto.SkillLifecycleVersionResponse;
 import com.iflytek.skillhub.dto.SkillSummaryResponse;
 import com.iflytek.skillhub.service.SkillSearchAppService;
+import java.math.BigDecimal;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -20,13 +23,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.math.BigDecimal;
-import java.time.Instant;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -56,8 +58,8 @@ class ClawHubCompatControllerTest {
     @MockBean
     private SkillQueryService skillQueryService;
 
-        @MockBean
-        private CompatSkillLookupService compatSkillLookupService;
+    @MockBean
+    private CompatSkillLookupService compatSkillLookupService;
 
         @MockBean
         private UserAccountRepository userAccountRepository;
@@ -139,6 +141,8 @@ class ClawHubCompatControllerTest {
 
     @Test
     void resolve_query_with_legacy_slug_keeps_legacy_lookup_behavior() throws Exception {
+        when(compatSkillLookupService.findByLegacySlug("my-skill"))
+                .thenReturn(legacyCompatContext("global", "my-skill"));
         when(skillQueryService.resolveVersion("global", "my-skill", null, "latest", null, null, java.util.Map.of()))
                 .thenReturn(new SkillQueryService.ResolvedVersionDTO(
                         1L, "global", "my-skill", "latest", 2L, "sha", true, "/api/v1/skills/global/my-skill/download"));
@@ -164,6 +168,8 @@ class ClawHubCompatControllerTest {
 
     @Test
     void download_query_with_legacy_slug_keeps_legacy_lookup_behavior() throws Exception {
+        when(compatSkillLookupService.findByLegacySlug("my-skill"))
+                .thenReturn(legacyCompatContext("global", "my-skill"));
         mockMvc.perform(get("/api/v1/download")
                         .param("slug", "my-skill")
                         .param("version", "latest"))
@@ -186,6 +192,7 @@ class ClawHubCompatControllerTest {
     @Test
     void getSkill_returns_owner_info_when_available() throws Exception {
         Skill skill = new Skill(10L, "my-skill", "owner-1", SkillVisibility.PUBLIC);
+                ReflectionTestUtils.setField(skill, "id", 10L);
         skill.setDisplayName("My Skill");
         skill.setSummary("test summary");
 
@@ -239,5 +246,11 @@ class ClawHubCompatControllerTest {
                 .andExpect(jsonPath("$.user.handle").value("user-42"))
                 .andExpect(jsonPath("$.user.displayName").value("tester"))
                 .andExpect(jsonPath("$.user.image").value("https://example.com/avatar.png"));
+    }
+
+    private CompatSkillLookupService.CompatSkillContext legacyCompatContext(String namespaceSlug, String skillSlug) {
+        Namespace namespace = new Namespace(namespaceSlug, namespaceSlug, "tester");
+        Skill skill = new Skill(1L, skillSlug, "tester", SkillVisibility.PUBLIC);
+        return new CompatSkillLookupService.CompatSkillContext(namespace, skill, Optional.empty());
     }
 }

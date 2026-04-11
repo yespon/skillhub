@@ -40,11 +40,11 @@ public class S3StorageService implements ObjectStorageService {
     @PostConstruct
     void init() {
         this.s3Client = buildS3Client(properties);
-        this.s3Presigner = buildS3Presigner(properties);
+        this.s3Presigner = buildPresigner();
         ensureBucketExists();
-        }
+    }
 
-        static S3Client buildS3Client(S3StorageProperties properties) {
+    static S3Client buildS3Client(S3StorageProperties properties) {
         ApacheHttpClient.Builder httpClientBuilder = ApacheHttpClient.builder()
                 .maxConnections(properties.getMaxConnections())
                 .connectionAcquisitionTimeout(properties.getConnectionAcquisitionTimeout());
@@ -61,6 +61,10 @@ public class S3StorageService implements ObjectStorageService {
             builder.endpointOverride(URI.create(properties.getEndpoint()));
         }
         return builder.build();
+    }
+
+    S3Presigner buildPresigner() {
+        return buildS3Presigner(properties);
     }
 
     static S3Presigner buildS3Presigner(S3StorageProperties properties) {

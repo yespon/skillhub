@@ -105,13 +105,14 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         Set<Long> adminNamespaceIds = query.visibilityScope().adminNamespaceIds().isEmpty()
                 ? Set.of(-1L)
                 : query.visibilityScope().adminNamespaceIds();
+        boolean platformWideAccess = query.visibilityScope().platformWideAccess();
 
         String baseSql = buildBaseSql(query, hasKeyword, hasTsQuery, useShortPrefixTitleSearch);
         String searchSql = "SELECT d.skill_id " + baseSql + buildOrderByClause(query.sortBy(), useRelevanceOrdering, useShortPrefixTitleSearch, hasTsQuery)
                 + "LIMIT :limit OFFSET :offset";
 
         Query nativeQuery = entityManager.createNativeQuery(searchSql);
-        applyCommonParameters(nativeQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+        applyCommonParameters(nativeQuery, query, memberNamespaceIds, adminNamespaceIds, platformWideAccess, normalizedKeyword, tsQuery,
                 hasKeyword, useRelevanceOrdering, sqlLimit, sqlOffset, true);
 
         @SuppressWarnings("unchecked")
@@ -121,7 +122,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
 
         String countSql = "SELECT COUNT(*) " + baseSql;
         Query countQuery = entityManager.createNativeQuery(countSql);
-        applyCommonParameters(countQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+        applyCommonParameters(countQuery, query, memberNamespaceIds, adminNamespaceIds, platformWideAccess, normalizedKeyword, tsQuery,
                 hasKeyword, false, null, null, false);
 
         long total = ((Number) countQuery.getSingleResult()).longValue();
@@ -131,7 +132,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         }
 
         List<SearchResult.LabelFacet> labelFacets = query.includeFacets() && !skillIds.isEmpty()
-                ? queryLabelFacets(baseSql, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery, hasKeyword)
+            ? queryLabelFacets(baseSql, query, memberNamespaceIds, adminNamespaceIds, platformWideAccess, normalizedKeyword, tsQuery, hasKeyword)
                 : List.of();
 
         return new SearchResult(skillIds, total, query.page(), query.size(), labelFacets);
@@ -160,7 +161,9 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         sql.append("AND (d.visibility = 'PUBLIC' ");
         if (query.visibilityScope().userId() != null) {
             sql.append("OR (d.visibility = 'NAMESPACE_ONLY' AND d.namespace_id IN :memberNamespaceIds) ");
+            sql.append("OR (d.visibility = 'NAMESPACE_ONLY' AND :platformWideAccess = TRUE) ");
             sql.append("OR (d.visibility = 'PRIVATE' AND (d.namespace_id IN :adminNamespaceIds OR d.owner_id = :userId)) ");
+            sql.append("OR (d.visibility = 'PRIVATE' AND :platformWideAccess = TRUE) ");
         }
         sql.append(") ");
     }
@@ -172,6 +175,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         sql.append("AND (n.status <> 'ARCHIVED' ");
         if (query.visibilityScope().userId() != null) {
             sql.append("OR d.namespace_id IN :memberNamespaceIds ");
+            sql.append("OR :platformWideAccess = TRUE ");
         }
         sql.append(") ");
     }
@@ -252,6 +256,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
                                        SearchQuery query,
                                        Set<Long> memberNamespaceIds,
                                        Set<Long> adminNamespaceIds,
+                                       boolean platformWideAccess,
                                        String normalizedKeyword,
                                        String tsQuery,
                                        boolean hasKeyword,
@@ -263,6 +268,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
             queryObject.setParameter("memberNamespaceIds", memberNamespaceIds);
             queryObject.setParameter("adminNamespaceIds", adminNamespaceIds);
             queryObject.setParameter("userId", query.visibilityScope().userId());
+            queryObject.setParameter("platformWideAccess", platformWideAccess);
         }
 
         if (query.namespaceId() != null) {
@@ -297,6 +303,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
                                                            SearchQuery query,
                                                            Set<Long> memberNamespaceIds,
                                                            Set<Long> adminNamespaceIds,
+                                                           boolean platformWideAccess,
                                                            String normalizedKeyword,
                                                            String tsQuery,
                                                            boolean hasKeyword) {
@@ -309,7 +316,7 @@ public class PostgresFullTextQueryService implements SearchQueryService {
                 + "GROUP BY ld.slug, ld.type, ld.sort_order "
                 + "ORDER BY ld.sort_order ASC, ld.slug ASC";
         Query facetQuery = entityManager.createNativeQuery(facetSql);
-        applyCommonParameters(facetQuery, query, memberNamespaceIds, adminNamespaceIds, normalizedKeyword, tsQuery,
+        applyCommonParameters(facetQuery, query, memberNamespaceIds, adminNamespaceIds, platformWideAccess, normalizedKeyword, tsQuery,
                 hasKeyword, false, null, null, false);
 
         @SuppressWarnings("unchecked")
