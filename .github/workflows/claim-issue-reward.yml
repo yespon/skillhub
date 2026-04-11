@@ -1,17 +1,31 @@
 name: Claim Issue Reward
 on:
-  issues:
-    types:
-      - closed
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: Closed reward issue number to process manually
+        required: true
+        type: string
+      currency:
+        description: Reward currency label, for example CNY ¥ or USD $
+        required: true
+        type: string
+      amount:
+        description: Reward amount
+        required: true
+        type: string
+      payer:
+        description: Optional GitHub username of the payer, defaults to workflow actor
+        required: false
+        type: string
 
 concurrency:
-  group: claim-issue-reward-${{ github.event.issue.number }}
+  group: claim-issue-reward-${{ inputs.issue_number }}
   cancel-in-progress: false
 
 jobs:
   claim-issue-reward:
     runs-on: ubuntu-latest
-    if: contains(github.event.issue.labels.*.name, 'reward')
     permissions:
       contents: write
       issues: write
@@ -26,12 +40,6 @@ jobs:
         with:
           deno-version: v2.x
 
-      - name: Get Issue details
-        id: parse_issue
-        uses: stefanbuck/github-issue-parser@10dcc54158ba4c137713d9d69d70a2da63b6bda3 # v3.2.3
-        with:
-          template-path: ".github/ISSUE_TEMPLATE/reward-task.yml"
-
       - name: Calculate & Save Reward
         env:
           GH_TOKEN: ${{ github.token }}
@@ -40,7 +48,7 @@ jobs:
             .github/scripts/share-reward.ts \
             "${{ github.repository_owner }}" \
             "${{ github.event.repository.name }}" \
-            "${{ github.event.issue.number }}" \
-            "${{ steps.parse_issue.outputs.issueparser_payer || github.event.issue.user.login }}" \
-            "${{ steps.parse_issue.outputs.issueparser_currency }}" \
-            "${{ steps.parse_issue.outputs.issueparser_amount }}"
+            "${{ inputs.issue_number }}" \
+            "${{ inputs.payer || github.actor }}" \
+            "${{ inputs.currency }}" \
+            "${{ inputs.amount }}"

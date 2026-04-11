@@ -1,7 +1,11 @@
 name: Statistic Member Reward
 on:
-  schedule:
-    - cron: "0 0 1 * *" # Run at 00:00 on the first day of every month
+  workflow_dispatch:
+    inputs:
+      month:
+        description: Optional month label for manual run tracking, for example 2026-04
+        required: false
+        type: string
 
 jobs:
   statistic-member-reward:
@@ -15,29 +19,30 @@ jobs:
           fetch-tags: true
 
       - name: Check for new commits since last statistic
+        id: detect_changes
         run: |
           last_tag=$(git describe --tags --abbrev=0 --match "statistic-*" || echo "")
 
           if [ -z "$last_tag" ]; then
             echo "No previous statistic tags found."
-            echo "NEW_COMMITS=true" >> $GITHUB_ENV
+            echo "new_commits=true" >> "$GITHUB_OUTPUT"
           else
             new_commits=$(git log $last_tag..HEAD --oneline)
             if [ -z "$new_commits" ]; then
               echo "No new commits since last statistic tag."
-              echo "NEW_COMMITS=false" >> $GITHUB_ENV
+              echo "new_commits=false" >> "$GITHUB_OUTPUT"
             else
               echo "New commits found."
-              echo "NEW_COMMITS=true" >> $GITHUB_ENV
+              echo "new_commits=true" >> "$GITHUB_OUTPUT"
             fi
           fi
       - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
-        if: env.NEW_COMMITS == 'true'
+        if: steps.detect_changes.outputs.new_commits == 'true'
         with:
           deno-version: v2.x
 
       - name: Statistic rewards
-        if: env.NEW_COMMITS == 'true'
+        if: steps.detect_changes.outputs.new_commits == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: deno --allow-run --allow-sys --allow-env --allow-read --allow-net=api.github.com .github/scripts/count-reward.ts
