@@ -6,12 +6,6 @@ import { useAuthMethods } from './use-auth-methods'
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string>) => {
-      if (key === 'loginButton.providers.github') {
-        return 'GitHub'
-      }
-      if (key === 'loginButton.providers.sourceid') {
-        return 'Ruijie SSO'
-      }
       if (key === 'loginButton.loading') {
         return 'Loading'
       }
@@ -41,7 +35,7 @@ describe('LoginButton', () => {
           id: 'oauth-github',
           methodType: 'OAUTH_REDIRECT',
           provider: 'github',
-          displayName: 'github',
+          displayName: 'GitHub',
           actionUrl: '/oauth2/authorization/github',
         },
         {
