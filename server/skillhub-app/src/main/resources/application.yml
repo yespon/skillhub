@@ -46,17 +46,6 @@ spring:
     store-type: redis
     redis:
       namespace: ${SESSION_REDIS_NAMESPACE:skillhub:session}
-  security:
-    oauth2:
-      client:
-        registration:
-          github:
-            client-id: ${OAUTH2_GITHUB_CLIENT_ID:placeholder}
-            client-secret: ${OAUTH2_GITHUB_CLIENT_SECRET:placeholder}
-            scope: read:user,user:email
-        provider:
-          github:
-            user-info-uri: https://api.github.com/user
   servlet:
     multipart:
       max-file-size: 100MB
@@ -64,6 +53,8 @@ spring:
 
 skillhub:
   auth:
+    local:
+      show-entry: ${SKILLHUB_AUTH_LOCAL_SHOW_ENTRY:true}
     mock:
       enabled: ${SKILLHUB_AUTH_MOCK_ENABLED:false}
     direct:

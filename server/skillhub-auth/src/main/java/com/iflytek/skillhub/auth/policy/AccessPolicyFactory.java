@@ -31,4 +31,6 @@ public class AccessPolicyFactory {
     public void setAllowedEmailDomains(List<String> d) { this.allowedEmailDomains = d; }
     public void setAllowedProviders(List<String> p) { this.allowedProviders = p; }
     public void setWhitelistedSubjects(List<String> s) { this.whitelistedSubjects = s; }
+    public String getMode() { return mode; }
+    public List<String> getAllowedProviders() { return allowedProviders; }
 }

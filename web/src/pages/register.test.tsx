@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => children,
@@ -29,6 +29,10 @@ vi.mock('@/features/auth/use-local-auth', () => ({
   }),
 }))
 
+vi.mock('@/features/auth/use-auth-methods', () => ({
+  useAuthMethods: vi.fn(),
+}))
+
 vi.mock('@/shared/ui/button', () => ({
   Button: ({ children }: { children: ReactNode }) => children,
 }))
@@ -55,9 +59,34 @@ vi.mock('@/shared/ui/tabs', () => ({
 }))
 
 import { renderToStaticMarkup } from 'react-dom/server'
+import { useAuthMethods } from '@/features/auth/use-auth-methods'
 import { RegisterPage } from './register'
 
+const mockedUseAuthMethods = vi.mocked(useAuthMethods)
+
 describe('RegisterPage', () => {
+  beforeEach(() => {
+    mockedUseAuthMethods.mockReset()
+    mockedUseAuthMethods.mockReturnValue({
+      data: [
+        {
+          id: 'local-password',
+          methodType: 'PASSWORD',
+          provider: 'local',
+          displayName: 'Local Account',
+          actionUrl: '/api/v1/auth/local/login',
+        },
+        {
+          id: 'oauth-sourceid',
+          methodType: 'OAUTH_REDIRECT',
+          provider: 'sourceid',
+          displayName: '锐捷SSO',
+          actionUrl: '/oauth2/authorization/sourceid',
+        },
+      ],
+    } as ReturnType<typeof useAuthMethods>)
+  })
+
   it('exports a named component function', () => {
     expect(typeof RegisterPage).toBe('function')
   })
@@ -75,5 +104,24 @@ describe('RegisterPage', () => {
 
     expect(html).toContain('data-default-value="oauth"')
     expect(html.indexOf('register.tabOAuth')).toBeLessThan(html.indexOf('register.tabLocal'))
+  })
+
+  it('hides the local registration tab when local password auth is unavailable', () => {
+    mockedUseAuthMethods.mockReturnValue({
+      data: [
+        {
+          id: 'oauth-sourceid',
+          methodType: 'OAUTH_REDIRECT',
+          provider: 'sourceid',
+          displayName: '锐捷SSO',
+          actionUrl: '/oauth2/authorization/sourceid',
+        },
+      ],
+    } as ReturnType<typeof useAuthMethods>)
+
+    const html = renderToStaticMarkup(<RegisterPage />)
+
+    expect(html).not.toContain('register.tabLocal')
+    expect(html).not.toContain('register.submit')
   })
 })

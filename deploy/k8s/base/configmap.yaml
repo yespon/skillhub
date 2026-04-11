@@ -54,6 +54,11 @@ data:
   bootstrap-admin-display-name: Platform Admin
   bootstrap-admin-email: admin@example.com
 
+  # 认证入口控制
+  skillhub-auth-local-show-entry: "true"
+  skillhub-access-policy-mode: OPEN
+  skillhub-access-policy-allowed-providers: ""
+
   # 前端代理上游
   skillhub-api-upstream: http://skillhub-server:8080
 

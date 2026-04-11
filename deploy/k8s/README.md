@@ -271,6 +271,9 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/exter
 | bootstrap-admin-email | admin@example.com | 管理员邮箱 |
 | skillhub-api-upstream | http://skillhub-server:8080 | 前端代理到后端的集群内地址 |
 | session-cookie-secure | false | HTTPS 环境设为 true |
+| skillhub-auth-local-show-entry | true | 是否展示本地用户名密码入口 |
+| skillhub-access-policy-mode | OPEN | OAuth 准入策略模式，限制 Provider 时用 PROVIDER_ALLOWLIST |
+| skillhub-access-policy-allowed-providers | 空 | 允许的 OAuth Provider 列表，多个值用逗号分隔 |
 
 ### Secret 配置项
 

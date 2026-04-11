@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@tanstack/react-router', () => ({
   Link: ({ children }: { children: ReactNode }) => children,
@@ -37,7 +37,7 @@ vi.mock('@/features/auth/session-bootstrap-entry', () => ({
 }))
 
 vi.mock('@/features/auth/use-auth-methods', () => ({
-  useAuthMethods: () => ({ data: [] }),
+  useAuthMethods: vi.fn(),
 }))
 
 vi.mock('@/features/auth/use-password-login', () => ({
@@ -66,8 +66,33 @@ vi.mock('@/shared/ui/tabs', () => ({
 }))
 
 import { LoginPage } from './login'
+import { useAuthMethods } from '@/features/auth/use-auth-methods'
+
+const mockedUseAuthMethods = vi.mocked(useAuthMethods)
 
 describe('LoginPage', () => {
+  beforeEach(() => {
+    mockedUseAuthMethods.mockReset()
+    mockedUseAuthMethods.mockReturnValue({
+      data: [
+        {
+          id: 'local-password',
+          methodType: 'PASSWORD',
+          provider: 'local',
+          displayName: 'Local Account',
+          actionUrl: '/api/v1/auth/local/login',
+        },
+        {
+          id: 'oauth-sourceid',
+          methodType: 'OAUTH_REDIRECT',
+          provider: 'sourceid',
+          displayName: '锐捷SSO',
+          actionUrl: '/oauth2/authorization/sourceid',
+        },
+      ],
+    } as ReturnType<typeof useAuthMethods>)
+  })
+
   it('exports a named component function', () => {
     expect(typeof LoginPage).toBe('function')
   })
@@ -85,5 +110,24 @@ describe('LoginPage', () => {
 
     expect(html).toContain('data-default-value="oauth"')
     expect(html.indexOf('login.tabOAuth')).toBeLessThan(html.indexOf('login.tabPassword'))
+  })
+
+  it('hides password registration entry when local password method is unavailable', () => {
+    mockedUseAuthMethods.mockReturnValue({
+      data: [
+        {
+          id: 'oauth-sourceid',
+          methodType: 'OAUTH_REDIRECT',
+          provider: 'sourceid',
+          displayName: '锐捷SSO',
+          actionUrl: '/oauth2/authorization/sourceid',
+        },
+      ],
+    } as ReturnType<typeof useAuthMethods>)
+
+    const html = renderToStaticMarkup(<LoginPage />)
+
+    expect(html).not.toContain('login.tabPassword')
+    expect(html).not.toContain('login.register')
   })
 })

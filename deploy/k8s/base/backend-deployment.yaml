@@ -164,6 +164,21 @@ spec:
                 configMapKeyRef:
                   name: skillhub-config
                   key: session-cookie-secure
+            - name: SKILLHUB_AUTH_LOCAL_SHOW_ENTRY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-local-show-entry
+            - name: SKILLHUB_ACCESS_POLICY_MODE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-access-policy-mode
+            - name: SKILLHUB_ACCESS_POLICY_ALLOWED_PROVIDERS
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-access-policy-allowed-providers
 
             # Bootstrap Admin (non-sensitive from ConfigMap)
             - name: BOOTSTRAP_ADMIN_ENABLED

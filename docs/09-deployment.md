@@ -194,8 +194,10 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 - 推荐将敏感变量放入 CI/CD Secret 或主机上的受控 `.env.release`
 - 外部对象存储通过 `SKILLHUB_STORAGE_S3_*` 注入
 - 前端反代和运行时 API 地址通过 `SKILLHUB_API_UPSTREAM` / `SKILLHUB_WEB_API_BASE_URL` 注入
+- 可通过 `SKILLHUB_AUTH_LOCAL_SHOW_ENTRY=false` 隐藏本地用户名密码入口（登录页与注册页不再展示）
 - 如果要开放真实登录，再补充 `OAUTH2_GITHUB_CLIENT_ID` / `OAUTH2_GITHUB_CLIENT_SECRET`
 - 如果要启用 SourceID，再补充 `OAUTH2_SOURCEID_CLIENT_ID` / `OAUTH2_SOURCEID_CLIENT_SECRET` / `OAUTH2_SOURCEID_REDIRECT_URI` / `OAUTH2_SOURCEID_AUTHORIZATION_URI` / `OAUTH2_SOURCEID_TOKEN_URI` / `OAUTH2_SOURCEID_USER_INFO_URI`
+- 如果只允许并只展示锐捷 SSO，可设置 `SKILLHUB_ACCESS_POLICY_MODE=PROVIDER_ALLOWLIST` 与 `SKILLHUB_ACCESS_POLICY_ALLOWED_PROVIDERS=sourceid`
 
 ## 8 裸金属上线清单
 

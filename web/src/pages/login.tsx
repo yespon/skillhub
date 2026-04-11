@@ -30,13 +30,23 @@ export function LoginPage() {
   const isChinese = i18n.resolvedLanguage?.split('-')[0] === 'zh'
   const { data: authMethods } = useAuthMethods(search.returnTo)
 
+  const authMethodsLoaded = authMethods !== undefined
+  const methods = authMethods ?? []
   const returnTo = search.returnTo && search.returnTo.startsWith('/') ? search.returnTo : '/dashboard'
   const disabledMessage = search.reason === 'accountDisabled' ? t('apiError.auth.accountDisabled') : null
+  const hasOauthMethods = !authMethodsLoaded || methods.some((method) => method.methodType === 'OAUTH_REDIRECT')
+  const hasLocalPasswordMethod = !authMethodsLoaded
+    || methods.some((method) => method.methodType === 'PASSWORD' && method.provider === 'local')
+  const hasPasswordMethod = directAuthConfig.enabled
+    || !authMethodsLoaded
+    || methods.some((method) => method.methodType === 'PASSWORD' || method.methodType === 'DIRECT_PASSWORD')
+  const tabCount = Number(hasOauthMethods) + Number(hasPasswordMethod)
+  const defaultTab = hasOauthMethods ? 'oauth' : 'password'
   const directMethod = directAuthConfig.provider
-    ? authMethods?.find((method) =>
+    ? methods.find((method) =>
       method.methodType === 'DIRECT_PASSWORD' && method.provider === directAuthConfig.provider)
     : undefined
-  const bootstrapMethod = authMethods?.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
+  const bootstrapMethod = methods.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -88,13 +98,16 @@ export function LoginPage() {
               onAuthenticated={() => navigate({ to: returnTo })}
             />
 
-            <Tabs defaultValue="oauth" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger>
-                <TabsTrigger value="password">{t('login.tabPassword')}</TabsTrigger>
-              </TabsList>
+            <Tabs defaultValue={defaultTab} className="space-y-6">
+              {tabCount > 1 ? (
+                <TabsList className={`grid w-full ${tabCount === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                  {hasOauthMethods ? <TabsTrigger value="oauth">{t('login.tabOAuth')}</TabsTrigger> : null}
+                  {hasPasswordMethod ? <TabsTrigger value="password">{t('login.tabPassword')}</TabsTrigger> : null}
+                </TabsList>
+              ) : null}
 
-              <TabsContent value="password">
+              {hasPasswordMethod ? (
+                <TabsContent value="password">
                 <form className="space-y-4" onSubmit={handleSubmit}>
                   {directAuthConfig.enabled ? (
                     <p className="text-sm text-muted-foreground">
@@ -161,25 +174,32 @@ export function LoginPage() {
                     {loginMutation.isPending ? t('login.submitting') : t('login.submit')}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground">
-                    {t('login.noAccount')}
-                    {' '}
-                    <Link
-                      to="/register"
-                      search={{ returnTo }}
-                      className="font-medium text-primary hover:underline"
-                    >
-                      {t('login.register')}
-                    </Link>
+                    {hasLocalPasswordMethod ? (
+                      <>
+                        {t('login.noAccount')}
+                        {' '}
+                        <Link
+                          to="/register"
+                          search={{ returnTo }}
+                          className="font-medium text-primary hover:underline"
+                        >
+                          {t('login.register')}
+                        </Link>
+                      </>
+                    ) : null}
                   </p>
                 </form>
-              </TabsContent>
+                </TabsContent>
+              ) : null}
 
-              <TabsContent value="oauth" className="space-y-4">
-                <p className="text-sm text-muted-foreground">
-                  {t('login.oauthHint')}
-                </p>
-                <LoginButton returnTo={returnTo} />
-              </TabsContent>
+              {hasOauthMethods ? (
+                <TabsContent value="oauth" className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {t('login.oauthHint')}
+                  </p>
+                  <LoginButton returnTo={returnTo} />
+                </TabsContent>
+              ) : null}
             </Tabs>
           </div>
         </div>
