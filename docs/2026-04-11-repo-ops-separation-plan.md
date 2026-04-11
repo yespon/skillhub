@@ -48,13 +48,15 @@ Current action in this phase:
 
 ### Extract To Repo Ops Package Or Separate Repository
 
-- `.github/scripts/share-reward.ts`
-- `.github/scripts/count-reward.ts`
-- `.github/scripts/type.ts`
-- `.github/ISSUE_TEMPLATE/reward-task.yml`
+- `repo-ops/reward/share-reward.ts`
+- `repo-ops/reward/count-reward.ts`
+- `repo-ops/reward/type.ts`
+- `repo-ops/reward/reward-task.yml`
+- `repo-ops/reward/deno.json`
 
 Recommended target:
 
+- current staging location inside this repository: `repo-ops/reward/`
 - a separate `repo-ops` repository, or
 - a dedicated `.github` governance repository if the organization standardizes issue and reward automation centrally
 
@@ -74,8 +76,12 @@ Recommended target:
 
 ### Phase 3
 
-- review `deepwiki.yml`
-- remove it if the DeepWiki crawl is not part of active documentation operations
+- remove non-essential external documentation integrations from the default baseline
+
+Completed in this phase:
+
+- remove `deepwiki.yml`
+- remove the DeepWiki README badge
 
 ## Decision Rules
 
@@ -88,5 +94,7 @@ Recommended target:
 As of 2026-04-11:
 
 - reward workflows are moved to manual-only mode
+- reward scripts and template are relocated under `repo-ops/reward/`
 - baseline maintenance scripts are cleaned and validated
+- DeepWiki automation is removed from the default repository baseline
 - docs, CI, image publication, and upstream-sync workflows remain baseline capabilities

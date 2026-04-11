@@ -45,4 +45,4 @@ jobs:
         if: steps.detect_changes.outputs.new_commits == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: deno --allow-run --allow-sys --allow-env --allow-read --allow-net=api.github.com .github/scripts/count-reward.ts
+        run: deno --allow-run --allow-sys --allow-env --allow-read --allow-net=api.github.com repo-ops/reward/count-reward.ts
