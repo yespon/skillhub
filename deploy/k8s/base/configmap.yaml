@@ -47,6 +47,32 @@ data:
   oauth2-sourceid-user-info-uri: ""
   oauth2-sourceid-user-name-attribute: id
 
+  # SourceID 登录后 namespace 自动补齐（可选）
+  skillhub-auth-sourceid-namespace-sync-enabled: "false"
+  skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
+  skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
+  skillhub-auth-sourceid-namespace-sync-active-status-key: active
+  skillhub-auth-sourceid-namespace-sync-active-status-values-0: "true"
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-1: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-2: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-role: MEMBER
+
+  # SourceID OSDS 组织关系增强（可选）
+  skillhub-auth-sourceid-osds-enabled: "false"
+  skillhub-auth-sourceid-osds-base-url: ""
+  skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
+  skillhub-auth-sourceid-osds-sysid: ""
+  skillhub-auth-sourceid-osds-sign-server-auth: ""
+  skillhub-auth-sourceid-osds-fail-open: "true"
+
   # Bootstrap 管理员配置（非敏感）
   bootstrap-admin-enabled: "true"
   bootstrap-admin-user-id: docker-admin

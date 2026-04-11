@@ -61,6 +61,21 @@ skillhub:
       enabled: ${SKILLHUB_AUTH_DIRECT_ENABLED:false}
     session-bootstrap:
       enabled: ${SKILLHUB_AUTH_SESSION_BOOTSTRAP_ENABLED:false}
+    sourceid:
+      namespace-sync:
+        enabled: ${SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED:false}
+        provider-code: ${SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_PROVIDER_CODE:sourceid}
+        attribute-root-key: ${SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ATTRIBUTE_ROOT_KEY:attributes}
+        active-status-key: ${SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY:active}
+        active-status-values:
+          - ${SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0:true}
+      osds:
+        enabled: ${SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED:false}
+        base-url: ${SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL:}
+        staff-by-user-id-path: ${SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH:/staff/user-id/{userId}/data}
+        sysid: ${SKILLHUB_AUTH_SOURCEID_OSDS_SYSID:}
+        sign-server-auth: ${SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH:}
+        fail-open: ${SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN:true}
   public:
     base-url: ${SKILLHUB_PUBLIC_BASE_URL:}
   access-policy:

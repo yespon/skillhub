@@ -283,6 +283,120 @@ spec:
                   name: skillhub-config
                   key: oauth2-sourceid-user-name-attribute
 
+            # SourceID namespace sync (optional)
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-enabled
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_PROVIDER_CODE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-provider-code
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ATTRIBUTE_ROOT_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-attribute-root-key
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-active-status-key
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-active-status-values-0
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUES_0
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUES_1
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-1
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUES_2
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-2
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-0-role
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_NAMESPACE_SLUG
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ROLE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-namespace-sync-mappings-1-role
+
+            # SourceID OSDS organization enrichment (optional)
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-enabled
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-base-url
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-staff-by-user-id-path
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_SYSID
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-sysid
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-sign-server-auth
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: skillhub-auth-sourceid-osds-fail-open
+
           volumeMounts:
             - name: skillhub-storage
               mountPath: /var/lib/skillhub/storage

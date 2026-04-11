@@ -4,6 +4,7 @@ import com.iflytek.skillhub.auth.identity.IdentityBindingService;
 import com.iflytek.skillhub.auth.policy.AccessDecision;
 import com.iflytek.skillhub.auth.policy.AccessPolicy;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
+import com.iflytek.skillhub.auth.sourceid.SourceIdNamespaceMembershipSyncService;
 import com.iflytek.skillhub.domain.user.UserStatus;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -33,14 +34,17 @@ public class OAuthLoginFlowService {
     private final Map<String, OAuthClaimsExtractor> extractors;
     private final AccessPolicy accessPolicy;
     private final IdentityBindingService identityBindingService;
+    private final SourceIdNamespaceMembershipSyncService sourceIdNamespaceMembershipSyncService;
 
     public OAuthLoginFlowService(List<OAuthClaimsExtractor> extractorList,
                                  AccessPolicy accessPolicy,
-                                 IdentityBindingService identityBindingService) {
+                                 IdentityBindingService identityBindingService,
+                                 SourceIdNamespaceMembershipSyncService sourceIdNamespaceMembershipSyncService) {
         this.extractors = extractorList.stream()
                 .collect(Collectors.toMap(OAuthClaimsExtractor::getProvider, Function.identity()));
         this.accessPolicy = accessPolicy;
         this.identityBindingService = identityBindingService;
+        this.sourceIdNamespaceMembershipSyncService = sourceIdNamespaceMembershipSyncService;
     }
 
     public AuthenticatedLoginContext loadLoginContext(OAuth2UserRequest request) {
@@ -68,6 +72,7 @@ public class OAuthLoginFlowService {
         }
 
         PlatformPrincipal principal = identityBindingService.bindOrCreate(claims, UserStatus.ACTIVE);
+        sourceIdNamespaceMembershipSyncService.reconcile(claims, principal);
         return new AuthenticatedLoginContext(upstreamUser, principal);
     }
 
