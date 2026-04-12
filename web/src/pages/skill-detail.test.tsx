@@ -103,6 +103,12 @@ vi.mock('@/features/skill/install-command', () => ({
   InstallCommand: () => <div>install</div>,
 }))
 
+vi.mock('@/features/skill/skill-label-panel', () => ({
+  SkillLabelPanel: ({ canManage }: { canManage: boolean }) => canManage
+    ? <div>skillDetail.labelsSectionTitle skillDetail.removeLabel skillDetail.addLabel</div>
+    : null,
+}))
+
 vi.mock('@/features/social/rating-input', () => ({
   RatingInput: () => <div>rating</div>,
 }))

@@ -318,8 +318,6 @@ public class SkillSearchAppService {
                 skill.getDisplayName(),
                 preferredDisplayName,
                 skill.getDisplayName(),
-                preferredDisplayName,
-                skill.getDisplayName(),
                 skill.getSummary(),
                 skill.getStatus().name(),
                 skill.getDownloadCount(),

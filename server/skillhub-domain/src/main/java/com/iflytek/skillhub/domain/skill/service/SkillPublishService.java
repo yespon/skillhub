@@ -1,6 +1,7 @@
 package com.iflytek.skillhub.domain.skill.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.iflytek.skillhub.domain.event.ReviewSubmittedEvent;
 import com.iflytek.skillhub.domain.event.SkillPublishedEvent;
 import com.iflytek.skillhub.domain.namespace.Namespace;
 import com.iflytek.skillhub.domain.namespace.NamespaceMemberRepository;
@@ -25,6 +26,8 @@ import org.yaml.snakeyaml.Yaml;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.IOException;
 import java.io.ByteArrayInputStream;
@@ -364,6 +367,13 @@ public class SkillPublishService {
         if (!autoPublish) {
             ReviewTask reviewTask = new ReviewTask(version.getId(), namespace.getId(), publisherId);
             reviewTaskRepository.save(reviewTask);
+            eventPublisher.publishEvent(new ReviewSubmittedEvent(
+                    reviewTask.getId(),
+                    skill.getId(),
+                    version.getId(),
+                    publisherId,
+                    namespace.getId()
+            ));
         }
 
         // 12. Update skill metadata and move the published pointer for auto-publish flows
@@ -422,12 +432,24 @@ public class SkillPublishService {
                 .ifPresent(reviewTaskRepository::delete);
 
         List<SkillFile> files = skillFileRepository.findByVersionId(version.getId());
-        if (!files.isEmpty()) {
-            objectStorageService.deleteObjects(files.stream().map(SkillFile::getStorageKey).toList());
-        }
-        objectStorageService.deleteObject(String.format("packages/%d/%d/bundle.zip", skill.getId(), version.getId()));
+        List<String> storageKeys = new ArrayList<>(files.stream().map(SkillFile::getStorageKey).toList());
+        storageKeys.add(String.format("packages/%d/%d/bundle.zip", skill.getId(), version.getId()));
         skillFileRepository.deleteByVersionId(version.getId());
         skillVersionRepository.delete(version);
+        skillVersionRepository.flush();
+
+        if (!storageKeys.isEmpty()) {
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        objectStorageService.deleteObjects(storageKeys);
+                    }
+                });
+            } else {
+                objectStorageService.deleteObjects(storageKeys);
+            }
+        }
 
         if (version.getId().equals(skill.getLatestVersionId())) {
             skill.setLatestVersionId(null);
