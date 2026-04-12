@@ -119,6 +119,8 @@ public class SkillTranslationTaskService {
             task.setLastError("Cancelled by manual translation update");
             task.setCompletedAt(now);
             task.setNextAttemptAt(now);
+            task.setLockedBy(null);
+            task.setLockedAt(null);
             skillTranslationTaskRepository.save(task);
         }
     }
@@ -137,10 +139,25 @@ public class SkillTranslationTaskService {
                 SkillTranslationTaskStatus.RUNNING, workerId);
         int processed = 0;
         for (SkillTranslationTask task : tasks) {
+            if (!isClaimStillActive(task)) {
+                log.info("Skip skill translation task {} because the claim is no longer active", task.getId());
+                continue;
+            }
             processTask(task);
             processed++;
         }
         return processed;
+    }
+
+    private boolean isClaimStillActive(SkillTranslationTask task) {
+        if (task.getId() == null) {
+            return false;
+        }
+        return skillTranslationTaskRepository.existsByIdAndStatusAndLockedBy(
+                task.getId(),
+                SkillTranslationTaskStatus.RUNNING,
+                workerId
+        );
     }
 
     private void processTask(SkillTranslationTask task) {

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
+import static org.assertj.core.api.Assertions.assertThat;
 
 class SkillTranslationTaskServiceTest {
 
@@ -70,6 +71,7 @@ class SkillTranslationTaskServiceTest {
         ReflectionTestUtils.setField(task, "id", 100L);
         when(skillTranslationTaskRepository.claimProcessableTasks(eq(Instant.parse("2026-03-22T00:00:00Z")), anyInt(), anyString())).thenReturn(1);
         when(skillTranslationTaskRepository.findByStatusAndLockedBy(eq(SkillTranslationTaskStatus.RUNNING), anyString())).thenReturn(List.of(task));
+        when(skillTranslationTaskRepository.existsByIdAndStatusAndLockedBy(eq(100L), eq(SkillTranslationTaskStatus.RUNNING), anyString())).thenReturn(true);
         when(skillRepository.findById(88L)).thenReturn(Optional.of(skill));
         when(skillTranslationRepository.findBySkillIdAndLocale(88L, "zh-cn")).thenReturn(Optional.empty());
         when(translationProvider.translateToZhCn("Demo Skill")).thenReturn(Optional.of("演示技能"));
@@ -81,6 +83,42 @@ class SkillTranslationTaskServiceTest {
         verify(skillTranslationRepository).save(any(SkillTranslation.class));
         verify(labelSearchSyncService).rebuildSkill(88L);
         verify(auditLogService).record(eq(null), eq("SKILL_TRANSLATION_AUTO_FILL"), eq("SKILL"), eq(88L), any(), eq(null), eq(null), eq("{\"locale\":\"zh-cn\",\"sourceType\":\"MACHINE\"}"));
+    }
+
+    @Test
+    void processPendingTasks_skipsTasksWhoseClaimWasCancelledAfterFetch() {
+        SkillTranslationTask task = new SkillTranslationTask(88L, "zh-cn", "Demo Skill", sha256("Demo Skill"));
+        ReflectionTestUtils.setField(task, "id", 100L);
+        when(skillTranslationTaskRepository.claimProcessableTasks(eq(Instant.parse("2026-03-22T00:00:00Z")), anyInt(), anyString())).thenReturn(1);
+        when(skillTranslationTaskRepository.findByStatusAndLockedBy(eq(SkillTranslationTaskStatus.RUNNING), anyString())).thenReturn(List.of(task));
+        when(skillTranslationTaskRepository.existsByIdAndStatusAndLockedBy(eq(100L), eq(SkillTranslationTaskStatus.RUNNING), anyString())).thenReturn(false);
+
+        int processed = service.processPendingTasks();
+
+        assertThat(processed).isZero();
+        verify(translationProvider, never()).translateToZhCn(anyString());
+        verify(skillTranslationRepository, never()).save(any(SkillTranslation.class));
+        verify(labelSearchSyncService, never()).rebuildSkill(any());
+    }
+
+    @Test
+    void cancelPendingTasks_clearsLockMetadataWhenTaskWasAlreadyClaimed() {
+        SkillTranslationTask task = new SkillTranslationTask(88L, "zh-cn", "Demo Skill", sha256("Demo Skill"));
+        task.setStatus(SkillTranslationTaskStatus.RUNNING);
+        task.setLockedBy("worker-1");
+        task.setLockedAt(Instant.parse("2026-03-22T00:00:00Z"));
+        when(skillTranslationTaskRepository.findBySkillIdAndLocaleAndStatusIn(
+                88L,
+                "zh-cn",
+                List.of(SkillTranslationTaskStatus.PENDING, SkillTranslationTaskStatus.RUNNING)
+        )).thenReturn(List.of(task));
+        when(skillTranslationTaskRepository.save(any(SkillTranslationTask.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.cancelPendingTasks(88L, "zh-cn");
+
+        assertThat(task.getStatus()).isEqualTo(SkillTranslationTaskStatus.SKIPPED);
+        assertThat(task.getLockedBy()).isNull();
+        assertThat(task.getLockedAt()).isNull();
     }
 
     private Skill skill(Long id, String displayName) {

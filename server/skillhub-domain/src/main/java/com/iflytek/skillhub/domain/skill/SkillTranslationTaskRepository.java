@@ -17,6 +17,9 @@ public interface SkillTranslationTaskRepository {
                                                              String locale,
                                                              String sourceHash,
                                                              List<SkillTranslationTaskStatus> statuses);
+    boolean existsByIdAndStatusAndLockedBy(Long id,
+                                           SkillTranslationTaskStatus status,
+                                           String lockedBy);
     List<SkillTranslationTask> findBySkillIdAndLocaleAndStatusIn(Long skillId,
                                                                  String locale,
                                                                  List<SkillTranslationTaskStatus> statuses);
