@@ -51,37 +51,38 @@ data:
   oauth2-sourceid-user-name-attribute: id
 
   # SourceID 登录后 namespace 自动补齐（可选）
-  # 默认关闭；开启后会在 SourceID 登录成功后按映射规则只增不删地补齐 namespace 成员。
-  skillhub-auth-sourceid-namespace-sync-enabled: "false"
+  # 当前示例已启用，按 OSDS 组织属性只增不删地补齐 namespace 成员。
+  skillhub-auth-sourceid-namespace-sync-enabled: "true"
   skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
   skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
-  # 默认示例仍使用 SourceID profile 根字段 active=true 做在任判定；
-  # 若启用 OSDS，也可以改为 isEnable=true 或 staffStatus=1。
-  skillhub-auth-sourceid-namespace-sync-active-status-key: active
-  skillhub-auth-sourceid-namespace-sync-active-status-values-0: "true"
-  # 推荐优先启用 OSDS 组织关系查询，再基于 OSDS 的 departmentCode / oneDepartmentCode 等字段做映射。
-  # 下面示例演示一条最小 mapping：当来源属性命中时，把用户补齐到指定 namespace。
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0: ""
+  # 当前配置改用 OSDS 的 staffStatus=1 做在任判定。
+  skillhub-auth-sourceid-namespace-sync-active-status-key: staffStatus
+  skillhub-auth-sourceid-namespace-sync-active-status-values-0: "0"
+  skillhub-auth-sourceid-namespace-sync-active-status-values-1: "1"
+  # 基于 OSDS 的 departmentCode 做两条互斥映射：
+  # 000023 -> it-team，000004 -> ebg-skills。
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: departmentCode
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: "000023"
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0: "000023"
   skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-1: ""
   skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-2: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: it-team
   skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
-  # 如果同一个来源值还要同步到第二个 namespace，可继续填写 mappings-1。
-  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug: ""
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: departmentCode
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value: "000004"
+  skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug: ebg-skills
   skillhub-auth-sourceid-namespace-sync-mappings-1-role: MEMBER
+  # 如果你希望同一批用户同时进入两个 namespace，可以故意把 mappings-1 的 attribute-value
+  # 改成和 mappings-0 相同；否则请保持两个 mapping 的条件互斥。
 
   # SourceID OSDS 组织关系增强（可选）
   # 开启后会用 claims.subject 作为 userId 调 OSDS，把 departmentCode 等字段并入映射上下文。
   # fail-open=true 时，OSDS 异常不会阻断登录，只是不执行自动补齐；
   # fail-open=false 时，OSDS 查询失败会直接中断本次登录。
-  skillhub-auth-sourceid-osds-enabled: "false"
-  skillhub-auth-sourceid-osds-base-url: ""
+  skillhub-auth-sourceid-osds-enabled: "true"
+  skillhub-auth-sourceid-osds-base-url: "https://gw.ruijie.com.cn/v1/api/osds-api"
   skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
-  skillhub-auth-sourceid-osds-sysid: ""
+  skillhub-auth-sourceid-osds-sysid: "skillhub"
   skillhub-auth-sourceid-osds-sign-server-auth: ""
   skillhub-auth-sourceid-osds-fail-open: "true"
 
