@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -80,13 +79,20 @@ public class SkillDisplayNameLocalizationService {
 
     private List<String> localeCandidates() {
         Locale locale = LocaleContextHolder.getLocale();
-        return List.of(
-                normalizeLocale(locale.toLanguageTag()),
-                normalizeLocale(locale.getLanguage()),
-                "zh-cn",
-                "zh",
-                "en"
-        ).stream().distinct().toList();
+        String languageTag = normalizeLocale(locale.toLanguageTag());
+        String language = normalizeLocale(locale.getLanguage());
+
+        if (language.startsWith("zh")) {
+            return List.of(languageTag, language, "zh-cn", "zh", "en").stream()
+                .filter(candidate -> !candidate.isBlank())
+                .distinct()
+                .toList();
+        }
+
+        return List.of(languageTag, language, "en").stream()
+            .filter(candidate -> !candidate.isBlank())
+            .distinct()
+            .toList();
     }
 
     private String fallbackDisplayName(String canonicalDisplayName) {
