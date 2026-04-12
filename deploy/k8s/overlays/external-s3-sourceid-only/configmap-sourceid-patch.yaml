@@ -27,6 +27,8 @@ data:
   skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
 
   # Optional: enrich SourceID login context with OSDS attributes.
+  # fail-open=true keeps login available when OSDS is down and only skips auto-sync.
+  # fail-open=false blocks the current login when the OSDS lookup fails.
   skillhub-auth-sourceid-osds-enabled: "false"
   skillhub-auth-sourceid-osds-base-url: ""
   skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data

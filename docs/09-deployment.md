@@ -232,6 +232,7 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 
 - 登录链路会使用 `claims.subject` 作为 `userId` 查询 OSDS
 - `FAIL_OPEN=true` 时，OSDS 不可用不会阻断登录，只是不执行自动补齐
+- `FAIL_OPEN=false` 时，OSDS 不可用会直接阻断这次登录，适合必须 fail-close 的组织策略
 - Compose 交付场景可直接在 `.env.release` 填写这些变量
 - Kubernetes 场景可在 `deploy/k8s/01-configmap.yml` 或 SourceID-only overlays 中填写同名 kebab-case 键
 

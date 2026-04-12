@@ -66,6 +66,8 @@ data:
   skillhub-auth-sourceid-namespace-sync-mappings-1-role: MEMBER
 
   # SourceID OSDS 组织关系增强（可选）
+  # fail-open=true 时，OSDS 异常不会阻断登录，只是不执行自动补齐；
+  # fail-open=false 时，OSDS 查询失败会直接中断本次登录。
   skillhub-auth-sourceid-osds-enabled: "false"
   skillhub-auth-sourceid-osds-base-url: ""
   skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
