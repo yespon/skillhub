@@ -499,7 +499,6 @@ export function AdminLabelsPage() {
                         variant="outline"
                         onClick={() => handleMove(index, 1)}
                         disabled={!canReorder || index === displayedDefinitions.length - 1 || updateSortOrderMutation.isPending}
-                        disabled={!canReorder || index === displayedDefinitions.length - 1 || updateSortOrderMutation.isPending}
                       >
                         {t('adminLabels.moveDown')}
                       </Button>

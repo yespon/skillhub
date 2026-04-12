@@ -97,6 +97,8 @@ vi.mock('@/shared/hooks/use-user-queries', () => ({
   }),
 }))
 
+import { SearchPage } from './search'
+
 function findButton(label: string) {
   const record = buttonRecords.find((item) => item.label === label)
   if (!record) {
