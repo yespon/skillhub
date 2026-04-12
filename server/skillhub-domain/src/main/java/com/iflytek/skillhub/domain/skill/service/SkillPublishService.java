@@ -26,6 +26,8 @@ import com.iflytek.skillhub.storage.ObjectStorageService;
 import org.yaml.snakeyaml.Yaml;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
@@ -438,16 +440,34 @@ public class SkillPublishService {
                 .ifPresent(reviewTaskRepository::delete);
 
         List<SkillFile> files = skillFileRepository.findByVersionId(version.getId());
-        if (!files.isEmpty()) {
-            objectStorageService.deleteObjects(files.stream().map(SkillFile::getStorageKey).toList());
-        }
-        objectStorageService.deleteObject(String.format("packages/%d/%d/bundle.zip", skill.getId(), version.getId()));
+        List<String> storageKeys = new ArrayList<>(files.stream().map(SkillFile::getStorageKey).toList());
+        storageKeys.add(String.format("packages/%d/%d/bundle.zip", skill.getId(), version.getId()));
+
         skillFileRepository.deleteByVersionId(version.getId());
         skillVersionRepository.delete(version);
+        skillVersionRepository.flush();
+
+        deleteStorageAfterCommit(storageKeys);
 
         if (version.getId().equals(skill.getLatestVersionId())) {
             skill.setLatestVersionId(null);
         }
+    }
+
+    private void deleteStorageAfterCommit(List<String> storageKeys) {
+        if (storageKeys.isEmpty()) {
+            return;
+        }
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            objectStorageService.deleteObjects(storageKeys);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                objectStorageService.deleteObjects(storageKeys);
+            }
+        });
     }
 
     private String resolveNamespaceSlug(Long namespaceId) {

@@ -104,6 +104,21 @@ vi.mock('@/features/skill/install-command', () => ({
   InstallCommand: () => <div>install</div>,
 }))
 
+vi.mock('@/features/skill/skill-label-panel', () => ({
+  SkillLabelPanel: ({ canManage }: { canManage: boolean }) =>
+    canManage ? (
+      <div>
+        <div>skillDetail.labelsSectionTitle</div>
+        <div>skillDetail.removeLabel</div>
+        <div>skillDetail.addLabel</div>
+      </div>
+    ) : null,
+}))
+
+vi.mock('@/features/security-audit/security-audit-summary', () => ({
+  SecurityAuditSummary: () => <div>securityAudit.title</div>,
+}))
+
 vi.mock('@/features/social/rating-input', () => ({
   RatingInput: () => <div>__RATING_WIDGET__</div>,
 }))

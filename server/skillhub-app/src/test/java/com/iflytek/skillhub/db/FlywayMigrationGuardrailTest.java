@@ -50,11 +50,28 @@ class FlywayMigrationGuardrailTest {
                 .sorted()
                 .toList();
 
+        List<Integer> baseVersions = versions.stream()
+                .filter(version -> version < 1000)
+                .toList();
+        List<Integer> extensionVersions = versions.stream()
+                .filter(version -> version >= 1000)
+                .toList();
+
         List<String> gaps = new ArrayList<>();
-        for (int expected = 1; expected <= versions.size(); expected++) {
-            int actual = versions.get(expected - 1);
+        for (int expected = 1; expected <= baseVersions.size(); expected++) {
+            int actual = baseVersions.get(expected - 1);
             if (actual != expected) {
                 gaps.add("expected V" + expected + " but found V" + actual);
+            }
+        }
+
+        if (!extensionVersions.isEmpty()) {
+            int expected = 1001;
+            for (int actual : extensionVersions) {
+                if (actual != expected) {
+                    gaps.add("expected V" + expected + " but found V" + actual);
+                }
+                expected++;
             }
         }
 

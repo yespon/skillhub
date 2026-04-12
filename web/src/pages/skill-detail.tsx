@@ -169,9 +169,22 @@ export function SkillDetailPage() {
     }
 
     const updateOverviewState = () => {
+      const contentHeight = overviewContentRef.current?.scrollHeight ?? 0
+      const nextMaxHeight = getOverviewCollapseMaxHeight(window.innerWidth, window.innerHeight)
+      const collapsible = shouldCollapseOverview(contentHeight, window.innerWidth, window.innerHeight)
+
+      setOverviewMaxHeight(nextMaxHeight)
+      setIsOverviewCollapsible(collapsible)
+      if (!collapsible) {
+        setIsOverviewExpanded(false)
+      }
+    }
+
+    window.addEventListener('resize', updateOverviewState)
 
     updateOverviewState()
 
+    const resizeObserver = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver(() => updateOverviewState())
       : null
 
@@ -1018,19 +1031,9 @@ export function SkillDetailPage() {
           {t('skillDetail.download')}
         </Button>
 
-<<<<<<< HEAD
-=======
-        <ShareButton
-          namespace={namespace}
-          slug={slug}
-          description={skill.summary}
-        />
-
         {skill.canManageLifecycle && selectedVersionEntry && (
           <SecurityAuditSummary skillId={skill.id} versionId={selectedVersionEntry.id} versionStatus={selectedVersionEntry.status} />
         )}
-
->>>>>>> c4fc92e2 (feat(web): add skill share button with e2e tests (#181))
         <SkillLabelPanel
           namespace={namespace}
           slug={slug}

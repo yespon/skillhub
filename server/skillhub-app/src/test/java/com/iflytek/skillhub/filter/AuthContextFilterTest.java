@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iflytek.skillhub.auth.policy.RouteSecurityPolicyRegistry;
 import com.iflytek.skillhub.auth.rbac.PlatformPrincipal;
 import com.iflytek.skillhub.domain.namespace.NamespaceMember;
@@ -46,11 +47,12 @@ class AuthContextFilterTest {
             messageSource,
             Clock.fixed(Instant.parse("2026-04-08T00:00:00Z"), ZoneOffset.UTC)
     );
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
     private final AuthContextFilter filter = new AuthContextFilter(
             namespaceMemberRepository,
             userAccountRepository,
             apiResponseFactory,
-            new ObjectMapper(),
+            objectMapper,
             true,
             new RouteSecurityPolicyRegistry()
     );
