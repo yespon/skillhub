@@ -174,13 +174,18 @@ async function publishSkill(params: { namespace: string; file: File; visibility:
   })
 }
 
+interface UseSearchSkillsOptions {
+  enabledWhenEmpty?: boolean
+}
+
 // Query hooks stay close to the low-level fetchers so cache keys and invalidation rules remain
 // consistent across pages and feature wrappers.
-export function useSearchSkills(params: SearchParams) {
+export function useSearchSkills(params: SearchParams, options: UseSearchSkillsOptions = {}) {
+  const shouldEnableWithoutFilters = options.enabledWhenEmpty === true
   return useQuery({
     queryKey: ['skills', 'search', params],
     queryFn: () => searchSkills(params),
-    enabled: params.starredOnly !== true && Boolean(params.q || params.labels?.length),
+    enabled: params.starredOnly !== true && (shouldEnableWithoutFilters || Boolean(params.q || params.labels?.length)),
   })
 }
 

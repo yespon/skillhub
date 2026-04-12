@@ -15,12 +15,12 @@ export function HomePage() {
   const { data: popularSkills, isLoading: isLoadingPopular } = useSearchSkills({
     sort: 'downloads',
     size: 6,
-  })
+  }, { enabledWhenEmpty: true })
 
   const { data: latestSkills, isLoading: isLoadingLatest } = useSearchSkills({
     sort: 'newest',
     size: 6,
-  })
+  }, { enabledWhenEmpty: true })
 
   const handleSearch = (query: string) => {
     navigate({ to: '/search', search: { q: normalizeSearchQuery(query), sort: 'relevance', page: 0, starredOnly: false } })

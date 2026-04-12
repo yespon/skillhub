@@ -22,12 +22,12 @@ export function LandingPage() {
   const { data: popularSkills, isLoading: isLoadingPopular } = useSearchSkills({
     sort: 'downloads',
     size: 6,
-  })
+  }, { enabledWhenEmpty: true })
 
   const { data: latestSkills, isLoading: isLoadingLatest } = useSearchSkills({
     sort: 'newest',
     size: 6,
-  })
+  }, { enabledWhenEmpty: true })
 
   const handleSkillClick = (namespace: string, slug: string) => {
     navigate({ to: `/space/${namespace}/${encodeURIComponent(slug)}` })

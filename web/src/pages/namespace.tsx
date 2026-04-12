@@ -26,7 +26,7 @@ export function NamespacePage() {
     labels: selectedLabels,
     labelMode,
     size: 20,
-  })
+  }, { enabledWhenEmpty: true })
 
   const facetItems = skillsData?.facets?.labels.items ?? []
 
