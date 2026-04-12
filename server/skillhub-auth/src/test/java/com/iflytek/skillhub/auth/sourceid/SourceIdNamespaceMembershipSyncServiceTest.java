@@ -275,6 +275,15 @@ class SourceIdNamespaceMembershipSyncServiceTest {
         );
     }
 
+    @Test
+    void reconcile_propagatesOsdsLookupFailureWhenClientFailsClosed() {
+        when(organizationClient.loadAttributesByUserId("20042020")).thenThrow(new IllegalStateException("osds unavailable"));
+
+        assertThatThrownBy(() -> service.reconcile(claims(Map.of("XM", "张三")), principal("usr_1")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("osds unavailable");
+    }
+
     private OAuthClaims claims(Map<String, Object> sourceIdAttributes) {
         return claims(sourceIdAttributes, true);
     }
