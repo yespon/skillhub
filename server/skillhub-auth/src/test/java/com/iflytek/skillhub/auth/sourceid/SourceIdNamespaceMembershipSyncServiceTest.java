@@ -15,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -148,13 +149,22 @@ class SourceIdNamespaceMembershipSyncServiceTest {
     }
 
     @Test
-    void reconcile_doesNotBreakLoginFlowWhenOsdsLookupFails() {
-        when(organizationClient.loadAttributesByUserId("20042020")).thenThrow(new IllegalStateException("osds unavailable"));
+    void reconcile_skipsNamespaceSyncWhenOsdsLookupFailsOpen() {
+        when(organizationClient.loadAttributesByUserId("20042020")).thenReturn(Optional.empty());
 
         service.reconcile(claims(Map.of("XM", "张三")), principal("usr_1"));
 
         verify(namespaceRepository, never()).findBySlug(any());
         verify(namespaceMemberRepository, never()).save(any());
+    }
+
+    @Test
+    void reconcile_propagatesOsdsLookupFailureWhenClientFailsClosed() {
+        when(organizationClient.loadAttributesByUserId("20042020")).thenThrow(new IllegalStateException("osds unavailable"));
+
+        assertThatThrownBy(() -> service.reconcile(claims(Map.of("XM", "张三")), principal("usr_1")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("osds unavailable");
     }
 
     private OAuthClaims claims(Map<String, Object> sourceIdAttributes) {

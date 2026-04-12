@@ -156,12 +156,7 @@ public class SourceIdNamespaceMembershipSyncService {
     }
 
     private Optional<Map<String, Object>> loadOrganizationAttributes(String userId) {
-        try {
-            return organizationClient.loadAttributesByUserId(userId);
-        } catch (RuntimeException e) {
-            log.warn("Skip SourceID organization enrichment for user {} because lookup failed: {}", userId, e.getMessage());
-            return Optional.empty();
-        }
+        return organizationClient.loadAttributesByUserId(userId);
     }
 
     private List<String> normalizedAttributeValues(SourceIdNamespaceSyncProperties.Mapping mapping) {
