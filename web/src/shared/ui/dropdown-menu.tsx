@@ -4,11 +4,24 @@ import { cn } from '@/shared/lib/utils'
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+type WithClassNameAndChildren<T> = T & {
+  className?: string
+  children?: React.ReactNode
+}
+
+const DropdownMenuTrigger = React.forwardRef<
+  React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+  WithClassNameAndChildren<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>>
+>(({ children, ...props }, ref) => (
+  <DropdownMenuPrimitive.Trigger ref={ref} {...props}>
+    {children}
+  </DropdownMenuPrimitive.Trigger>
+))
+DropdownMenuTrigger.displayName = DropdownMenuPrimitive.Trigger.displayName
 
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
+  WithClassNameAndChildren<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>>
 >(({ className, sideOffset = 4, ...props }, ref) => (
   <DropdownMenuPrimitive.Portal>
     <DropdownMenuPrimitive.Content
@@ -27,7 +40,7 @@ DropdownMenuContent.displayName = DropdownMenuPrimitive.Content.displayName
 
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
+  WithClassNameAndChildren<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item>> & {
     inset?: boolean
   }
 >(({ className, inset, ...props }, ref) => (
@@ -45,7 +58,7 @@ DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
 const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
+  WithClassNameAndChildren<React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>>
 >(({ className, ...props }, ref) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}

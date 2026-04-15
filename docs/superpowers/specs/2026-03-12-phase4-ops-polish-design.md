@@ -867,7 +867,7 @@ server {
 ### 10.1 Deployment（后端）
 
 ```yaml
-# deploy/k8s/backend-deployment.yaml
+# deploy/k8s/03-backend-deployment.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -939,7 +939,7 @@ spec:
 ### 10.2 Deployment（前端）
 
 ```yaml
-# deploy/k8s/frontend-deployment.yaml
+# deploy/k8s/04-frontend-deployment.yml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -976,7 +976,7 @@ spec:
 ### 10.3 Service
 
 ```yaml
-# deploy/k8s/services.yaml
+# deploy/k8s/06-services.yaml
 apiVersion: v1
 kind: Service
 metadata:
@@ -1007,7 +1007,7 @@ spec:
 ### 10.4 Ingress
 
 ```yaml
-# deploy/k8s/ingress.yaml
+# deploy/k8s/05-ingress.yml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -1072,7 +1072,7 @@ spec:
 ### 10.5 ConfigMap & Secret 模板
 
 ```yaml
-# deploy/k8s/configmap.yaml
+# deploy/k8s/01-configmap.yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -1082,7 +1082,7 @@ data:
   storage-type: "s3"
   s3-endpoint: "http://minio-service:9000"
 ---
-# deploy/k8s/secret.yaml.example（不提交到 Git）
+# deploy/k8s/02-secret.example.yml（模板提交到 Git，实际使用 deploy/k8s/02-secret.yml）
 apiVersion: v1
 kind: Secret
 metadata:
@@ -1360,7 +1360,7 @@ github: [your-username]
 
 ```gitignore
 # Phase 4 新增
-deploy/k8s/secret.yaml
+deploy/k8s/02-secret.yml
 *.env.local
 ```
 

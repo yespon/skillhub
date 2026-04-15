@@ -21,17 +21,6 @@ spec:
         - name: web
           image: harbor.ruijie.com.cn/skillhub/skillhub-web:release-r0.1.0
           imagePullPolicy: IfNotPresent
-          env:
-            - name: SKILLHUB_API_UPSTREAM
-              valueFrom:
-                configMapKeyRef:
-                  name: skillhub-config
-                  key: skillhub-api-upstream
-            - name: SKILLHUB_PUBLIC_BASE_URL
-              valueFrom:
-                configMapKeyRef:
-                  name: skillhub-config
-                  key: skillhub-public-base-url
           ports:
             - containerPort: 80
               name: http

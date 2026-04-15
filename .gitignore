@@ -96,3 +96,4 @@ feature_auth.md
 
 # local
 *.local.json
+deploy/k8s/archives/

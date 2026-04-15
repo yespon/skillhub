@@ -15,11 +15,18 @@ spec:
       labels:
         app.kubernetes.io/name: skillhub-server
     spec:
+      imagePullSecrets:
+        - name: harbor-regcred
       containers:
         - name: server
           # 替换为实际镜像仓库地址（内网需提前同步镜像）
-          image: harbor.ruijie.com.cn/skillhub/skillhub-server:release-r0.1.1
+          image: harbor.ruijie.com.cn/skillhub/skillhub-server:20260406
           imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: skillhub-config
+            - secretRef:
+                name: skillhub-secret
           ports:
             - containerPort: 8080
               name: http
@@ -230,6 +237,76 @@ spec:
                 configMapKeyRef:
                   name: skillhub-config
                   key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_1
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_1
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG
+            - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_SYSID
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_SYSID
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: skillhub-secret
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET
+            - name: SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH
           
           # 启动期间 Flyway 数据库迁移需要时间，给足 startupProbe 时间
           startupProbe:
@@ -259,22 +336,3 @@ spec:
             limits:
               memory: "1Gi"
               cpu: "1000m"
-      # 若镜像仓库需要鉴权（内网 Harbor 等），取消注释并创建对应 imagePullSecret
-      # imagePullSecrets:
-      #   - name: registry-credentials
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: skillhub-server
-  namespace: skillhub
-  labels:
-    app.kubernetes.io/name: skillhub-server
-spec:
-  selector:
-    app.kubernetes.io/name: skillhub-server
-  ports:
-    - port: 8080
-      targetPort: 8080
-      name: http
-  type: ClusterIP

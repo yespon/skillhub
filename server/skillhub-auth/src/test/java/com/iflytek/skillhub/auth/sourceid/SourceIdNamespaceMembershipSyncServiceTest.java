@@ -167,6 +167,114 @@ class SourceIdNamespaceMembershipSyncServiceTest {
                 .hasMessageContaining("osds unavailable");
     }
 
+    // ── OSDS dialect evidence tests (staffStatus / departmentCode config) ─────────────
+
+    /**
+     * 证据A: OSDS returns staffStatus=1 (在职) + departmentCode=000023 → user auto-added to it-team as MEMBER.
+     */
+    @Test
+    void evidenceA_osdsDialect_addsMemberWhenDepartmentCodeMatches() {
+        configureOsdsDialect();
+        when(organizationClient.loadAttributesByUserId("osds-user-001"))
+                .thenReturn(Optional.of(Map.of("departmentCode", "000023", "staffStatus", 1)));
+        Namespace namespace = namespace(2L, "it-team", NamespaceStatus.ACTIVE);
+        when(namespaceRepository.findBySlug("it-team")).thenReturn(Optional.of(namespace));
+        when(namespaceMemberRepository.findByNamespaceIdAndUserId(2L, "u_osds_1")).thenReturn(Optional.empty());
+
+        service.reconcile(osdsDialectClaims("osds-user-001"), principal("u_osds_1"));
+
+        ArgumentCaptor<NamespaceMember> captor = ArgumentCaptor.forClass(NamespaceMember.class);
+        verify(namespaceMemberRepository).save(captor.capture());
+        assertThat(captor.getValue().getNamespaceId()).isEqualTo(2L);
+        assertThat(captor.getValue().getUserId()).isEqualTo("u_osds_1");
+        assertThat(captor.getValue().getRole()).isEqualTo(NamespaceRole.MEMBER);
+    }
+
+    /**
+     * 证据B: OSDS returns a departmentCode that does not match any mapping → no membership change.
+     */
+    @Test
+    void evidenceB_osdsDialect_skipsWhenDepartmentCodeDoesNotMatch() {
+        configureOsdsDialect();
+        when(organizationClient.loadAttributesByUserId("osds-user-002"))
+                .thenReturn(Optional.of(Map.of("departmentCode", "999999", "staffStatus", 1)));
+
+        service.reconcile(osdsDialectClaims("osds-user-002"), principal("u_osds_2"));
+
+        verify(namespaceRepository, never()).findBySlug(any());
+        verify(namespaceMemberRepository, never()).save(any());
+    }
+
+    /**
+     * 证据C: User already holds ADMIN role in it-team; sync must not downgrade to MEMBER.
+     */
+    @Test
+    void evidenceC_osdsDialect_doesNotDowngradeExistingAdminRole() {
+        configureOsdsDialect();
+        when(organizationClient.loadAttributesByUserId("osds-user-003"))
+                .thenReturn(Optional.of(Map.of("departmentCode", "000023", "staffStatus", 1)));
+        Namespace namespace = namespace(2L, "it-team", NamespaceStatus.ACTIVE);
+        when(namespaceRepository.findBySlug("it-team")).thenReturn(Optional.of(namespace));
+        when(namespaceMemberRepository.findByNamespaceIdAndUserId(2L, "u_osds_3"))
+                .thenReturn(Optional.of(new NamespaceMember(2L, "u_osds_3", NamespaceRole.ADMIN)));
+
+        service.reconcile(osdsDialectClaims("osds-user-003"), principal("u_osds_3"));
+
+        verify(namespaceMemberRepository, never()).save(any());
+    }
+
+    /**
+     * 证据D: OSDS lookup fails open → login must not be blocked, no membership change.
+     */
+    @Test
+    void evidenceD_osdsDialect_doesNotBlockLoginWhenOsdsUnavailable() {
+        configureOsdsDialect();
+        when(organizationClient.loadAttributesByUserId("osds-user-004"))
+                .thenReturn(Optional.empty());
+
+        // Must not throw; login flow continues
+        service.reconcile(osdsDialectClaims("osds-user-004"), principal("u_osds_4"));
+
+        verify(namespaceMemberRepository, never()).save(any());
+    }
+
+    @Test
+    void evidenceE_osdsDialect_skipsWhenConfiguredStatusFieldIsMissing() {
+        configureOsdsDialect();
+        when(organizationClient.loadAttributesByUserId("osds-user-005"))
+                .thenReturn(Optional.of(Map.of("departmentCode", "000023")));
+
+        service.reconcile(osdsDialectClaims("osds-user-005"), principal("u_osds_5"));
+
+        verify(namespaceRepository, never()).findBySlug(any());
+        verify(namespaceMemberRepository, never()).save(any());
+    }
+
+    // ── OSDS dialect helpers ───────────────────────────────────────────────────────
+
+    private void configureOsdsDialect() {
+        properties.setActiveStatusKey("staffStatus");
+        properties.setActiveStatusValues(java.util.List.of("0", "1"));
+        SourceIdNamespaceSyncProperties.Mapping mapping = new SourceIdNamespaceSyncProperties.Mapping();
+        mapping.setAttributeKey("departmentCode");
+        mapping.setAttributeValue("000023");
+        mapping.setNamespaceSlug("it-team");
+        mapping.setRole(NamespaceRole.MEMBER);
+        properties.setMappings(java.util.List.of(mapping));
+    }
+
+    private OAuthClaims osdsDialectClaims(String subject) {
+        // SourceID OAuth claims without departmentCode/isEnable — those come from OSDS
+        return new OAuthClaims(
+                "sourceid",
+                subject,
+                null,
+                false,
+                "OSDS测试用户",
+                Map.of("id", subject)
+        );
+    }
+
     private OAuthClaims claims(Map<String, Object> sourceIdAttributes) {
         return claims(sourceIdAttributes, true);
     }

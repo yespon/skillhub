@@ -312,22 +312,27 @@ so start the backend locally on port `8080` first.
 
 Basic Kubernetes manifests are available under [`deploy/k8s/`](./deploy/k8s):
 
-- `configmap.yaml`
-- `secret.yaml.example`
-- `backend-deployment.yaml`
-- `frontend-deployment.yaml`
-- `services.yaml`
-- `ingress.yaml`
+- `00-namespace.yml`
+- `01-configmap.yml`
+- `02-secret.example.yml`
+- `03-01-scanner-deployment.yaml`
+- `03-backend-deployment.yml`
+- `04-frontend-deployment.yml`
+- `05-ingress.yml`
+- `06-services.yaml`
 
 Apply them after creating your own secret:
 
 ```bash
-kubectl apply -f deploy/k8s/configmap.yaml
-kubectl apply -f deploy/k8s/secret.yaml
-kubectl apply -f deploy/k8s/backend-deployment.yaml
-kubectl apply -f deploy/k8s/frontend-deployment.yaml
-kubectl apply -f deploy/k8s/services.yaml
-kubectl apply -f deploy/k8s/ingress.yaml
+cp deploy/k8s/02-secret.example.yml deploy/k8s/02-secret.yml
+kubectl apply -f deploy/k8s/00-namespace.yml
+kubectl apply -f deploy/k8s/01-configmap.yml
+kubectl apply -f deploy/k8s/02-secret.yml
+kubectl apply -f deploy/k8s/06-services.yaml
+kubectl apply -f deploy/k8s/03-01-scanner-deployment.yaml
+kubectl apply -f deploy/k8s/03-backend-deployment.yml
+kubectl apply -f deploy/k8s/04-frontend-deployment.yml
+kubectl apply -f deploy/k8s/05-ingress.yml
 ```
 
 ## Smoke Test

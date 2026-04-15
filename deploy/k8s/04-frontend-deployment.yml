@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: skillhub-web
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: skillhub-web
@@ -15,10 +15,12 @@ spec:
       labels:
         app.kubernetes.io/name: skillhub-web
     spec:
+      imagePullSecrets:
+        - name: harbor-regcred
       containers:
         - name: web
           # 替换为实际镜像仓库地址（内网需提前同步镜像）
-          image: harbor.ruijie.com.cn/skillhub/skillhub-web:release-r0.1.1
+          image: harbor.ruijie.com.cn/skillhub/skillhub-web:20260405
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -57,22 +59,3 @@ spec:
             limits:
               memory: "256Mi"
               cpu: "200m"
-      # 若镜像仓库需要鉴权，取消注释
-      # imagePullSecrets:
-      #   - name: registry-credentials
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: skillhub-web
-  namespace: skillhub
-  labels:
-    app.kubernetes.io/name: skillhub-web
-spec:
-  selector:
-    app.kubernetes.io/name: skillhub-web
-  ports:
-    - port: 80
-      targetPort: 80
-      name: http
-  type: ClusterIP

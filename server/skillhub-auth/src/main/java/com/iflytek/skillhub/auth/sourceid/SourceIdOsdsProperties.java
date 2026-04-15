@@ -14,8 +14,8 @@ public class SourceIdOsdsProperties {
     private String baseUrl;
     private String staffByUserIdPath = "/staff/user-id/{userId}/data";
     private String sysid;
+    private String accessKeySecret;
     private String signServerAuth;
-    private boolean failOpen = true;
 
     public boolean isEnabled() {
         return enabled;
@@ -49,19 +49,19 @@ public class SourceIdOsdsProperties {
         this.sysid = sysid;
     }
 
+    public String getAccessKeySecret() {
+        return accessKeySecret;
+    }
+
+    public void setAccessKeySecret(String accessKeySecret) {
+        this.accessKeySecret = accessKeySecret;
+    }
+
     public String getSignServerAuth() {
         return signServerAuth;
     }
 
     public void setSignServerAuth(String signServerAuth) {
         this.signServerAuth = signServerAuth;
-    }
-
-    public boolean isFailOpen() {
-        return failOpen;
-    }
-
-    public void setFailOpen(boolean failOpen) {
-        this.failOpen = failOpen;
     }
 }

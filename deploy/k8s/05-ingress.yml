@@ -12,14 +12,6 @@ metadata:
     # 若使用 HTTPS，取消以下注释并配置 cert-manager
     # cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # 基于 IP 限流示例，调整参数以满足实际需求
-    nginx.ingress.kubernetes.io/limit-rps: "10"
-    nginx.ingress.kubernetes.io/limit-burst-multiplier: "3"
-    nginx.ingress.kubernetes.io/limit-connections: "20"
-    nginx.ingress.kubernetes.io/server-snippet: |
-      location ~ ^/(oauth2/authorization|login/oauth2/code|api/v1/auth|api/v1/search|api/v1/skills/.*/download|api/v1/namespaces) {
-        limit_req zone=default burst=30 nodelay;
-      }
 spec:
   # 根据集群实际 IngressClass 修改，如 nginx / traefik / istio 等
   ingressClassName: nginx

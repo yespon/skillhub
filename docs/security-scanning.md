@@ -77,10 +77,10 @@ SKILLHUB_SECURITY_SCANNER_URL=http://skillhub-scanner:8000
 
 Relevant manifests:
 
-- `deploy/k8s/scanner-deployment.yaml`
-- `deploy/k8s/services.yaml`
-- `deploy/k8s/backend-deployment.yaml`
-- `deploy/k8s/configmap.yaml`
+- `deploy/k8s/03-01-scanner-deployment.yaml`
+- `deploy/k8s/06-services.yaml`
+- `deploy/k8s/03-backend-deployment.yml`
+- `deploy/k8s/01-configmap.yml`
 
 The scanner service is internal-only by default and is consumed by the backend through cluster DNS.
 

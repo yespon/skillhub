@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: skillhub-scanner
+  namespace: skillhub
   labels:
     app.kubernetes.io/name: skillhub-scanner
 spec:
@@ -14,25 +15,33 @@ spec:
       labels:
         app.kubernetes.io/name: skillhub-scanner
     spec:
+      imagePullSecrets:
+        - name: harbor-regcred
       containers:
         - name: scanner
-          image: ghcr.io/iflytek/skillhub-scanner:edge
+          image: harbor.ruijie.com.cn/skillhub/skillhub-scanner:20260405
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
               name: http
           env:
+            - name: SKILL_SCANNER_LLM_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILL_SCANNER_LLM_BASE_URL
+                  optional: true
+            - name: SKILL_SCANNER_LLM_MODEL
+              valueFrom:
+                configMapKeyRef:
+                  name: skillhub-config
+                  key: SKILL_SCANNER_LLM_MODEL
+                  optional: true
             - name: SKILL_SCANNER_LLM_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: skillhub-secret
-                  key: skill-scanner-llm-api-key
-                  optional: true
-            - name: SKILL_SCANNER_LLM_MODEL
-              valueFrom:
-                secretKeyRef:
-                  name: skillhub-secret
-                  key: skill-scanner-llm-model
+                  key: SKILL_SCANNER_LLM_API_KEY
                   optional: true
           readinessProbe:
             httpGet:
@@ -46,3 +55,10 @@ spec:
               port: http
             initialDelaySeconds: 20
             periodSeconds: 15
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"

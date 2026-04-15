@@ -1,0 +1,696 @@
+apiVersion: v1
+items:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "4"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"skillhub-server"},"name":"skillhub-server","namespace":"skillhub"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"skillhub-server"}},"template":{"metadata":{"labels":{"app.kubernetes.io/name":"skillhub-server"}},"spec":{"containers":[{"env":[{"name":"SPRING_PROFILES_ACTIVE","valueFrom":{"configMapKeyRef":{"key":"SPRING_PROFILES_ACTIVE","name":"skillhub-config"}}},{"name":"SKILLHUB_PUBLIC_BASE_URL","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_PUBLIC_BASE_URL","name":"skillhub-config"}}},{"name":"POSTGRES_HOST","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_HOST","name":"skillhub-config"}}},{"name":"POSTGRES_PORT","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_PORT","name":"skillhub-config"}}},{"name":"POSTGRES_DB","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_DB","name":"skillhub-config"}}},{"name":"SPRING_DATASOURCE_URL","value":"jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"},{"name":"POSTGRES_USER","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_USER","name":"skillhub-config"}}},{"name":"SPRING_DATASOURCE_USERNAME","valueFrom":{"configMapKeyRef":{"key":"POSTGRES_USER","name":"skillhub-config"}}},{"name":"POSTGRES_PASSWORD","valueFrom":{"secretKeyRef":{"key":"POSTGRES_PASSWORD","name":"skillhub-secret"}}},{"name":"SPRING_DATASOURCE_PASSWORD","valueFrom":{"secretKeyRef":{"key":"POSTGRES_PASSWORD","name":"skillhub-secret"}}},{"name":"REDIS_HOST","valueFrom":{"configMapKeyRef":{"key":"REDIS_HOST","name":"skillhub-config"}}},{"name":"REDIS_PORT","valueFrom":{"configMapKeyRef":{"key":"REDIS_PORT","name":"skillhub-config"}}},{"name":"REDIS_PASSWORD","valueFrom":{"secretKeyRef":{"key":"REDIS_PASSWORD","name":"skillhub-secret"}}},{"name":"SKILLHUB_STORAGE_PROVIDER","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_PROVIDER","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_ENDPOINT","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_ENDPOINT","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_BUCKET","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_BUCKET","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_REGION","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_REGION","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY","name":"skillhub-config"}}},{"name":"SKILLHUB_STORAGE_S3_ACCESS_KEY","valueFrom":{"secretKeyRef":{"key":"SKILLHUB_STORAGE_S3_ACCESS_KEY","name":"skillhub-secret"}}},{"name":"SKILLHUB_STORAGE_S3_SECRET_KEY","valueFrom":{"secretKeyRef":{"key":"SKILLHUB_STORAGE_S3_SECRET_KEY","name":"skillhub-secret"}}},{"name":"SESSION_COOKIE_SECURE","valueFrom":{"configMapKeyRef":{"key":"SESSION_COOKIE_SECURE","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_ENABLED","valueFrom":{"configMapKeyRef":{"key":"BOOTSTRAP_ADMIN_ENABLED","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_USER_ID","valueFrom":{"configMapKeyRef":{"key":"BOOTSTRAP_ADMIN_USER_ID","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_USERNAME","valueFrom":{"configMapKeyRef":{"key":"BOOTSTRAP_ADMIN_USERNAME","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_DISPLAY_NAME","valueFrom":{"configMapKeyRef":{"key":"BOOTSTRAP_ADMIN_DISPLAY_NAME","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_EMAIL","valueFrom":{"configMapKeyRef":{"key":"BOOTSTRAP_ADMIN_EMAIL","name":"skillhub-config"}}},{"name":"BOOTSTRAP_ADMIN_PASSWORD","valueFrom":{"secretKeyRef":{"key":"BOOTSTRAP_ADMIN_PASSWORD","name":"skillhub-secret"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID","valueFrom":{"secretKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID","name":"skillhub-secret"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET","valueFrom":{"secretKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET","name":"skillhub-secret"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI","name":"skillhub-config"}}},{"name":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE","valueFrom":{"configMapKeyRef":{"key":"SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_SYSID","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_SYSID","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH","name":"skillhub-config"}}},{"name":"SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN","name":"skillhub-config"}}}],"image":"harbor.ruijie.com.cn/skillhub/skillhub-server:release-r0.1.1","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":4,"httpGet":{"path":"/actuator/health","port":8080},"initialDelaySeconds":30,"periodSeconds":15},"name":"server","ports":[{"containerPort":8080,"name":"http"}],"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/actuator/health","port":8080},"initialDelaySeconds":20,"periodSeconds":10},"resources":{"limits":{"cpu":"1000m","memory":"1Gi"},"requests":{"cpu":"250m","memory":"512Mi"}},"startupProbe":{"failureThreshold":30,"httpGet":{"path":"/actuator/health","port":8080},"periodSeconds":10}}]}}}}
+    creationTimestamp: "2026-03-27T05:47:15Z"
+    generation: 5
+    labels:
+      app.kubernetes.io/name: skillhub-server
+    name: skillhub-server
+    namespace: skillhub
+    resourceVersion: "2171333"
+    uid: 908f9819-470b-461a-a48a-8cf5c47656b4
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: skillhub-server
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          kubectl.kubernetes.io/restartedAt: "2026-04-03T14:24:27+08:00"
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/name: skillhub-server
+      spec:
+        containers:
+        - env:
+          - name: SPRING_PROFILES_ACTIVE
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_PROFILES_ACTIVE
+                name: skillhub-config
+          - name: SKILLHUB_PUBLIC_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_PUBLIC_BASE_URL
+                name: skillhub-config
+          - name: POSTGRES_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: POSTGRES_HOST
+                name: skillhub-config
+          - name: POSTGRES_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: POSTGRES_PORT
+                name: skillhub-config
+          - name: POSTGRES_DB
+            valueFrom:
+              configMapKeyRef:
+                key: POSTGRES_DB
+                name: skillhub-config
+          - name: SPRING_DATASOURCE_URL
+            value: jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)
+          - name: POSTGRES_USER
+            valueFrom:
+              configMapKeyRef:
+                key: POSTGRES_USER
+                name: skillhub-config
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                key: POSTGRES_USER
+                name: skillhub-config
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: POSTGRES_PASSWORD
+                name: skillhub-secret
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: POSTGRES_PASSWORD
+                name: skillhub-secret
+          - name: REDIS_HOST
+            valueFrom:
+              configMapKeyRef:
+                key: REDIS_HOST
+                name: skillhub-config
+          - name: REDIS_PORT
+            valueFrom:
+              configMapKeyRef:
+                key: REDIS_PORT
+                name: skillhub-config
+          - name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: REDIS_PASSWORD
+                name: skillhub-secret
+          - name: SKILLHUB_STORAGE_PROVIDER
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_PROVIDER
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_ENDPOINT
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_ENDPOINT
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_BUCKET
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_REGION
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_REGION
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
+                name: skillhub-config
+          - name: SKILLHUB_STORAGE_S3_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: SKILLHUB_STORAGE_S3_ACCESS_KEY
+                name: skillhub-secret
+          - name: SKILLHUB_STORAGE_S3_SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                key: SKILLHUB_STORAGE_S3_SECRET_KEY
+                name: skillhub-secret
+          - name: SESSION_COOKIE_SECURE
+            valueFrom:
+              configMapKeyRef:
+                key: SESSION_COOKIE_SECURE
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                key: BOOTSTRAP_ADMIN_ENABLED
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_USER_ID
+            valueFrom:
+              configMapKeyRef:
+                key: BOOTSTRAP_ADMIN_USER_ID
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_USERNAME
+            valueFrom:
+              configMapKeyRef:
+                key: BOOTSTRAP_ADMIN_USERNAME
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_DISPLAY_NAME
+            valueFrom:
+              configMapKeyRef:
+                key: BOOTSTRAP_ADMIN_DISPLAY_NAME
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_EMAIL
+            valueFrom:
+              configMapKeyRef:
+                key: BOOTSTRAP_ADMIN_EMAIL
+                name: skillhub-config
+          - name: BOOTSTRAP_ADMIN_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: BOOTSTRAP_ADMIN_PASSWORD
+                name: skillhub-secret
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_ID
+                name: skillhub-secret
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_SECRET
+                name: skillhub-secret
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
+                name: skillhub-config
+          - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+            valueFrom:
+              configMapKeyRef:
+                key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_SYSID
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_SYSID
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH
+                name: skillhub-config
+          - name: SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN
+                name: skillhub-config
+          image: harbor.ruijie.com.cn/skillhub/skillhub-server:release-r0.1.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 4
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: server
+          ports:
+          - containerPort: 8080
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /actuator/health
+              port: 8080
+              scheme: HTTP
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2026-03-27T08:09:27Z"
+      lastUpdateTime: "2026-03-27T08:09:27Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2026-03-27T05:47:15Z"
+      lastUpdateTime: "2026-04-03T06:28:57Z"
+      message: ReplicaSet "skillhub-server-786b844997" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 5
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "2"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"skillhub-web"},"name":"skillhub-web","namespace":"skillhub"},"spec":{"replicas":1,"selector":{"matchLabels":{"app.kubernetes.io/name":"skillhub-web"}},"template":{"metadata":{"labels":{"app.kubernetes.io/name":"skillhub-web"}},"spec":{"containers":[{"env":[{"name":"SKILLHUB_API_UPSTREAM","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_API_UPSTREAM","name":"skillhub-config"}}},{"name":"SKILLHUB_PUBLIC_BASE_URL","valueFrom":{"configMapKeyRef":{"key":"SKILLHUB_PUBLIC_BASE_URL","name":"skillhub-config"}}}],"image":"harbor.ruijie.com.cn/skillhub/skillhub-web:release-r0.1.1","imagePullPolicy":"IfNotPresent","livenessProbe":{"failureThreshold":3,"httpGet":{"path":"/nginx-health","port":80},"initialDelaySeconds":10,"periodSeconds":15},"name":"web","ports":[{"containerPort":80,"name":"http"}],"readinessProbe":{"failureThreshold":3,"httpGet":{"path":"/nginx-health","port":80},"initialDelaySeconds":5,"periodSeconds":10},"resources":{"limits":{"cpu":"200m","memory":"256Mi"},"requests":{"cpu":"50m","memory":"64Mi"}}}]}}}}
+    creationTimestamp: "2026-03-27T05:13:59Z"
+    generation: 3
+    labels:
+      app.kubernetes.io/name: skillhub-web
+    name: skillhub-web
+    namespace: skillhub
+    resourceVersion: "473830"
+    uid: 41508ed5-e7b4-40b0-b6bd-467d8c96cc47
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: skillhub-web
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app.kubernetes.io/name: skillhub-web
+      spec:
+        containers:
+        - env:
+          - name: SKILLHUB_API_UPSTREAM
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_API_UPSTREAM
+                name: skillhub-config
+          - name: SKILLHUB_PUBLIC_BASE_URL
+            valueFrom:
+              configMapKeyRef:
+                key: SKILLHUB_PUBLIC_BASE_URL
+                name: skillhub-config
+          image: harbor.ruijie.com.cn/skillhub/skillhub-web:release-r0.1.1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /nginx-health
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: web
+          ports:
+          - containerPort: 80
+            name: http
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /nginx-health
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 2
+    conditions:
+    - lastTransitionTime: "2026-03-27T05:13:59Z"
+      lastUpdateTime: "2026-03-27T05:23:37Z"
+      message: ReplicaSet "skillhub-web-554df46c85" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    - lastTransitionTime: "2026-03-27T08:10:29Z"
+      lastUpdateTime: "2026-03-27T08:10:29Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    observedGeneration: 3
+    readyReplicas: 2
+    replicas: 2
+    updatedReplicas: 2
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"skillhub-server"},"name":"skillhub-server","namespace":"skillhub"},"spec":{"ports":[{"name":"http","port":8080,"targetPort":8080}],"selector":{"app.kubernetes.io/name":"skillhub-server"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-03-27T05:47:15Z"
+    labels:
+      app.kubernetes.io/name: skillhub-server
+    name: skillhub-server
+    namespace: skillhub
+    resourceVersion: "449926"
+    uid: 33546544-89a7-4ec8-9ad8-61d941ffb0a4
+  spec:
+    clusterIP: 10.244.76.8
+    clusterIPs:
+    - 10.244.76.8
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app.kubernetes.io/name: skillhub-server
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app.kubernetes.io/name":"skillhub-web"},"name":"skillhub-web","namespace":"skillhub"},"spec":{"ports":[{"name":"http","port":80,"targetPort":80}],"selector":{"app.kubernetes.io/name":"skillhub-web"},"type":"ClusterIP"}}
+    creationTimestamp: "2026-03-27T05:13:59Z"
+    labels:
+      app.kubernetes.io/name: skillhub-web
+    name: skillhub-web
+    namespace: skillhub
+    resourceVersion: "443787"
+    uid: da1a4f53-7820-4fd4-89bb-e8fc9272f6cd
+  spec:
+    clusterIP: 10.244.120.205
+    clusterIPs:
+    - 10.244.120.205
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app.kubernetes.io/name: skillhub-web
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  data:
+    ca.crt: |
+      -----BEGIN CERTIFICATE-----
+      MIIC/DCCAeSgAwIBAgIUO7LN4m7C1AOYScvSkS2wGeruZqgwDQYJKoZIhvcNAQEL
+      BQAwFTETMBEGA1UEAwwKa3ViZXJuZXRlczAgFw0yNjAzMjUwODQ3MzlaGA8yMTI2
+      MDMwMTA4NDczOVowFTETMBEGA1UEAwwKa3ViZXJuZXRlczCCASIwDQYJKoZIhvcN
+      AQEBBQADggEPADCCAQoCggEBAJk12EC2B7e1oho51qDtpQuzdGaS9giTBwbkaEbZ
+      g/5GWpQ0+aCfoSjCl/vUhkUCQs7ZKP1gd1mARn7Rj1qfauKkXmtVPVlksCcoZev8
+      edWJMwtsh6twq0+04Zv9PH9s0m6WSNGV19EF40xWe2fRTfG/LCRk4Kuv/FWN2KXN
+      jX0C5v5fE92WzSfEvIz3bj/Yk8AOnN+HkXzlB/8eSbPf/EROCHkGj9nIzvtm/TMe
+      iF4WsD4PlJPEKd0qpysPk1BKNHZh9DNbxc6dVOb4XcJCttDz7B0Th9DV92RpO8/A
+      Zh4RQ5G4eHkrEWbnGqf0Gr//Neh/HOdWjE5ZuFjMjAJc5tMCAwEAAaNCMEAwDwYD
+      VR0TAQH/BAUwAwEB/zAOBgNVHQ8BAf8EBAMCAqQwHQYDVR0OBBYEFK+PqmDA6+Gk
+      FEhqMtDEDmbFVX8rMA0GCSqGSIb3DQEBCwUAA4IBAQAS15jVmgiad7WUu0beV0Lt
+      qZN3zOJnodsOX+65wDqBm6Xhqo5vErTW5PKMYKJgD2sUm5zBCCGdRkLHrIeSMXbH
+      RO4rC/3DVZWFewAsDFuwC2muz+f71FjJ1gjYZ2k2kDnYjoHfogTov+Y4Zengwa3Y
+      VRb/jvLdUFXPt6xcfjbfpDnJ8MP2694CkoK40KECe6cWXhvvT56WwW9pUfQVIrm5
+      eLg+gP9rAJZx0e+dAf19zQx+U3pMsmICmUsXEIvrLmDkhcUe5KH/Nbp8xdPrN+wH
+      7h9R7SuCe16ZbTC3ApJ4+QYcTVC3eGJQXe+ghXOmAIw2VLDAx15BU3PnD4guk4ZX
+      -----END CERTIFICATE-----
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubernetes.io/description: Contains a CA bundle that can be used to verify the
+        kube-apiserver when using internal endpoints such as the internal service
+        IP or kubernetes.default.svc. No other usage is guaranteed across distributions
+        of Kubernetes clusters.
+    creationTimestamp: "2026-03-26T01:42:44Z"
+    name: kube-root-ca.crt
+    namespace: skillhub
+    resourceVersion: "169644"
+    uid: a2fef23f-c239-4064-b7a2-5e795bb4c08e
+- apiVersion: v1
+  data:
+    BOOTSTRAP_ADMIN_DISPLAY_NAME: Platform Admin
+    BOOTSTRAP_ADMIN_EMAIL: liuyanpeng@ruijie.com.cn
+    BOOTSTRAP_ADMIN_ENABLED: "true"
+    BOOTSTRAP_ADMIN_USER_ID: admin
+    BOOTSTRAP_ADMIN_USERNAME: liuyanpeng
+    POSTGRES_DB: skillhub
+    POSTGRES_HOST: k8s-bj-pro-nodeports.ruijie.com.cn
+    POSTGRES_PORT: "32642"
+    POSTGRES_USER: skillhub
+    REDIS_HOST: k8s-bj-pro-nodeports.ruijie.com.cn
+    REDIS_PORT: "32209"
+    SESSION_COOKIE_SECURE: "true"
+    SKILLHUB_API_UPSTREAM: http://skillhub-server:8080
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY: isEnable
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0: "true"
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED: "true"
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY: departmentCode
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE: "000023"
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG: it-team
+    SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE: MEMBER
+    SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET: 574A2FB66A7B4C26BE544D22AC614913
+    SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL: http://service-gw.ruijie.com.cn/api/osds-api
+    SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED: "true"
+    SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN: "true"
+    SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH: ""
+    SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH: /staff/user-id/{userId}/data
+    SKILLHUB_AUTH_SOURCEID_OSDS_SYSID: 20b24185dccd4d4d80693cf051f780e7
+    SKILLHUB_PUBLIC_BASE_URL: https://skillhub.ruijie.com.cn
+    SKILLHUB_STORAGE_PROVIDER: s3
+    SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET: "false"
+    SKILLHUB_STORAGE_S3_BUCKET: ruijie-skillhub
+    SKILLHUB_STORAGE_S3_ENDPOINT: https://tos-s3-cn-beijing.volces.com
+    SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE: "false"
+    SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY: PT10M
+    SKILLHUB_STORAGE_S3_REGION: cn-beijing
+    SPRING_PROFILES_ACTIVE: docker
+    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI: https://sid.ruijie.com.cn/oauth2.0/authorize
+    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI: https://sid.ruijie.com.cn/oauth2.0/accessToken
+    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI: https://sid.ruijie.com.cn/oauth2.0/profile
+    SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE: id
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE: authorization_code
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME: 锐捷SSO
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER: sourceid
+    SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI: https://skillhub.ruijie.com.cn/login/oauth2/code/sourceid
+  kind: ConfigMap
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","data":{"BOOTSTRAP_ADMIN_DISPLAY_NAME":"Platform Admin","BOOTSTRAP_ADMIN_EMAIL":"liuyanpeng@ruijie.com.cn","BOOTSTRAP_ADMIN_ENABLED":"true","BOOTSTRAP_ADMIN_USERNAME":"liuyanpeng","BOOTSTRAP_ADMIN_USER_ID":"admin","POSTGRES_DB":"skillhub","POSTGRES_HOST":"k8s-bj-pro-nodeports.ruijie.com.cn","POSTGRES_PORT":"32642","POSTGRES_USER":"skillhub","REDIS_HOST":"k8s-bj-pro-nodeports.ruijie.com.cn","REDIS_PORT":"32209","SESSION_COOKIE_SECURE":"true","SKILLHUB_API_UPSTREAM":"http://skillhub-server:8080","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY":"isEnable","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0":"true","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED":"true","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY":"departmentCode","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE":"000023","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG":"it-team","SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE":"MEMBER","SKILLHUB_AUTH_SOURCEID_OSDS_ACCESS_KEY_SECRET":"574A2FB66A7B4C26BE544D22AC614913","SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL":"http://service-gw.ruijie.com.cn/api/osds-api","SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED":"true","SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN":"true","SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH":"","SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH":"/staff/user-id/{userId}/data","SKILLHUB_AUTH_SOURCEID_OSDS_SYSID":"20b24185dccd4d4d80693cf051f780e7","SKILLHUB_PUBLIC_BASE_URL":"https://skillhub.ruijie.com.cn","SKILLHUB_STORAGE_PROVIDER":"s3","SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET":"false","SKILLHUB_STORAGE_S3_BUCKET":"ruijie-skillhub","SKILLHUB_STORAGE_S3_ENDPOINT":"https://tos-s3-cn-beijing.volces.com","SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE":"false","SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY":"PT10M","SKILLHUB_STORAGE_S3_REGION":"cn-beijing","SPRING_PROFILES_ACTIVE":"docker","SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI":"https://sid.ruijie.com.cn/oauth2.0/authorize","SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI":"https://sid.ruijie.com.cn/oauth2.0/accessToken","SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI":"https://sid.ruijie.com.cn/oauth2.0/profile","SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE":"id","SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE":"authorization_code","SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME":"锐捷SSO","SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER":"sourceid","SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI":"https://skillhub.ruijie.com.cn/login/oauth2/code/sourceid"},"kind":"ConfigMap","metadata":{"annotations":{},"name":"skillhub-config","namespace":"skillhub"}}
+    creationTimestamp: "2026-03-27T03:20:29Z"
+    name: skillhub-config
+    namespace: skillhub
+    resourceVersion: "2170355"
+    uid: 2694bef1-c861-4551-b905-0eee51eb8c28
+- apiVersion: networking.k8s.io/v1
+  kind: Ingress
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"networking.k8s.io/v1","kind":"Ingress","metadata":{"annotations":{"nginx.ingress.kubernetes.io/proxy-body-size":"100m","nginx.ingress.kubernetes.io/proxy-read-timeout":"600","nginx.ingress.kubernetes.io/proxy-send-timeout":"600","nginx.ingress.kubernetes.io/ssl-redirect":"true"},"name":"skillhub-ingress","namespace":"skillhub"},"spec":{"ingressClassName":"nginx","rules":[{"host":"skillhub.ruijie.com.cn","http":{"paths":[{"backend":{"service":{"name":"skillhub-server","port":{"number":8080}}},"path":"/oauth2","pathType":"Prefix"},{"backend":{"service":{"name":"skillhub-server","port":{"number":8080}}},"path":"/login/oauth2","pathType":"Prefix"},{"backend":{"service":{"name":"skillhub-server","port":{"number":8080}}},"path":"/.well-known","pathType":"ImplementationSpecific"},{"backend":{"service":{"name":"skillhub-web","port":{"number":80}}},"path":"/","pathType":"Prefix"},{"backend":{"service":{"name":"skillhub-server","port":{"number":8080}}},"path":"/api","pathType":"Prefix"}]}}],"tls":[{"hosts":["skillhub.ruijie.com.cn"],"secretName":"skillhub-tls"}]}}
+      nginx.ingress.kubernetes.io/proxy-body-size: 100m
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    creationTimestamp: "2026-03-27T03:26:58Z"
+    generation: 2
+    name: skillhub-ingress
+    namespace: skillhub
+    resourceVersion: "453598"
+    uid: 53e697fa-c881-4bdb-91f5-b5cb2994a5f4
+  spec:
+    ingressClassName: nginx
+    rules:
+    - host: skillhub.ruijie.com.cn
+      http:
+        paths:
+        - backend:
+            service:
+              name: skillhub-server
+              port:
+                number: 8080
+          path: /oauth2
+          pathType: Prefix
+        - backend:
+            service:
+              name: skillhub-server
+              port:
+                number: 8080
+          path: /login/oauth2
+          pathType: Prefix
+        - backend:
+            service:
+              name: skillhub-server
+              port:
+                number: 8080
+          path: /.well-known
+          pathType: ImplementationSpecific
+        - backend:
+            service:
+              name: skillhub-web
+              port:
+                number: 80
+          path: /
+          pathType: Prefix
+        - backend:
+            service:
+              name: skillhub-server
+              port:
+                number: 8080
+          path: /api
+          pathType: Prefix
+    tls:
+    - hosts:
+      - skillhub.ruijie.com.cn
+      secretName: skillhub-tls
+  status:
+    loadBalancer:
+      ingress:
+      - ip: 10.244.89.203
+kind: List
+metadata:
+  resourceVersion: ""

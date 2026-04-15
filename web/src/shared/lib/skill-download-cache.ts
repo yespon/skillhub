@@ -60,18 +60,18 @@ export function incrementSkillDownloadCount(
 ): void {
   queryClient.setQueryData<SkillDetail>(
     ['skills', target.namespace, target.slug],
-    (current) => incrementDetailDownloadCount(current, target),
+    (current: SkillDetail | undefined) => incrementDetailDownloadCount(current, target),
   )
   queryClient.setQueryData<SkillSummary[]>(
     ['skills', 'my'],
-    (current) => incrementSummaryList(current, target),
+    (current: SkillSummary[] | undefined) => incrementSummaryList(current, target),
   )
   queryClient.setQueryData<SkillSummary[]>(
     ['skills', 'stars'],
-    (current) => incrementSummaryList(current, target),
+    (current: SkillSummary[] | undefined) => incrementSummaryList(current, target),
   )
   queryClient.setQueriesData<PagedResponse<SkillSummary>>(
     { queryKey: ['skills', 'search'] },
-    (current) => incrementPagedSummaryList(current, target),
+    (current: PagedResponse<SkillSummary> | undefined) => incrementPagedSummaryList(current, target),
   )
 }

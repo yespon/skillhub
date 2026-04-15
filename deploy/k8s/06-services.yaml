@@ -2,6 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: skillhub-server
+  namespace: skillhub
   labels:
     app.kubernetes.io/name: skillhub-server
 spec:
@@ -16,6 +17,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: skillhub-scanner
+  namespace: skillhub
   labels:
     app.kubernetes.io/name: skillhub-scanner
 spec:
@@ -30,6 +32,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: skillhub-web
+  namespace: skillhub
   labels:
     app.kubernetes.io/name: skillhub-web
 spec:

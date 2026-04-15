@@ -56,7 +56,7 @@ Cisco skill-scanner API
 SkillHub 后端的 Scanner 配置位于：
 
 - `server/skillhub-app/src/main/resources/application.yml`
-- `deploy/k8s/configmap.yaml`
-- `deploy/k8s/secret.yaml`
+- `deploy/k8s/01-configmap.yml`
+- `deploy/k8s/02-secret.example.yml`
 
 详见 [配置说明](./docs/configuration.md)。

@@ -15,6 +15,8 @@ import com.iflytek.skillhub.domain.skill.SkillVersion;
 import com.iflytek.skillhub.domain.skill.SkillVisibility;
 import com.iflytek.skillhub.domain.skill.SkillVersionStatus;
 import com.iflytek.skillhub.domain.skill.service.SkillGovernanceService;
+import com.iflytek.skillhub.domain.skill.service.SkillQueryService;
+import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -38,6 +43,9 @@ class AdminSkillControllerTest {
 
     @MockBean
     private SkillGovernanceService skillGovernanceService;
+
+    @MockBean
+    private SkillQueryService skillQueryService;
 
     @MockBean
     private NamespaceMemberRepository namespaceMemberRepository;
@@ -85,6 +93,22 @@ class AdminSkillControllerTest {
             .andExpect(jsonPath("$.data.versionId").value(33))
             .andExpect(jsonPath("$.data.action").value("YANK"))
             .andExpect(jsonPath("$.data.status").value("YANKED"));
+    }
+
+    @Test
+    void getVersionFile_streamsVersionScopedContent() throws Exception {
+        given(skillQueryService.getFileContentByVersionId(33L, "docs/README.md"))
+            .willReturn(new ByteArrayInputStream("admin-file".getBytes()));
+
+        PlatformPrincipal principal = new PlatformPrincipal("admin", "admin", "a@example.com", "", "github", Set.of("SKILL_ADMIN"));
+        var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of(new SimpleGrantedAuthority("ROLE_SKILL_ADMIN")));
+
+        mockMvc.perform(get("/api/v1/admin/skills/versions/33/file")
+                .param("path", "docs/README.md")
+                .with(authentication(auth)))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(MediaType.APPLICATION_OCTET_STREAM))
+            .andExpect(content().bytes("admin-file".getBytes()));
     }
 
     @Test

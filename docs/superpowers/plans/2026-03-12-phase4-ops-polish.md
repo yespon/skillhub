@@ -111,12 +111,12 @@
 **New files:**
 - `Dockerfile` — 多阶段构建（根目录）
 - `deploy/nginx/default.conf` — Nginx SPA 配置
-- `deploy/k8s/backend-deployment.yaml`
-- `deploy/k8s/frontend-deployment.yaml`
-- `deploy/k8s/services.yaml`
-- `deploy/k8s/ingress.yaml`
-- `deploy/k8s/configmap.yaml`
-- `deploy/k8s/secret.yaml.example`
+- `deploy/k8s/03-backend-deployment.yml`
+- `deploy/k8s/04-frontend-deployment.yml`
+- `deploy/k8s/06-services.yaml`
+- `deploy/k8s/05-ingress.yml`
+- `deploy/k8s/01-configmap.yml`
+- `deploy/k8s/02-secret.example.yml`
 - `README.md` — 项目 README
 - `CONTRIBUTING.md` — 贡献指南
 - `LICENSE` — Apache 2.0

@@ -332,6 +332,24 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/exter
 
 ## 部署架构
 
+export REGISTRY=harbor.ruijie.com.cn
+export PROJECT=skillhub
+export TAG=release-r0.1.1
+
+docker login harbor.ruijie.com.cn -u admin
+
+docker build -t $REGISTRY/$PROJECT/skillhub-server:$TAG -f server/Dockerfile server
+docker push $REGISTRY/$PROJECT/skillhub-server:$TAG
+
+docker build -t $REGISTRY/$PROJECT/skillhub-web:$TAG -f web/Dockerfile web
+docker push $REGISTRY/$PROJECT/skillhub-web:$TAG
+
+docker build -t $REGISTRY/$PROJECT/skillhub-scanner:$TAG -f scanner/Dockerfile scanner
+docker push $REGISTRY/$PROJECT/skillhub-scanner:$TAG
+```
+
+If you change the tag, update the backend, frontend, and scanner deployment manifests before applying them.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        skillhub namespace                    │
@@ -369,6 +387,15 @@ kubectl apply -k overlays/with-infra/  # 或 overlays/external/、overlays/exter
 - `ingress.yaml`
 - `backend-deployment.yaml`
 - `frontend-deployment.yaml`
+
+- `01-configmap.yml` — non-sensitive configuration (URLs, ports, feature flags; optional SourceID namespace-sync / OSDS are disabled by default)
+- `02-secret.example.yml` — template for secret values; copy to `deploy/k8s/02-secret.yml`
+- `05-ingress.yml` — domain and TLS settings
+- `deploy/k8s/SRE-RELEASE-RUNBOOK.md` — repeated production release procedure for SREs
+- `deploy/k8s/PRODUCTION-CONTEXT-SWITCH-CHECKLIST-2026-04-05.md` — one-page gate before switching `kubectl` to the production cluster
+- `deploy/k8s/INSTALL-VERIFICATION-2026-04-05.md` — live install and scanner verification record for the current cluster rollout
+- `deploy/k8s/create-temporary-release-archive.sh` — temporary pre-release archive script when only direct PostgreSQL, Redis, and S3 connection credentials are available
+- `deploy/k8s/verify-temporary-postgres-restore.sh` — isolated PostgreSQL restore validation for a temporary archive
 
 ### ConfigMap 配置项
 
@@ -499,23 +526,54 @@ kubectl create secret docker-registry ghcr-secret \
   --docker-username=<GitHub用户名> \
   --docker-password=<GitHub Token> \
   -n skillhub
+
+- PostgreSQL host, port, database name, username, and password
+- Redis hostname, port, and password if your Redis requires authentication
+- S3 endpoint, bucket, region, access key, and secret key
+- SourceID OAuth client ID, client secret, redirect URI
+- Harbor image tags if needed
+
+Create a real secret file from the example. Keep the real file ignored by Git:
+
+```bash
+cp deploy/k8s/02-secret.example.yml deploy/k8s/02-secret.yml
+# Edit deploy/k8s/02-secret.yml with real credentials
+```
+
+Or render it from environment variables:
+
+```bash
+export SPRING_DATASOURCE_PASSWORD='replace-me'
+export SKILLHUB_STORAGE_S3_ACCESS_KEY='replace-me'
+export SKILLHUB_STORAGE_S3_SECRET_KEY='replace-me'
+export OAUTH2_SOURCEID_CLIENT_ID='replace-me'
+export OAUTH2_SOURCEID_CLIENT_SECRET='replace-me'
+export OSDS_SYSID='replace-me'
+export OSDS_ACCESS_KEY_SECRET='replace-me'
+
+deploy/k8s/render-secret.sh stdout > deploy/k8s/02-secret.yml
+```
+
+If you use the rendered-secret flow, keep `deploy/k8s/02-secret.yml` on the operator machine so `validate-k8s-external-deps.sh` and `safe-rollout.sh` can read the same file. Alternatively, run `bash scripts/validate-k8s-external-deps.sh deploy/k8s/01-configmap.yml /path/to/secret.yml` and `SECRET_FILE=/path/to/secret.yml bash deploy/k8s/safe-rollout.sh ...` so both steps use the same secret source.
+
+Do not place real credentials in files tracked by Git.
+
+Validate the Kubernetes config before rollout:
+
+```bash
+bash scripts/validate-k8s-external-deps.sh
 ```
 
 ### 数据库连接失败
 
 ```bash
-# 检查 PostgreSQL 是否就绪
-kubectl logs postgres-0 -n skillhub
-
-# 检查 Secret 配置
-kubectl get secret skillhub-secret -n skillhub -o yaml
+CHECK_NETWORK=true bash scripts/validate-k8s-external-deps.sh
 ```
 
 ### 查看日志
 
 ```bash
-# 后端日志
-kubectl logs -l app.kubernetes.io/name=skillhub-server -n skillhub -f
+kubectl apply -f deploy/k8s/00-namespace.yml
 
 # 前端日志
 kubectl logs -l app.kubernetes.io/name=skillhub-web -n skillhub -f
@@ -533,3 +591,96 @@ kubectl delete -k overlays/with-infra/  # 或 overlays/external/
 # 删除命名空间
 kubectl delete namespace skillhub
 ```
+
+
+
+## 3.1 Safe Incremental Rollout Script (Recommended for Production)
+
+Use the rollout helper to run precheck + diff + incremental apply with health checks:
+
+```bash
+# Full pipeline: validation + kubectl diff + incremental rollout
+CHECK_NETWORK=true bash deploy/k8s/safe-rollout.sh all
+
+# If the rollout fails and leaves rollback artifacts behind, restore from that directory
+ROLLBACK_ARTIFACT_DIR=deploy/k8s/snapshots/rollback-skillhub-XXXXXX \
+  bash deploy/k8s/safe-rollout.sh rollback
+```
+
+The script will:
+
+- validate external dependency configuration using `scripts/validate-k8s-external-deps.sh`
+- verify required cluster prerequisites such as `harbor-regcred` and ingress TLS secret
+- export a pre-release snapshot of current cluster objects to `deploy/k8s/snapshots/` (Secrets excluded by default)
+- run `kubectl diff` on rollout manifests before apply (Secret diff is opt-in)
+- apply manifests in safe order (base resources -> scanner -> backend -> frontend -> ingress)
+- patch deployment template checksum annotations so ConfigMap/Secret-only releases still trigger new pod rollouts
+- back up current ConfigMap/Secret/Service/Ingress resources before apply
+- restore backed-up ConfigMap/Secret/Service/Ingress resources and undo only the deployment revisions changed by the failed rollout
+
+Notes:
+
+- `NAMESPACE` is fixed to `skillhub` for the checked-in manifests; do not override it.
+- `DIFF_SECRETS=true` will include the Secret manifest in `kubectl diff`; keep it off unless you are in a controlled environment.
+- `INCLUDE_SECRETS_IN_SNAPSHOT=true` will add live Secret objects to the snapshot file; this is break-glass only and should be handled as sensitive output.
+- Successful rollouts clean up rollback backups by default. Failed rollouts keep the backup directory and print its path for manual recovery.
+- A step-by-step release procedure is documented in `deploy/k8s/SRE-RELEASE-RUNBOOK.md`.
+- Use `deploy/k8s/PRODUCTION-CONTEXT-SWITCH-CHECKLIST-2026-04-05.md` before changing `kubectl` to the production cluster.
+- For cloud-managed PostgreSQL, Redis, and S3-compatible storage, production rollout still requires a separate provider-backed backup and restore plan; Kubernetes rollback artifacts are not a substitute. See `deploy/k8s/PRODUCTION-READINESS-2026-04-05.md`.
+- If cloud platform backup permissions are not available and the live data set is still very small, a temporary pre-release local archive can be created with `deploy/k8s/create-temporary-release-archive.sh`. See `deploy/k8s/TEMPORARY-CONNECTION-CREDS-BACKUP-QUICKSTART-2026-04-05.md`.
+- The current cluster install verification record is documented in `deploy/k8s/INSTALL-VERIFICATION-2026-04-05.md`.
+- Standard rollback confirmation is automated in `deploy/k8s/rollback-health-check.sh`.
+- Controlled rehearsal steps are documented in `deploy/k8s/ROLLBACK-DRILL-CHECKLIST.md`.
+
+## 4. Apply Kubernetes Manifests
+
+```bash
+kubectl apply -f deploy/k8s/01-configmap.yml
+kubectl apply -f deploy/k8s/02-secret.yml
+kubectl apply -f deploy/k8s/06-services.yaml
+kubectl apply -f deploy/k8s/03-01-scanner-deployment.yaml
+kubectl apply -f deploy/k8s/03-backend-deployment.yml
+kubectl apply -f deploy/k8s/04-frontend-deployment.yml
+kubectl apply -f deploy/k8s/05-ingress.yml
+```
+
+## 5. Verify Rollout
+
+```bash
+kubectl -n skillhub get pods
+kubectl -n skillhub get svc
+kubectl -n skillhub get ingress
+
+kubectl -n skillhub rollout status deployment/skillhub-scanner
+kubectl -n skillhub rollout status deployment/skillhub-server
+kubectl -n skillhub rollout status deployment/skillhub-web
+
+kubectl -n skillhub logs deployment/skillhub-scanner --tail=200
+kubectl -n skillhub logs deployment/skillhub-server --tail=200
+kubectl -n skillhub logs deployment/skillhub-web --tail=200
+```
+
+## 6. Functional Checks
+
+After ingress is ready, verify:
+
+```bash
+curl -k https://skillhub.ruijie.com.cn/api/v1/auth/methods
+curl -k https://skillhub.ruijie.com.cn/
+kubectl -n skillhub exec deploy/skillhub-server -- wget -qO- http://127.0.0.1:8080/actuator/health
+```
+
+Expected checks:
+
+- Login page opens through ingress
+- OAuth is the default tab
+- Only `锐捷SSO` is shown in OAuth login options
+- `/api/v1/auth/methods` returns `oauth-sourceid`
+- backend `/actuator/health` returns `UP`
+
+## Notes
+
+- This baseline assumes your cluster does not provide persistent volumes for bundled data services.
+- The Harbor password should only be used at `docker login` time or when creating the Kubernetes pull secret. Do not store it in Git.
+- If you do not want bootstrap admin, keep `bootstrap-admin-enabled` as `false`.
+- Update `01-configmap.yml` and `02-secret.yml` to point at your external PostgreSQL, Redis, and object storage endpoints before rollout.

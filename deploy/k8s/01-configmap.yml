@@ -39,6 +39,14 @@ data:
   skill-scanner-url: http://skillhub-scanner:8000
   skill-scanner-mode: upload
 
+  # ========== Bootstrap 管理员 ==========
+  # 生产环境沿用现有 bootstrap 管理员配置，避免镜像发布时引入登录入口漂移。
+  BOOTSTRAP_ADMIN_ENABLED: "true"
+  BOOTSTRAP_ADMIN_USER_ID: "admin"
+  BOOTSTRAP_ADMIN_USERNAME: "liuyanpeng"
+  BOOTSTRAP_ADMIN_DISPLAY_NAME: "Platform Admin"
+  BOOTSTRAP_ADMIN_EMAIL: "liuyanpeng@ruijie.com.cn"
+
   # SourceID / 私有 SSO（可选）
   # 下面示例展示“仅显示 SourceID，隐藏本地账号入口”的常见部署方式。
   oauth2-sourceid-provider: sourceid
@@ -55,32 +63,33 @@ data:
   skillhub-auth-sourceid-namespace-sync-enabled: "true"
   skillhub-auth-sourceid-namespace-sync-provider-code: sourceid
   skillhub-auth-sourceid-namespace-sync-attribute-root-key: attributes
-  # 当前配置改用 OSDS 的 staffStatus=1 做在任判定。
+  # 当前配置改用 OSDS 的 staffStatus 做在任判定。
   skillhub-auth-sourceid-namespace-sync-active-status-key: staffStatus
   skillhub-auth-sourceid-namespace-sync-active-status-values-0: "0"
   skillhub-auth-sourceid-namespace-sync-active-status-values-1: "1"
-  # 基于 OSDS 的 departmentCode 做两条互斥映射：
-  # 000023 -> it-team，000004 -> ebg-skills。
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: departmentCode
+  # mapping-0: oneDepartmentCode=000023 -> it-team
+  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-key: oneDepartmentCode
   skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-value: "000023"
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-0: "000023"
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-1: ""
-  skillhub-auth-sourceid-namespace-sync-mappings-0-attribute-values-2: ""
   skillhub-auth-sourceid-namespace-sync-mappings-0-namespace-slug: it-team
   skillhub-auth-sourceid-namespace-sync-mappings-0-role: MEMBER
-  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: departmentCode
-  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-value: "000004"
+  # mapping-1: nv1 场景 — 多个二级部门映射到 ebg-skills
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-key: twoDepartmentCode
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-0: "000062707"  # 网络产品事业部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-1: "000062710"  # 软件平台业务开发部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-2: "000062711"  # 硬件平台业务开发部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-3: "000062712"  # EBG产研运营管理部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-4: "000062713"  # 质量管理部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-5: "000062715"  # 产品技术平台部
+  skillhub-auth-sourceid-namespace-sync-mappings-1-attribute-values-6: "000062723"  # 软件产品事业部
   skillhub-auth-sourceid-namespace-sync-mappings-1-namespace-slug: ebg-skills
   skillhub-auth-sourceid-namespace-sync-mappings-1-role: MEMBER
-  # 如果你希望同一批用户同时进入两个 namespace，可以故意把 mappings-1 的 attribute-value
-  # 改成和 mappings-0 相同；否则请保持两个 mapping 的条件互斥。
 
   # SourceID OSDS 组织关系增强（可选）
   # 开启后会用 claims.subject 作为 userId 调 OSDS，把 departmentCode 等字段并入映射上下文。
   # fail-open=true 时，OSDS 异常不会阻断登录，只是不执行自动补齐；
   # fail-open=false 时，OSDS 查询失败会直接中断本次登录。
   skillhub-auth-sourceid-osds-enabled: "true"
-  skillhub-auth-sourceid-osds-base-url: "https://gw.ruijie.com.cn/v1/api/osds-api"
+  skillhub-auth-sourceid-osds-base-url: "http://service-gw.ruijie.com.cn/api/osds-api"
   skillhub-auth-sourceid-osds-staff-by-user-id-path: /staff/user-id/{userId}/data
   skillhub-auth-sourceid-osds-sysid: "skillhub"
   skillhub-auth-sourceid-osds-sign-server-auth: ""
@@ -102,5 +111,39 @@ data:
   skillhub-api-upstream: http://skillhub-server:8080
 
   # Session 配置
-  # HTTP 环境设为 false，HTTPS 环境设为 true
   session-cookie-secure: "true"
+
+  # ========== 以下为生产环境 SCREAMING_SNAKE 配置（直接作为 env 注入） ==========
+
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED: "true"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_KEY: "staffStatus"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_0: "0"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ACTIVE_STATUS_VALUES_1: "1"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_KEY: "oneDepartmentCode"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ATTRIBUTE_VALUE: "000023"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_NAMESPACE_SLUG: "it-team"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_0_ROLE: "MEMBER"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_KEY: "twoDepartmentCode"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_0: "000062707"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_1: "000062710"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_2: "000062711"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_3: "000062712"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_4: "000062713"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_5: "000062715"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ATTRIBUTE_VALUES_6: "000062723"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_NAMESPACE_SLUG: "ebg-skills"
+  SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_MAPPINGS_1_ROLE: "MEMBER"
+
+  SKILLHUB_AUTH_SOURCEID_OSDS_ENABLED: "true"
+  SKILLHUB_AUTH_SOURCEID_OSDS_BASE_URL: "http://service-gw.ruijie.com.cn/api/osds-api"
+  SKILLHUB_AUTH_SOURCEID_OSDS_STAFF_BY_USER_ID_PATH: "/staff/user-id/{userId}/data"
+  SKILLHUB_AUTH_SOURCEID_OSDS_SIGN_SERVER_AUTH: ""
+  SKILLHUB_AUTH_SOURCEID_OSDS_FAIL_OPEN: "true"
+
+  SKILLHUB_SECURITY_SCANNER_ENABLED: "true"
+  SKILLHUB_SECURITY_SCANNER_URL: "http://skillhub-scanner:8000"
+  SKILLHUB_SECURITY_SCANNER_MODE: "upload"
+  SKILL_SCANNER_LLM_BASE_URL: "https://llmproxy.ruijie.com.cn/v1"
+  SKILL_SCANNER_LLM_MODEL: "gpt-5.1-mini"
+
+  SKILLHUB_API_UPSTREAM: "http://skillhub-server:8080"

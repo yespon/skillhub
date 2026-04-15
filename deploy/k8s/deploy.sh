@@ -7,12 +7,13 @@ ROOT_DIR=$(cd -- "$SCRIPT_DIR/../.." && pwd)
 
 REGISTRY=${REGISTRY:-harbor.ruijie.com.cn}
 PROJECT=${PROJECT:-skillhub}
-TAG=${TAG:-release-r0.1.0}
+TAG=${TAG:-release-r0.1.1}
 HARBOR_USERNAME=${HARBOR_USERNAME:-admin}
 HARBOR_PASSWORD=${HARBOR_PASSWORD:-}
 
 SERVER_IMAGE="$REGISTRY/$PROJECT/skillhub-server:$TAG"
 WEB_IMAGE="$REGISTRY/$PROJECT/skillhub-web:$TAG"
+SCANNER_IMAGE="$REGISTRY/$PROJECT/skillhub-scanner:$TAG"
 
 usage() {
   cat <<'EOF'
@@ -21,13 +22,13 @@ Usage: deploy/k8s/deploy.sh <command>
 Commands:
   login         Log in to Harbor
   mirror-deps   Mirror postgres, redis, and minio images to Harbor
-  push-app      Build and push skillhub-server and skillhub-web images
+  push-app      Build and push skillhub-server, skillhub-web, and skillhub-scanner images
   all           Log in, mirror dependencies, then build and push app images
 
 Environment variables:
   REGISTRY          Harbor registry, default harbor.ruijie.com.cn
   PROJECT           Harbor project, default skillhub
-  TAG               App image tag, default release-r0.1.0
+  TAG               App image tag, default release-r0.1.1
   HARBOR_USERNAME   Harbor username, default admin
   HARBOR_PASSWORD   Harbor password, required for login if not already logged in
 EOF
@@ -66,6 +67,9 @@ push_app() {
 
   docker build -t "$WEB_IMAGE" -f "$ROOT_DIR/web/Dockerfile" "$ROOT_DIR/web"
   docker push "$WEB_IMAGE"
+
+  docker build -t "$SCANNER_IMAGE" -f "$ROOT_DIR/scanner/Dockerfile" "$ROOT_DIR/scanner"
+  docker push "$SCANNER_IMAGE"
 }
 
 main() {

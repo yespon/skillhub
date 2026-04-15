@@ -9,7 +9,7 @@
 - **开发环境**：`server/skillhub-app/src/main/resources/application-local.yml`
 - **测试环境**：`server/skillhub-app/src/main/resources/application-test.yml`
 - **生产环境**：`server/skillhub-app/src/main/resources/application.yml`
-- **Kubernetes**：`deploy/k8s/configmap.yaml` 和 `deploy/k8s/secret.yaml`
+- **Kubernetes**：`deploy/k8s/01-configmap.yml` 和 `deploy/k8s/02-secret.example.yml`
 
 ## 完整配置示例
 
@@ -309,7 +309,7 @@ services:
 ### Kubernetes ConfigMap
 
 ```yaml
-# deploy/k8s/configmap.yaml
+# deploy/k8s/01-configmap.yml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -328,7 +328,7 @@ data:
 ### Kubernetes Secret
 
 ```yaml
-# deploy/k8s/secret.yaml
+# deploy/k8s/02-secret.yml
 apiVersion: v1
 kind: Secret
 metadata:

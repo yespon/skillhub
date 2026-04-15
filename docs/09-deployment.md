@@ -292,9 +292,9 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 
 相关文件：
 
-- `deploy/k8s/scanner-deployment.yaml`
-- `deploy/k8s/services.yaml`
-- `deploy/k8s/backend-deployment.yaml`
+- `deploy/k8s/03-01-scanner-deployment.yaml`
+- `deploy/k8s/06-services.yaml`
+- `deploy/k8s/03-backend-deployment.yml`
 - `scripts/verify-scanner.sh`
 - `docs/security-scanning.md`
 
