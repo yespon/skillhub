@@ -35,44 +35,41 @@ spec:
           env:
             # ---- 从 ConfigMap 读取 ----
             - name: SPRING_PROFILES_ACTIVE
-              valueFrom:
-                configMapKeyRef:
-                  name: skillhub-config
-                  key: SPRING_PROFILES_ACTIVE
+              value: "prod"
             - name: SKILLHUB_PUBLIC_BASE_URL
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_PUBLIC_BASE_URL
+                  key: skillhub-public-base-url
 
             # ---- 数据库 ----
             - name: POSTGRES_HOST
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: POSTGRES_HOST
+                  key: postgres-host
             - name: POSTGRES_PORT
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: POSTGRES_PORT
+                  key: postgres-port
             - name: POSTGRES_DB
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: POSTGRES_DB
+                  key: postgres-db
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://$(POSTGRES_HOST):$(POSTGRES_PORT)/$(POSTGRES_DB)"
             - name: POSTGRES_USER
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: POSTGRES_USER
+                  key: postgres-user
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: POSTGRES_USER
+                  key: postgres-user
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -89,12 +86,12 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: REDIS_HOST
+                  key: redis-host
             - name: REDIS_PORT
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: REDIS_PORT
+                  key: redis-port
             # 若 Redis 无密码，删除以下两行
             - name: REDIS_PASSWORD
               valueFrom:
@@ -107,37 +104,37 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_PROVIDER
+                  key: skillhub-storage-provider
             - name: SKILLHUB_STORAGE_S3_ENDPOINT
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_ENDPOINT
+                  key: skillhub-storage-s3-endpoint
             - name: SKILLHUB_STORAGE_S3_BUCKET
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_BUCKET
+                  key: skillhub-storage-s3-bucket
             - name: SKILLHUB_STORAGE_S3_REGION
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_REGION
+                  key: skillhub-storage-s3-region
             - name: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_FORCE_PATH_STYLE
+                  key: skillhub-storage-s3-force-path-style
             - name: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_AUTO_CREATE_BUCKET
+                  key: skillhub-storage-s3-auto-create-bucket
             - name: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_STORAGE_S3_PRESIGN_EXPIRY
+                  key: skillhub-storage-s3-presign-expiry
             - name: SKILLHUB_STORAGE_S3_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
@@ -154,7 +151,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SESSION_COOKIE_SECURE
+                  key: session-cookie-secure
 
             # ---- Bootstrap 管理员 ----
             - name: BOOTSTRAP_ADMIN_ENABLED
@@ -201,42 +198,42 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_PROVIDER
+                  key: oauth2-sourceid-provider
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_AUTHORIZATION_GRANT_TYPE
+                  key: oauth2-sourceid-authorization-grant-type
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_REDIRECT_URI
+                  key: oauth2-sourceid-redirect-uri
             - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_SOURCEID_CLIENT_NAME
+                  key: oauth2-sourceid-client-name
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_AUTHORIZATION_URI
+                  key: oauth2-sourceid-authorization-uri
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_TOKEN_URI
+                  key: oauth2-sourceid-token-uri
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_INFO_URI
+                  key: oauth2-sourceid-user-info-uri
             - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_SOURCEID_USER_NAME_ATTRIBUTE
+                  key: oauth2-sourceid-user-name-attribute
             - name: SKILLHUB_AUTH_SOURCEID_NAMESPACE_SYNC_ENABLED
               valueFrom:
                 configMapKeyRef:

@@ -90,6 +90,14 @@ data:
   # 前端代理上游
   skillhub-api-upstream: http://skillhub-server:8080
 
+  # 前端运行时配置
+  skillhub-web-api-base-url: ""
+  skillhub-web-auth-direct-enabled: "false"
+  skillhub-web-auth-direct-provider: ""
+  skillhub-web-auth-session-bootstrap-enabled: "false"
+  skillhub-web-auth-session-bootstrap-provider: ""
+  skillhub-web-auth-session-bootstrap-auto: "false"
+
   # Session 配置
   # HTTP 环境设为 false，HTTPS 环境设为 true
   session-cookie-secure: "false"

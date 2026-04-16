@@ -91,6 +91,42 @@ public class SecurityScanService {
         skillVersionRepository.save(version);
     }
 
+    /**
+     * Triggers an audit-only scan for already-published versions (e.g. super-admin auto-publish).
+     * Creates an audit record and publishes the scan task but does NOT change the version status.
+     */
+    @Transactional
+    public void triggerPostPublishAudit(Long versionId, List<PackageEntry> entries, String publisherId) {
+        if (!enabled) {
+            log.debug("Security scanner disabled, skipping post-publish audit for versionId={}", versionId);
+            return;
+        }
+
+        SkillVersion version = skillVersionRepository.findById(versionId)
+                .orElseThrow(() -> new IllegalStateException("SkillVersion not found: " + versionId));
+
+        String packagePath = null;
+        String bundleKey = null;
+        if ("upload".equalsIgnoreCase(scanMode)) {
+            validateUploadEntries(entries);
+            bundleKey = buildBundleStorageKey(version.getSkillId(), versionId);
+        } else {
+            packagePath = saveTempDirectory(versionId, entries).toString();
+        }
+
+        auditRepository.save(new SecurityAudit(versionId, ScannerType.SKILL_SCANNER));
+        scanTaskProducer.publishScanTask(new ScanTask(
+                UUID.randomUUID().toString(),
+                versionId,
+                packagePath,
+                bundleKey,
+                publisherId,
+                System.currentTimeMillis(),
+                Map.of("scannerType", ScannerType.SKILL_SCANNER.getValue())
+        ));
+        log.info("Post-publish audit scan triggered for versionId={}, publisherId={}", versionId, publisherId);
+    }
+
     @Transactional
     public void processScanResult(Long versionId, ScannerType scannerType, SecurityScanResponse response) {
         SecurityAudit audit = auditRepository.findLatestActiveByVersionIdAndScannerType(versionId, scannerType)

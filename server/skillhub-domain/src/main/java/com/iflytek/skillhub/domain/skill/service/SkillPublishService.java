@@ -382,6 +382,8 @@ public class SkillPublishService {
                         savedReviewTask.getNamespaceId()
                 ));
             }
+        } else if (securityScanService.isEnabled()) {
+            securityScanService.triggerPostPublishAudit(version.getId(), entries, publisherId);
         }
 
         // 12. Update skill metadata and move the published pointer for auto-publish flows

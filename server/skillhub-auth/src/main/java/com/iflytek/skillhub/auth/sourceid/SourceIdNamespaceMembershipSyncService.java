@@ -57,15 +57,6 @@ public class SourceIdNamespaceMembershipSyncService {
             return;
         }
 
-        try {
-            doReconcile(claims, principal);
-        } catch (RuntimeException e) {
-            log.warn("Skip SourceID namespace sync for user {} because an unexpected error occurred: {}",
-                    principal.userId(), e.getMessage());
-        }
-    }
-
-    private void doReconcile(OAuthClaims claims, PlatformPrincipal principal) {
         Map<String, Object> rootAttributes = new LinkedHashMap<>(claims.extra());
         loadOrganizationAttributes(claims.subject()).ifPresent(rootAttributes::putAll);
         Map<String, Object> profileAttributes = nestedAttributes(rootAttributes, properties.getAttributeRootKey());

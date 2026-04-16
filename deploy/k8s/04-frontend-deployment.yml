@@ -37,7 +37,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: skillhub-config
-                  key: SKILLHUB_PUBLIC_BASE_URL
+                  key: skillhub-public-base-url
           livenessProbe:
             httpGet:
               path: /nginx-health
