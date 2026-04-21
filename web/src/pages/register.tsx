@@ -86,7 +86,7 @@ export function RegisterPage() {
   function validateEmail(value: string) {
     const trimmed = value.trim().toLowerCase()
     if (!trimmed) {
-      return undefined
+      return t('register.emailRequired')
     }
     if (!EMAIL_PATTERN.test(trimmed)) {
       return t('register.emailInvalid')
@@ -121,6 +121,8 @@ export function RegisterPage() {
         return { fieldErrors: { username: t('register.usernameRequired') } }
       case 'validation.auth.local.password.notBlank':
         return { fieldErrors: { password: t('register.passwordRequired') } }
+      case 'validation.auth.local.email.notBlank':
+        return { fieldErrors: { email: t('register.emailRequired') } }
       case 'validation.auth.local.email.invalid':
         return { fieldErrors: { email: t('register.emailInvalid') } }
       case 'error.auth.local.username.invalid':
@@ -230,6 +232,7 @@ export function RegisterPage() {
                       }
                     }}
                     placeholder={t('register.emailPlaceholder')}
+                    required
                     aria-invalid={fieldErrors.email ? 'true' : 'false'}
                     onBlur={() => {
                       setFieldErrors((current) => ({ ...current, email: validateEmail(email) }))

@@ -8,8 +8,6 @@ const useSkillLabelsMock = vi.fn()
 const useSkillTranslationsMock = vi.fn()
 const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
 const useSkillVersionsMock = vi.fn()
-const useSkillTranslationsMock = vi.fn()
-const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -30,6 +28,7 @@ vi.mock('react-i18next', async () => {
 })
 
 vi.mock('@tanstack/react-query', () => ({
+  useQuery: () => ({ data: undefined, isLoading: false }),
   useMutation: () => ({ mutate: vi.fn(), isPending: false }),
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
 }))
@@ -144,6 +143,9 @@ vi.mock('@/shared/hooks/use-skill-queries', () => ({
   useSubmitPromotion: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUnarchiveSkill: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useWithdrawSkillReview: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useSubmitForReview: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useConfirmPublish: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useSubmitSkillReport: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }))
 
 import { SkillDetailPage } from './skill-detail'

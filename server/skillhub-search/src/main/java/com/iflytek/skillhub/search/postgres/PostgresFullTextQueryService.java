@@ -161,9 +161,6 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         sql.append("AND (d.visibility = 'PUBLIC' ");
         if (query.visibilityScope().userId() != null) {
             sql.append("OR (d.visibility = 'NAMESPACE_ONLY' AND d.namespace_id IN :memberNamespaceIds) ");
-            sql.append("OR (d.visibility = 'NAMESPACE_ONLY' AND :platformWideAccess = TRUE) ");
-            sql.append("OR (d.visibility = 'PRIVATE' AND (d.namespace_id IN :adminNamespaceIds OR d.owner_id = :userId)) ");
-            sql.append("OR (d.visibility = 'PRIVATE' AND :platformWideAccess = TRUE) ");
         }
         sql.append(") ");
     }
@@ -175,7 +172,6 @@ public class PostgresFullTextQueryService implements SearchQueryService {
         sql.append("AND (n.status <> 'ARCHIVED' ");
         if (query.visibilityScope().userId() != null) {
             sql.append("OR d.namespace_id IN :memberNamespaceIds ");
-            sql.append("OR :platformWideAccess = TRUE ");
         }
         sql.append(") ");
     }

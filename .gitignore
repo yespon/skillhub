@@ -62,6 +62,7 @@ package-lock.json
 **/playwright-report/
 **/test-results/
 **/.playwright/
+.playwright-mcp/
 
 # Python / temporary files
 *.py[cod]
@@ -87,3 +88,10 @@ feature_auth.md
 # local
 *.local.json
 deploy/k8s/archives/
+
+# Local workspace metadata
+AGENTS.md
+CLAUDE.md
+
+# Local config file
+.mcp.json

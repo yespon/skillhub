@@ -28,7 +28,7 @@ describe('LoginButton', () => {
     mockedUseAuthMethods.mockReset()
   })
 
-  it('renders all oauth redirect providers returned by auth methods', () => {
+  it('renders only sourceid oauth redirect providers', () => {
     mockedUseAuthMethods.mockReturnValue({
       data: [
         {
@@ -39,11 +39,11 @@ describe('LoginButton', () => {
           actionUrl: '/oauth2/authorization/github',
         },
         {
-          id: 'oauth-gitee',
+          id: 'oauth-sourceid',
           methodType: 'OAUTH_REDIRECT',
-          provider: 'gitee',
-          displayName: 'Gitee',
-          actionUrl: '/oauth2/authorization/gitee',
+          provider: 'sourceid',
+          displayName: 'SourceID',
+          actionUrl: '/oauth2/authorization/sourceid',
         },
         {
           id: 'local-password',
@@ -58,9 +58,9 @@ describe('LoginButton', () => {
 
     const html = renderToStaticMarkup(LoginButton({ returnTo: '/dashboard' }))
 
-    expect(html).toContain('Login with GitHub')
-    expect(html).toContain('Login with Gitee')
+    expect(html).not.toContain('Login with GitHub')
     expect(html).not.toContain('Login with Password')
+    expect(html).toContain('sourceid')
   })
 
   it('renders a loading button while auth methods are loading', () => {

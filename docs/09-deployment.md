@@ -198,6 +198,7 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 - 如果要开放真实登录，再补充 `OAUTH2_GITHUB_CLIENT_ID` / `OAUTH2_GITHUB_CLIENT_SECRET`
 - 如果要启用 SourceID，再补充 `OAUTH2_SOURCEID_CLIENT_ID` / `OAUTH2_SOURCEID_CLIENT_SECRET` / `OAUTH2_SOURCEID_REDIRECT_URI` / `OAUTH2_SOURCEID_AUTHORIZATION_URI` / `OAUTH2_SOURCEID_TOKEN_URI` / `OAUTH2_SOURCEID_USER_INFO_URI`
 - 如果只允许并只展示锐捷 SSO，可设置 `SKILLHUB_ACCESS_POLICY_MODE=PROVIDER_ALLOWLIST` 与 `SKILLHUB_ACCESS_POLICY_ALLOWED_PROVIDERS=sourceid`
+- 如果要启用密码重置验证码邮件，参见：`docs/19-smtp-password-reset-email-setup.md`
 
 ### 7.1 SourceID namespace 自动补齐
 

@@ -31,6 +31,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         PlatformPrincipal principal = context.principal();
         var attrs = new HashMap<>(context.upstreamUser().getAttributes());
         attrs.put("platformPrincipal", principal);
+        // Store providerLogin under a fixed key so DefaultOAuth2User can find it
+        attrs.put("providerLogin", principal.userId());
 
         var authorities = new LinkedHashSet<GrantedAuthority>(context.upstreamUser().getAuthorities());
         principal.platformRoles().stream()
@@ -38,7 +40,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                 .forEach(authorities::add);
 
         String registrationId = request.getClientRegistration().getRegistrationId();
-        String nameAttributeKey = "sourceid".equals(registrationId) ? "id" : "login";
+        String nameAttributeKey = "sourceid".equals(registrationId) ? "id" : "providerLogin";
         return new DefaultOAuth2User(authorities, attrs, nameAttributeKey);
     }
 }

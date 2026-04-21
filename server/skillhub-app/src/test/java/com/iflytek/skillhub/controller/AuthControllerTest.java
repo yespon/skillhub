@@ -152,12 +152,13 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/v1/auth/providers"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.code").value(0))
-            .andExpect(jsonPath("$.data.length()").value(3))
-            .andExpect(jsonPath("$.data[*].id", hasItems("github", "gitee", "sourceid")))
+            .andExpect(jsonPath("$.data.length()").value(4))
+            .andExpect(jsonPath("$.data[*].id", hasItems("github", "gitee", "sourceid", "gitlab")))
             .andExpect(jsonPath("$.data[*].authorizationUrl", hasItems(
                 "/oauth2/authorization/github",
                 "/oauth2/authorization/gitee",
-                "/oauth2/authorization/sourceid"
+                "/oauth2/authorization/sourceid",
+                "/oauth2/authorization/gitlab"
             )))
             .andExpect(jsonPath("$.timestamp").isNotEmpty())
             .andExpect(jsonPath("$.requestId").isNotEmpty());

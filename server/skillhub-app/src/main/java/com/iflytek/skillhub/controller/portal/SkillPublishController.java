@@ -71,6 +71,7 @@ public class SkillPublishController extends BaseApiController {
             @RequestParam("visibility") String visibility,
             @RequestParam(name = "displayNameZhCn", required = false) String displayNameZhCn,
             @RequestParam(name = "label", required = false) List<String> labels,
+            @RequestParam(value = "confirmWarnings", defaultValue = "false") boolean confirmWarnings,
             @AuthenticationPrincipal PlatformPrincipal principal,
             @RequestAttribute(value = "userNsRoles", required = false) Map<Long, NamespaceRole> userNsRoles,
             HttpServletRequest httpRequest) throws IOException {
@@ -90,6 +91,7 @@ public class SkillPublishController extends BaseApiController {
                 principal.userId(),
                 skillVisibility,
                 principal.platformRoles(),
+                confirmWarnings,
                 normalizeOptionalDisplayName(displayNameZhCn)
         );
 

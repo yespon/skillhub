@@ -21,6 +21,20 @@ function toProviderLabel(method: AuthMethod, t: (key: string) => string) {
 }
 
 /**
+ * Returns the appropriate icon for a given OAuth provider.
+ */
+function OAuthIcon({ provider }: { provider: string }) {
+  const normalizedProvider = provider.toLowerCase()
+  return (
+    <img
+      src={`/${normalizedProvider}-logo.svg`}
+      alt={provider}
+      className="w-5 h-5 mr-3"
+    />
+  )
+}
+
+/**
  * Renders OAuth login buttons from the auth-method catalog returned by the backend.
  */
 export function LoginButton({ returnTo }: LoginButtonProps) {
@@ -52,12 +66,11 @@ export function LoginButton({ returnTo }: LoginButtonProps) {
             window.location.href = provider.actionUrl
           }}
         >
-          <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
-          </svg>
+          <OAuthIcon provider={provider.provider} />
           {t('loginButton.loginWith', { name: toProviderLabel(provider, t) })}
         </Button>
       ))}
     </div>
   )
 }
+
