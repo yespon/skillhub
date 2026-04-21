@@ -73,13 +73,13 @@ ADMIN_LOGIN_STATUS="$(curl --max-time 10 -s -o /dev/null -w "%{http_code}" \
   -H "Content-Type: application/json" \
   -d "{\"username\":\"$ADMIN_USERNAME\",\"password\":\"$ADMIN_PASSWORD\"}" || true)"
 if [[ "$ADMIN_LOGIN_STATUS" == "200" ]]; then
-  check_with_cookie "Prometheus metrics" "$BASE_URL/actuator/prometheus" "200" "$ADMIN_COOKIE_JAR"
+  check_with_cookie "Admin health check" "$BASE_URL/actuator/health" "200" "$ADMIN_COOKIE_JAR"
   ADMIN_CSRF="$(awk '$6 == "XSRF-TOKEN" { print $7 }' "$ADMIN_COOKIE_JAR" | tail -n 1)"
 else
-  echo "FAIL: Prometheus metrics (admin login failed, got $ADMIN_LOGIN_STATUS)"
+  echo "FAIL: Admin health check (admin login failed, got $ADMIN_LOGIN_STATUS)"
   FAIL=$((FAIL + 1))
 fi
-check "Namespaces API" "$BASE_URL/api/v1/namespaces" "200"
+check_with_cookie "Namespaces API" "$BASE_URL/api/v1/namespaces" "200" "$ADMIN_COOKIE_JAR"
 check "Auth required" "$BASE_URL/api/v1/auth/me" "401"
 
 CSRF_TOKEN="$(fetch_csrf_token "$COOKIE_JAR")"
