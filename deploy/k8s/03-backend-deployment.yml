@@ -20,7 +20,7 @@ spec:
       containers:
         - name: server
           # 替换为实际镜像仓库地址（内网需提前同步镜像）
-          image: harbor.ruijie.com.cn/skillhub/skillhub-server:20260406
+          image: harbor.ruijie.com.cn/skillhub/skillhub-server:20260421
           imagePullPolicy: IfNotPresent
           envFrom:
             - configMapRef:

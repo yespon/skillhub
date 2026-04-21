@@ -20,7 +20,7 @@ spec:
       containers:
         - name: web
           # 替换为实际镜像仓库地址（内网需提前同步镜像）
-          image: harbor.ruijie.com.cn/skillhub/skillhub-web:20260405
+          image: harbor.ruijie.com.cn/skillhub/skillhub-web:20260421
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

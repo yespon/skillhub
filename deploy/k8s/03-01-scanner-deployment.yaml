@@ -19,7 +19,7 @@ spec:
         - name: harbor-regcred
       containers:
         - name: scanner
-          image: harbor.ruijie.com.cn/skillhub/skillhub-scanner:20260405
+          image: harbor.ruijie.com.cn/skillhub/skillhub-scanner:20260421
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
