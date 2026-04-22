@@ -262,9 +262,6 @@ public class PostgresFullTextQueryService implements SearchQueryService {
                                        boolean includePagination) {
         if (query.visibilityScope().userId() != null) {
             queryObject.setParameter("memberNamespaceIds", memberNamespaceIds);
-            queryObject.setParameter("adminNamespaceIds", adminNamespaceIds);
-            queryObject.setParameter("userId", query.visibilityScope().userId());
-            queryObject.setParameter("platformWideAccess", platformWideAccess);
         }
 
         if (query.namespaceId() != null) {
