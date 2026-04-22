@@ -228,6 +228,7 @@ test.describe('Search Results (Real API)', () => {
     await page.goto(searchUrl(basicSeed!.keyword))
     await page.waitForLoadState('networkidle')
     const cards = getSearchCards(page)
+    await expect(cards.first()).toBeVisible({ timeout: 10_000 })
     const visibleCount = await cards.count()
     const countText = await page.getByText(/\d+\s+skills found/i).textContent()
     const totalMatch = countText?.match(/\d+/)
