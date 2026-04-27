@@ -147,6 +147,7 @@ export interface SkillSummary {
   preferredDisplayName?: string
   canonicalDisplayName?: string
   summary?: string
+  visibility?: string
   status?: string
   downloadCount: number
   starCount: number

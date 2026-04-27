@@ -2,12 +2,19 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const navigateMock = vi.fn()
-const hasRoleMock = vi.fn((role: string) => role === 'USER')
+const hasRoleMock = vi.fn<(role: string) => boolean>((role: string) => role === 'USER')
 const useSkillDetailMock = vi.fn()
 const useSkillLabelsMock = vi.fn()
 const useSkillTranslationsMock = vi.fn()
 const buttonRecords: Array<{ label: string; onClick?: (() => void) | undefined }> = []
 const useSkillVersionsMock = vi.fn()
+let authState: {
+  user: { userId: string; platformRoles: string[] } | null
+  hasRole: (role: string) => boolean
+} = {
+  user: { userId: 'owner-1', platformRoles: ['USER'] },
+  hasRole: hasRoleMock,
+}
 
 vi.mock('@tanstack/react-router', () => ({
   useNavigate: () => navigateMock,
@@ -34,10 +41,7 @@ vi.mock('@tanstack/react-query', () => ({
 }))
 
 vi.mock('@/features/auth/use-auth', () => ({
-  useAuth: () => ({
-    user: { userId: 'owner-1', platformRoles: ['USER'] },
-    hasRole: hasRoleMock,
-  }),
+  useAuth: () => authState,
 }))
 
 vi.mock('@/features/report/use-skill-reports', () => ({
@@ -183,6 +187,10 @@ describe('SkillDetailPage', () => {
     navigateMock.mockReset()
     buttonRecords.length = 0
     hasRoleMock.mockImplementation((role: string) => role === 'USER')
+    authState = {
+      user: { userId: 'owner-1', platformRoles: ['USER'] },
+      hasRole: hasRoleMock,
+    }
     useSkillDetailMock.mockReturnValue({
       data: createSkill(),
       isLoading: false,
@@ -226,6 +234,31 @@ describe('SkillDetailPage', () => {
 
     const html = renderToStaticMarkup(<SkillDetailPage />)
 
+    expect(html).not.toContain('skillDetail.deleteSkill')
+  })
+
+  it('renders public skill details for an anonymous viewer', () => {
+    authState = {
+      user: null,
+      hasRole: vi.fn(() => false),
+    }
+
+    useSkillDetailMock.mockReturnValue({
+      data: createSkill({
+        canManageLifecycle: false,
+        canInteract: true,
+        visibility: 'PUBLIC',
+      }),
+      isLoading: false,
+      isFetching: false,
+      error: null,
+    })
+
+    const html = renderToStaticMarkup(<SkillDetailPage />)
+
+    expect(html).toContain('Demo Skill')
+    expect(html).toContain('install')
+    expect(html).not.toContain('skillDetail.loginRequired')
     expect(html).not.toContain('skillDetail.deleteSkill')
   })
 

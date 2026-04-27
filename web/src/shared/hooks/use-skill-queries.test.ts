@@ -48,22 +48,22 @@ describe('useSearchSkills', () => {
     useQueryMock.mockReturnValue({ data: undefined, isLoading: false })
   })
 
-  it('keeps empty global search disabled by default', () => {
+  it('enables the query when no search filters are set', () => {
     useSearchSkills({ sort: 'newest', size: 6 })
-
-    expect(useQueryMock).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
-  })
-
-  it('allows empty queries when the caller opts in', () => {
-    useSearchSkills({ namespace: 'team-ai', size: 20 }, { enabledWhenEmpty: true })
 
     expect(useQueryMock).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }))
   })
 
-  it('still enables filtered searches without the opt-in flag', () => {
+  it('enables the query with label filters', () => {
     useSearchSkills({ labels: ['official'], labelMode: 'all' })
 
     expect(useQueryMock).toHaveBeenCalledWith(expect.objectContaining({ enabled: true }))
+  })
+
+  it('disables the query when starredOnly is true', () => {
+    useSearchSkills({ sort: 'newest', size: 6, starredOnly: true })
+
+    expect(useQueryMock).toHaveBeenCalledWith(expect.objectContaining({ enabled: false }))
   })
 })
 

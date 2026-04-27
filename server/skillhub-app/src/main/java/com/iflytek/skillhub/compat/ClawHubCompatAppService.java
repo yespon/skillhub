@@ -308,9 +308,6 @@ public class ClawHubCompatAppService {
                 principal.platformRoles(),
                 confirmWarnings,
                 null
-        );
-        recordCompatPublishAudit(principal.userId(), result.version().getId(), clientIp, userAgent,
-                "{\"namespace\":\"" + namespace + "\",\"slug\":\"" + extracted.payload().slug() + "\"}");
         return new ClawHubPublishResponse(result.skillId().toString(), result.version().getId().toString());
     }
 

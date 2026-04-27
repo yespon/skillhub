@@ -427,6 +427,7 @@ public class SkillPublishService {
         skill.setSummary(metadata.description());
         upsertLocalizedDisplayName(skill.getId(), displayNameZhCn);
         if (autoPublish || visibility == SkillVisibility.PRIVATE) {
+            // Update latestVersionId for autoPublish or PRIVATE skill (UPLOADED status)
             skill.setLatestVersionId(version.getId());
             skill.setVisibility(visibility);
         }

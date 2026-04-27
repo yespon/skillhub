@@ -18,8 +18,12 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
 import java.io.InputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.List;
 
@@ -46,8 +50,12 @@ public class S3StorageService implements ObjectStorageService {
                 .connectionAcquisitionTimeout(properties.getConnectionAcquisitionTimeout());
         this.s3Client = buildS3Client(httpClientBuilder);
         this.s3Presigner = buildPresigner();
-        log.info("Initialized S3 storage client for bucket '{}' (bucket verification is deferred until first storage access)",
-                properties.getBucket());
+        if (properties.isAutoCreateBucket()) {
+            log.info("Initialized S3 storage client for bucket '{}' (bucket auto-creation is deferred until first write)",
+                    properties.getBucket());
+        } else {
+            log.info("Initialized S3 storage client for bucket '{}'", properties.getBucket());
+        }
     }
 
     protected S3Client buildS3Client(ApacheHttpClient.Builder httpClientBuilder) {
@@ -91,22 +99,74 @@ public class S3StorageService implements ObjectStorageService {
             if (bucketPrepared) {
                 return;
             }
-            try {
-                s3Client.headBucket(HeadBucketRequest.builder().bucket(properties.getBucket()).build());
-            } catch (NoSuchBucketException e) {
                 log.info("Bucket '{}' does not exist, creating...", properties.getBucket());
                 s3Client.createBucket(CreateBucketRequest.builder().bucket(properties.getBucket()).build());
+            } catch (BucketAlreadyExistsException | BucketAlreadyOwnedByYouException e) {
+                log.debug("Bucket '{}' was created concurrently, continuing", properties.getBucket());
             }
             bucketPrepared = true;
         }
     }
 
-    @Override public void putObject(String key, InputStream data, long size, String contentType) {
+    private void putObjectInternal(String key, InputStream data, long size, String contentType) {
+        putObjectInternal(key, RequestBody.fromInputStream(data, size), size, contentType);
+    }
+
+    private void putObjectInternal(String key, RequestBody requestBody, long size, String contentType) {
+        s3Client.putObject(
+                PutObjectRequest.builder()
+                        .bucket(properties.getBucket())
+                        .key(key)
+                        .contentType(contentType)
+                        .contentLength(size)
+                        .build(),
+                requestBody);
+    }
+
+    private Path stagePutObjectBody(InputStream data) throws IOException {
+        Path stagedBody = Files.createTempFile("skillhub-s3-upload-", ".tmp");
         try {
-            ensureBucketPrepared();
-            s3Client.putObject(PutObjectRequest.builder().bucket(properties.getBucket()).key(key).contentType(contentType).contentLength(size).build(), RequestBody.fromInputStream(data, size));
+            Files.copy(data, stagedBody, StandardCopyOption.REPLACE_EXISTING);
+            return stagedBody;
+        } catch (IOException e) {
+            Files.deleteIfExists(stagedBody);
+            throw e;
+        }
+    }
+
+    private void deleteStagedBody(Path stagedBody) {
+        if (stagedBody == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(stagedBody);
+        } catch (IOException e) {
+            log.warn("Failed to clean up staged S3 upload body {}", stagedBody, e);
+        }
+    }
+
+    @Override public void putObject(String key, InputStream data, long size, String contentType) {
+        Path stagedBody = null;
+        try {
+            if (!properties.isAutoCreateBucket() || bucketPrepared) {
+                putObjectInternal(key, data, size, contentType);
+                return;
+            }
+
+            stagedBody = stagePutObjectBody(data);
+            try {
+                putObjectInternal(key, RequestBody.fromFile(stagedBody), size, contentType);
+                bucketPrepared = true;
+            } catch (NoSuchBucketException e) {
+                ensureBucketPrepared();
+                putObjectInternal(key, RequestBody.fromFile(stagedBody), size, contentType);
+            }
+        } catch (IOException e) {
+            throw new StorageAccessException("putObject", key, e);
         } catch (RuntimeException e) {
             throw new StorageAccessException("putObject", key, e);
+        } finally {
+            deleteStagedBody(stagedBody);
         }
     }
 
@@ -141,7 +201,6 @@ public class S3StorageService implements ObjectStorageService {
 
     @Override public boolean exists(String key) {
         try {
-            ensureBucketPrepared();
             s3Client.headObject(HeadObjectRequest.builder().bucket(properties.getBucket()).key(key).build());
             return true;
         }

@@ -10,6 +10,7 @@ public record SkillSummaryResponse(
         String preferredDisplayName,
         String canonicalDisplayName,
         String summary,
+        String visibility,
         String status,
         Long downloadCount,
         Integer starCount,

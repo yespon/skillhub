@@ -317,6 +317,7 @@ public class SkillSearchAppService {
                 preferredDisplayName,
                 skill.getDisplayName(),
                 skill.getSummary(),
+                skill.getVisibility().name(),
                 skill.getStatus().name(),
                 skill.getDownloadCount(),
                 skill.getStarCount(),

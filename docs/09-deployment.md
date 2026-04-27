@@ -243,6 +243,7 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 - `deploy/k8s/overlays/external-sourceid-only/configmap-sourceid-patch.yaml`
 - `deploy/k8s/overlays/external-s3-sourceid-only/configmap-sourceid-patch.yaml`
 - `docs/2026-03-30-sourceid-namespace-sync-test-config-sample.md`
+- 如果要启用密码重置验证码邮件，参见：`docs/19-smtp-password-reset-email-setup.md`
 
 ## 8 裸金属上线清单
 

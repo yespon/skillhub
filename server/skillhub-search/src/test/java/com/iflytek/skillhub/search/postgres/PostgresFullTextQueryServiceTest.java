@@ -394,6 +394,34 @@ class PostgresFullTextQueryServiceTest {
     }
 
     @Test
+    void authenticatedQueriesShouldNotBindUnusedAdminNamespaceIdsParameter() {
+        EntityManager entityManager = mock(EntityManager.class);
+        Query nativeQuery = mock(Query.class);
+        Query countQuery = mock(Query.class);
+        when(entityManager.createNativeQuery(anyString()))
+                .thenReturn(nativeQuery)
+                .thenReturn(countQuery);
+        when(nativeQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(nativeQuery);
+        when(countQuery.setParameter(anyString(), org.mockito.ArgumentMatchers.any())).thenReturn(countQuery);
+        when(nativeQuery.getResultList()).thenReturn(List.of());
+        when(countQuery.getSingleResult()).thenReturn(0L);
+
+        PostgresFullTextQueryService service = new PostgresFullTextQueryService(entityManager);
+
+        service.search(new SearchQuery(
+                "issue331",
+                null,
+                new SearchVisibilityScope("user-1", Set.of(7L), Set.of(9L)),
+                "relevance",
+                0,
+                20
+        ));
+
+        verify(nativeQuery, never()).setParameter("adminNamespaceIds", Set.of(9L));
+        verify(countQuery, never()).setParameter("adminNamespaceIds", Set.of(9L));
+    }
+
+    @Test
     void platformWideAccessShouldNotBypassVisibilityInPortalSearch() {
         EntityManager entityManager = mock(EntityManager.class);
         Query nativeQuery = mock(Query.class);
@@ -423,6 +451,8 @@ class PostgresFullTextQueryServiceTest {
         assertThat(sqlCaptor.getAllValues().getFirst())
                 .doesNotContain("platformWideAccess")
                 .doesNotContain("PRIVATE");
+        verify(nativeQuery, never()).setParameter("platformWideAccess", true);
+        verify(countQuery, never()).setParameter("platformWideAccess", true);
     }
 
     @Test

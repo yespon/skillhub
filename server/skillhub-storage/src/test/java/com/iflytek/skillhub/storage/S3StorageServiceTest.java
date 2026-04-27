@@ -5,6 +5,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.BucketAlreadyOwnedByYouException;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.CreateBucketResponse;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
@@ -15,11 +16,15 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -76,15 +81,77 @@ class S3StorageServiceTest {
     }
 
     @Test
+    void putObjectShouldWriteDirectlyWhenBucketAlreadyExists() {
+        S3Client client = mock(S3Client.class);
+        S3Presigner presigner = mock(S3Presigner.class);
+        when(client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(PutObjectResponse.builder().eTag("etag").build());
+        TestableS3StorageService service = new TestableS3StorageService(properties(true), client, presigner);
+
+        service.init();
+        byte[] content = "hello".getBytes(StandardCharsets.UTF_8);
+        service.putObject("packages/demo.zip", new ByteArrayInputStream(content), content.length, "application/zip");
+
+        verify(client, never()).headBucket(any(HeadBucketRequest.class));
+        verify(client, never()).createBucket(any(CreateBucketRequest.class));
+        verify(client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    void getObjectShouldNotCreateBucketWhenAutoCreateIsEnabled() {
+        S3Client client = mock(S3Client.class);
+        S3Presigner presigner = mock(S3Presigner.class);
+        when(client.getObject(any(GetObjectRequest.class)))
+                .thenThrow(NoSuchBucketException.builder().message("missing").build());
+        TestableS3StorageService service = new TestableS3StorageService(properties(true), client, presigner);
+
+        service.init();
+        assertThatThrownBy(() -> service.getObject("packages/demo.zip"))
+                .isInstanceOf(StorageAccessException.class);
+
+        verify(client, never()).headBucket(any(HeadBucketRequest.class));
+        verify(client, never()).createBucket(any(CreateBucketRequest.class));
+        verify(client).getObject(any(GetObjectRequest.class));
+    }
+
+    @Test
+    void putObjectShouldCreateBucketAndRetryWhenMissing() {
+        S3Client client = mock(S3Client.class);
+        S3Presigner presigner = mock(S3Presigner.class);
+        List<String> uploadedBodies = new ArrayList<>();
+        when(client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenAnswer(invocation -> {
+                    uploadedBodies.add(readBody(invocation.getArgument(1)));
+                    throw NoSuchBucketException.builder().message("missing").build();
+                })
+                .thenAnswer(invocation -> {
+                    uploadedBodies.add(readBody(invocation.getArgument(1)));
+                    return PutObjectResponse.builder().eTag("etag").build();
+                });
+        when(client.createBucket(any(CreateBucketRequest.class)))
+                .thenReturn(CreateBucketResponse.builder().build());
+        TestableS3StorageService service = new TestableS3StorageService(properties(true), client, presigner);
+
+        service.init();
+        byte[] content = "hello".getBytes(StandardCharsets.UTF_8);
+        service.putObject("packages/demo-1.zip", new ByteArrayInputStream(content), content.length, "application/zip");
+
+        verify(client, never()).headBucket(any(HeadBucketRequest.class));
+        verify(client, times(1)).createBucket(any(CreateBucketRequest.class));
+        verify(client, times(2)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        assertThat(uploadedBodies).containsExactly("hello", "hello");
+    }
+
+    @Test
     void putObjectShouldCreateBucketOnlyOnceWhenAutoCreateIsEnabled() {
         S3Client client = mock(S3Client.class);
         S3Presigner presigner = mock(S3Presigner.class);
-        doThrow(NoSuchBucketException.builder().message("missing").build())
-                .when(client).headBucket(any(HeadBucketRequest.class));
+        when(client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(NoSuchBucketException.builder().message("missing").build())
+                .thenReturn(PutObjectResponse.builder().eTag("etag-1").build())
+                .thenReturn(PutObjectResponse.builder().eTag("etag-2").build());
         when(client.createBucket(any(CreateBucketRequest.class)))
                 .thenReturn(CreateBucketResponse.builder().build());
-        when(client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
-                .thenReturn(PutObjectResponse.builder().eTag("etag").build());
         TestableS3StorageService service = new TestableS3StorageService(properties(true), client, presigner);
 
         service.init();
@@ -92,7 +159,26 @@ class S3StorageServiceTest {
         service.putObject("packages/demo-1.zip", new ByteArrayInputStream(content), content.length, "application/zip");
         service.putObject("packages/demo-2.zip", new ByteArrayInputStream(content), content.length, "application/zip");
 
-        verify(client, times(1)).headBucket(any(HeadBucketRequest.class));
+        verify(client, never()).headBucket(any(HeadBucketRequest.class));
+        verify(client, times(1)).createBucket(any(CreateBucketRequest.class));
+        verify(client, times(3)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    void putObjectShouldRetryWhenBucketWasCreatedConcurrently() {
+        S3Client client = mock(S3Client.class);
+        S3Presigner presigner = mock(S3Presigner.class);
+        when(client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenThrow(NoSuchBucketException.builder().message("missing").build())
+                .thenReturn(PutObjectResponse.builder().eTag("etag").build());
+        doThrow(BucketAlreadyOwnedByYouException.builder().message("exists").build())
+                .when(client).createBucket(any(CreateBucketRequest.class));
+        TestableS3StorageService service = new TestableS3StorageService(properties(true), client, presigner);
+
+        service.init();
+        byte[] content = "hello".getBytes(StandardCharsets.UTF_8);
+        service.putObject("packages/demo.zip", new ByteArrayInputStream(content), content.length, "application/zip");
+
         verify(client, times(1)).createBucket(any(CreateBucketRequest.class));
         verify(client, times(2)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
@@ -103,6 +189,13 @@ class S3StorageServiceTest {
         properties.setAutoCreateBucket(autoCreateBucket);
         return properties;
     }
+
+    private String readBody(RequestBody body) throws Exception {
+        try (InputStream inputStream = body.contentStreamProvider().newStream()) {
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
 
     private URI presignGetObjectUrl(boolean forcePathStyle) {
         S3StorageService storageService = new S3StorageService(createProperties(forcePathStyle));

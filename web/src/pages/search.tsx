@@ -128,8 +128,6 @@ export function SearchPage() {
     isLoading: isLoadingStarred,
     isFetching: isFetchingStarred,
   } = useMyStars(starredOnly && isAuthenticated)
-  const shouldShowGuidance = !starredOnly && !q && selectedLabels.length === 0
-
   useEffect(() => {
     // Debounce URL updates while the user is typing so query state stays shareable without
     // triggering a navigation on every keystroke.
@@ -215,10 +213,10 @@ export function SearchPage() {
     : data
       ? Math.ceil(data.total / data.size)
       : 0
-  const displayItems = shouldShowGuidance ? [] : (starredOnly ? starredPageItems : (data?.items ?? []))
-  const isPageLoading = shouldShowGuidance ? false : (starredOnly ? isLoadingStarred : isLoading)
-  const isUpdatingResults = shouldShowGuidance ? false : (starredOnly ? isFetchingStarred && !isLoadingStarred : isFetching && !isLoading)
-  const resultCount = shouldShowGuidance ? 0 : (starredOnly ? filteredStarredSkills.length : (data?.total ?? 0))
+  const displayItems = starredOnly ? starredPageItems : (data?.items ?? [])
+  const isPageLoading = starredOnly ? isLoadingStarred : isLoading
+  const isUpdatingResults = starredOnly ? isFetchingStarred && !isLoadingStarred : isFetching && !isLoading
+  const resultCount = starredOnly ? filteredStarredSkills.length : (data?.total ?? 0)
   const facetItems = !starredOnly
     ? (data?.facets?.labels.items ?? labels?.map((label) => ({
         slug: label.slug,
@@ -442,11 +440,9 @@ export function SearchPage() {
             <EmptyState
               title={starredOnly ? t('search.noStarredResults') : t('search.noResults')}
               description={
-                shouldShowGuidance
-                  ? t('search.enterKeyword')
-                  : starredOnly
+                starredOnly
                   ? (q ? t('search.noStarredResultsFor', { q }) : t('search.noStarredSkills'))
-                  : (q ? t('search.noResultsFor', { q }) : t('search.enterKeyword'))
+                  : (q ? t('search.noResultsFor', { q }) : undefined)
               }
             />
           )}

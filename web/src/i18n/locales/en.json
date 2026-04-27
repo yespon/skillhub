@@ -352,6 +352,7 @@
       "HIDDEN": "Hidden"
     },
     "publishNew": "Publish New Skill",
+    "update": "Update",
     "archive": "Archive",
     "unarchive": "Restore",
     "statusArchived": "Archived",
