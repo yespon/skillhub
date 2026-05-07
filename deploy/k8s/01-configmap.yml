@@ -149,3 +149,4 @@ data:
   SKILL_SCANNER_LLM_MODEL: "gpt-5.1-mini"
 
   SKILLHUB_API_UPSTREAM: "http://skillhub-server:8080"
+

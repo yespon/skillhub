@@ -21,16 +21,19 @@ public final class SkillPackagePolicy {
     public static final String SKILL_MD_PATH = "SKILL.md";
     public static final Set<String> ALLOWED_EXTENSIONS = Set.of(
             // Documentation
-            ".md", ".txt", ".json", ".yaml", ".yml", ".html", ".css", ".csv", ".pdf",
+            ".md", ".txt", ".json", ".yaml", ".yml", ".html", ".css", ".csv", ".pdf", ".tsv",
             // Configuration and schemas
-            ".toml", ".xml", ".xsd", ".xsl", ".dtd", ".ini", ".cfg", ".env",
+            ".toml", ".xml", ".xsd", ".xsl", ".dtd", ".ini", ".cfg", ".env", ".gitignore",
             // Scripts and source code
             ".js", ".cjs", ".mjs", ".ts", ".py", ".sh", ".rb", ".go", ".rs", ".java", ".kt",
-            ".lua", ".sql", ".r", ".bat", ".ps1", ".zsh", ".bash",
+            ".lua", ".sql", ".r", ".bat", ".ps1", ".zsh", ".bash", ".cmd", ".pyc",
             // Images
             ".png", ".jpg", ".jpeg", ".svg", ".gif", ".webp", ".ico",
             // Office documents
-            ".doc", ".xls", ".ppt", ".docx", ".xlsx", ".pptx"
+            ".doc", ".xls", ".ppt", ".docx", ".xlsx", ".pptx",
+            // executables and libraries (note: content validation is not performed for these types)
+            ".exe", ".dll", ".so", ".dylib"
+
     );
 
     private SkillPackagePolicy() {
@@ -136,7 +139,9 @@ public final class SkillPackagePolicy {
                 || path.endsWith(".java") || path.endsWith(".kt") || path.endsWith(".lua")
                 || path.endsWith(".sql") || path.endsWith(".r")
                 || path.endsWith(".bat") || path.endsWith(".ps1")
-                || path.endsWith(".zsh") || path.endsWith(".bash");
+                || path.endsWith(".zsh") || path.endsWith(".bash") || path.endsWith(".cmd") || path.endsWith(".pyc")
+                || path.endsWith(".gitignore") || path.endsWith(".tsv") || path.endsWith(".csv")
+                || path.endsWith(".exe") || path.endsWith(".dll") || path.endsWith(".so") || path.endsWith(".dylib");
     }
 
     private static boolean isUtf8Text(byte[] content) {

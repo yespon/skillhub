@@ -78,8 +78,8 @@ spring:
             user-name-attribute: username
   servlet:
     multipart:
-      max-file-size: 100MB
-      max-request-size: 100MB
+      max-file-size: 500MB
+      max-request-size: 500MB
   mail:
     host: ${SPRING_MAIL_HOST:localhost}
     port: ${SPRING_MAIL_PORT:25}
@@ -161,8 +161,8 @@ skillhub:
       anonymous-cookie-secret: ${SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET:change-me-in-production}
   publish:
     max-file-count: 100
-    max-single-file-size: 10485760 # 10MB
-    max-package-size: 104857600 # 100MB
+    max-single-file-size: 52428800 # 50MB
+    max-package-size: 524288000 # 500MB
     # allowed-file-extensions: uses SkillPackagePolicy.ALLOWED_EXTENSIONS by default
     # Override via SKILLHUB_PUBLISH_ALLOWED_FILE_EXTENSIONS env var if needed
   profile:

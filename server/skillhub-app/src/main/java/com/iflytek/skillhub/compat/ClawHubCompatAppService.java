@@ -308,6 +308,7 @@ public class ClawHubCompatAppService {
                 principal.platformRoles(),
                 confirmWarnings,
                 null
+        );
         return new ClawHubPublishResponse(result.skillId().toString(), result.version().getId().toString());
     }
 

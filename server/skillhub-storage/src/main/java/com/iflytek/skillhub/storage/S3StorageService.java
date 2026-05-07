@@ -99,6 +99,7 @@ public class S3StorageService implements ObjectStorageService {
             if (bucketPrepared) {
                 return;
             }
+            try {
                 log.info("Bucket '{}' does not exist, creating...", properties.getBucket());
                 s3Client.createBucket(CreateBucketRequest.builder().bucket(properties.getBucket()).build());
             } catch (BucketAlreadyExistsException | BucketAlreadyOwnedByYouException e) {

@@ -347,6 +347,7 @@ class ClawHubCompatControllerTest {
                 eq(Set.of("SUPER_ADMIN")),
                 eq(false),
                 eq(null)))
+                .willReturn(new SkillPublishService.PublishResult(12L, "my-skill", version));
 
         mockMvc.perform(multipart("/api/v1/skills")
                         .file(skillMdFile())
@@ -372,6 +373,7 @@ class ClawHubCompatControllerTest {
                 eq(Set.of("SUPER_ADMIN")),
                 eq(false),
                 eq(null)))
+                .willReturn(new SkillPublishService.PublishResult(13L, "my-skill", version));
 
         mockMvc.perform(multipart("/api/v1/skills")
                         .file(skillMdFile())
@@ -397,6 +399,7 @@ class ClawHubCompatControllerTest {
                 eq(Set.of("SUPER_ADMIN")),
                 eq(false),
                 eq(null)))
+                .willReturn(new SkillPublishService.PublishResult(14L, "my-skill", version));
 
         mockMvc.perform(multipart("/api/v1/skills")
                         .file(skillMdFile())
